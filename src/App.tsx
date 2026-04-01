@@ -1,61 +1,25 @@
-import './App.css';
-
-import React, { useState } from 'react';
-
-import logo from './394-2026-Logo.png';
+import './styles/App.css';
+import PostGameForm from './components/PostGameForm';
+import GameCard from './components/GameCard';
+import { useGames } from './hooks/useGames';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const { games } = useGames();
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p className="header">
-          {' '}
-          🚀 Vite + React + Typescript + Vitest 🤘 & <br />
-          Eslint 🔥+ Prettier for Wildcats
-        </p>
-
-        <div className="body">
-          {' '}
-          <button onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-          <p> Don&apos;t forgot to install Eslint and Prettier in Your Vscode.</p>
-          <p>
-            Mess up the code in <code>App.tsx </code> and save the file.
-          </p>
-          <p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-            {' | '}
-            <a
-              className="App-link"
-              href="https://vitejs.dev/guide/features.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Vite Docs
-            </a>
-            {' | '}
-            <a
-              className="App-link"
-              href="https://vitest.dev/guide/features.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Vitest Docs
-            </a>
-          </p>
-        </div>
+        <h1>🏀 Pickup Sports Finder</h1>
+        <p>Find and post pickup games in your city</p>
       </header>
+      <main>
+        <PostGameForm />
+        <div className="game-list">
+          {games.map((game) => (
+            <GameCard key={game.id} game={game} />
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
