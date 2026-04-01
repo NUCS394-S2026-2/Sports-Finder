@@ -4,41 +4,31 @@ import { describe, expect, test } from 'vitest';
 
 import App from './App';
 
-describe('App component', () => {
-  test('renders the heading and links', () => {
+describe('Sports Finder App', () => {
+  test('renders the Sports Finder heading', () => {
     render(<App />);
-    expect(screen.getByText(/Vite \+ React \+ Typescript/)).toBeInTheDocument();
-    expect(screen.getByText('Learn React')).toBeInTheDocument();
-    expect(screen.getByText('Vite Docs')).toBeInTheDocument();
-    expect(screen.getByText('Vitest Docs')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sports finder/i })).toBeInTheDocument();
   });
 
-  test('counter should be 0 at the start', () => {
-    render(<App />);
-    expect(screen.getByText('count is: 0')).toBeInTheDocument();
-  });
-
-  test('counter should increment by one when clicked', async () => {
+  test('allows user to create a new event', async () => {
     const user = userEvent.setup();
     render(<App />);
-    const counter = screen.getByRole('button');
-    await user.click(counter);
-    expect(screen.getByText('count is: 1')).toBeInTheDocument();
-  });
 
-  test('counter should increment multiple times', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    const counter = screen.getByRole('button');
-    await user.click(counter);
-    await user.click(counter);
-    await user.click(counter);
-    expect(screen.getByText('count is: 3')).toBeInTheDocument();
-  });
+    await user.type(screen.getByPlaceholderText('e.g. Soccer'), 'Tennis');
+    await user.type(
+      screen.getByPlaceholderText('e.g. Campus Rec Field'),
+      'Campus Courts',
+    );
+    await user.type(screen.getByLabelText(/date and time/i), '2026-04-10T17:00');
+    await user.selectOptions(screen.getByRole('combobox'), 'Beginner');
+    await user.clear(screen.getByLabelText(/total spots/i));
+    await user.type(screen.getByLabelText(/total spots/i), '8');
+    await user.type(screen.getByPlaceholderText('Your name'), 'Damini');
 
-  test('renders the logo image', () => {
-    render(<App />);
-    const logo = screen.getByAltText('logo');
-    expect(logo).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /post event/i }));
+
+    expect(screen.getByText('Tennis')).toBeInTheDocument();
+    expect(screen.getByText(/campus courts/i)).toBeInTheDocument();
+    expect(screen.getByText(/damini/i)).toBeInTheDocument();
   });
 });
