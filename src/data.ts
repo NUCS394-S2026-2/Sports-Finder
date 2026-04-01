@@ -17,6 +17,9 @@ export const initialGames: PickupGame[] = [
     spotsFilled: 7,
     organizer: 'Maya',
     note: 'Friendly run with mixed skill levels. Bring a dark and light jersey.',
+    skillLevel: 'Intermediate',
+    ageRange: '25-34',
+    gender: 'Mixed',
   },
   {
     id: 2,
@@ -27,6 +30,9 @@ export const initialGames: PickupGame[] = [
     spotsFilled: 11,
     organizer: 'Jordan',
     note: 'Small-sided game with quick rotations and plenty of subs.',
+    skillLevel: 'Beginner',
+    ageRange: '18-24',
+    gender: 'Open',
   },
   {
     id: 3,
@@ -37,6 +43,9 @@ export const initialGames: PickupGame[] = [
     spotsFilled: 8,
     organizer: 'Avery',
     note: 'Open gym, all levels welcome. Kneepads recommended.',
+    skillLevel: 'Intermediate',
+    ageRange: '35-44',
+    gender: 'Women',
   },
 ];
 
@@ -47,4 +56,17 @@ export const emptyDraft: GameDraft = {
   capacity: 10,
   organizer: '',
   note: '',
+  skillLevel: 'Beginner',
+  ageRange: '25-34',
+  gender: 'Open',
 };
+
+export const skillLevels: GameDraft['skillLevel'][] = [
+  'Beginner',
+  'Intermediate',
+  'Advanced',
+];
+
+export const ageRanges: GameDraft['ageRange'][] = ['18-24', '25-34', '35-44', '45+'];
+
+export const genders: GameDraft['gender'][] = ['Open', 'Women', 'Men', 'Mixed'];

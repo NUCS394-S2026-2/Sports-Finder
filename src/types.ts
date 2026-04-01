@@ -9,6 +9,9 @@ export type PickupGame = {
   spotsFilled: number;
   organizer: string;
   note: string;
+  skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
+  ageRange: '18-24' | '25-34' | '35-44' | '45+';
+  gender: 'Open' | 'Women' | 'Men' | 'Mixed';
 };
 
 export type GameDraft = {
@@ -18,6 +21,9 @@ export type GameDraft = {
   capacity: number;
   organizer: string;
   note: string;
+  skillLevel: PickupGame['skillLevel'];
+  ageRange: PickupGame['ageRange'];
+  gender: PickupGame['gender'];
 };
 
 export type SportFilter = 'All' | SportName;

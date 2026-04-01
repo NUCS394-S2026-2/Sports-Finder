@@ -23,6 +23,12 @@ export function GameCard({ game, onJoin }: GameCardProps) {
       <p className="game-time">{formatGameTime(game.startTime)}</p>
       <p className="game-note">{game.note}</p>
 
+      <div className="tag-row" aria-label="Game tags">
+        <span className="tag">{game.skillLevel}</span>
+        <span className="tag">Age {game.ageRange}</span>
+        <span className="tag">{game.gender}</span>
+      </div>
+
       <dl className="game-details">
         <div>
           <dt>Organizer</dt>

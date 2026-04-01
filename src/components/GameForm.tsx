@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
 
+import { ageRanges, genders, skillLevels } from '../data';
 import type { GameDraft, SportName } from '../types';
 
 type GameFormProps = {
@@ -98,6 +99,60 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
             placeholder="Skill level, what to bring, game format..."
             rows={4}
           />
+        </label>
+
+        <label>
+          Skill level
+          <select
+            value={draft.skillLevel}
+            onChange={(event) =>
+              onChange({
+                ...draft,
+                skillLevel: event.target.value as GameDraft['skillLevel'],
+              })
+            }
+          >
+            {skillLevels.map((skillLevel) => (
+              <option key={skillLevel} value={skillLevel}>
+                {skillLevel}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Age range
+          <select
+            value={draft.ageRange}
+            onChange={(event) =>
+              onChange({
+                ...draft,
+                ageRange: event.target.value as GameDraft['ageRange'],
+              })
+            }
+          >
+            {ageRanges.map((ageRange) => (
+              <option key={ageRange} value={ageRange}>
+                {ageRange}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Gender
+          <select
+            value={draft.gender}
+            onChange={(event) =>
+              onChange({ ...draft, gender: event.target.value as GameDraft['gender'] })
+            }
+          >
+            {genders.map((gender) => (
+              <option key={gender} value={gender}>
+                {gender}
+              </option>
+            ))}
+          </select>
         </label>
 
         <button className="primary-button" type="submit">
