@@ -11,7 +11,7 @@ A web app that helps people find and join pickup sports games happening near the
 ## User Interface
 - Clean, mobile-friendly layout
 - Home page shows a feed of available games
-- Each game card shows: sport type, location, date/time, and spots remaining
+- Each game card shows: sport type, location, date/time, and spots remaining, and a join game spot if available
 - A button to create a new game opens a simple form
 
 ## Sports Supported
