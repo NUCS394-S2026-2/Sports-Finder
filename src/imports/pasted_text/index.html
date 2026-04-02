@@ -1,0 +1,1559 @@
+<!-- Marcus Rodriguez -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "error-dim": "#d7383b",
+            "surface-container-lowest": "#000000",
+            "on-tertiary-container": "#550b6d",
+            "inverse-primary": "#9f4225",
+            "on-tertiary-fixed": "#320043",
+            "error": "#ff716c",
+            "on-background": "#ffffff",
+            "surface-bright": "#2c2c2c",
+            "primary-dim": "#ef7e5d",
+            "surface-container": "#1a1919",
+            "error-container": "#9f0519",
+            "on-secondary-container": "#ffc1be",
+            "on-tertiary-fixed-variant": "#5f1977",
+            "inverse-surface": "#fcf9f8",
+            "outline-variant": "#484847",
+            "inverse-on-surface": "#565555",
+            "surface-container-high": "#201f1f",
+            "on-primary-fixed": "#1f0300",
+            "tertiary-dim": "#d589eb",
+            "tertiary-fixed": "#e496fa",
+            "secondary-fixed": "#ffc3c0",
+            "surface-tint": "#ff8f6f",
+            "secondary-container": "#842326",
+            "surface-container-highest": "#262626",
+            "secondary-dim": "#f57775",
+            "on-primary-fixed-variant": "#641700",
+            "tertiary-fixed-dim": "#d589eb",
+            "on-primary-container": "#470e00",
+            "primary-container": "#f2815f",
+            "surface": "#0e0e0e",
+            "on-secondary": "#58000b",
+            "tertiary": "#eda8ff",
+            "on-surface": "#ffffff",
+            "on-surface-variant": "#adaaaa",
+            "background": "#0e0e0e",
+            "on-secondary-fixed-variant": "#922d2f",
+            "primary": "#ff8f6f",
+            "surface-container-low": "#131313",
+            "primary-fixed": "#fc8866",
+            "tertiary-container": "#e496fa",
+            "primary-fixed-dim": "#ec7b5a",
+            "secondary": "#ff7f7d",
+            "surface-variant": "#262626",
+            "outline": "#767575",
+            "on-secondary-fixed": "#6a0e16",
+            "surface-dim": "#0e0e0e",
+            "on-error": "#490006",
+            "on-error-container": "#ffa8a3",
+            "on-primary": "#5c1400",
+            "secondary-fixed-dim": "#ffafac",
+            "on-tertiary": "#601a78"
+          },
+          fontFamily: {
+            "headline": ["Epilogue"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #0e0e0e;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e]/70 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-primary">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a young athletic man with short dark hair in a focused urban sports environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2u1RXw_f8HC_eYDolm0tgyTwdKiosZopQ0xJFh6SlB_XP5AyqFjTfL2WBzfgnHMl2FxlJ89orDHSsWqbEiGceEUSW9UKr3b3AxC1uLVVVOzcR9zkchbKMcBnJWTLDPw_uq6iJ7jO7CEGH9k5Oj_sJ2Z5eTA0kMug2_f26TxB4o_iLHfXnBYdIBQcQi6ynEr0xhosUiRYeqOw_Z0fgrQv32DJ3gqreZdBilj465pJj_efohTiypMugrUkxm5KbhRBl_HvicHXZx0s"/>
+</div>
+<span class="font-['Epilogue'] font-extrabold tracking-tighter uppercase text-2xl text-[#D96D4D]">KINETIC</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-gray-400 hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-gray-400 hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform" data-icon="settings">settings</button>
+</div>
+</header>
+<main class="flex-1 pt-24 pb-32 px-6">
+<!-- Profile Hero Section -->
+<section class="flex flex-col items-center text-center mb-10">
+<div class="relative mb-6">
+<div class="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary">
+<div class="w-full h-full rounded-full bg-background overflow-hidden p-1">
+<img class="w-full h-full object-cover rounded-full" data-alt="Studio portrait of a professional male athlete looking confidently at camera with dramatic cinematic side lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVl8EwIbJrwASy5Xzquqz3sFtVDbiBzyTGor8Q4xCWBg9osp4XM6AXN9TrlIh-_az99SlZuQL0x6G1cprLVFNTI11mvSXDtI5Vwazt9AZzYCdK-UY0Lcp_8YwWOt7rrJY8GjivXvMNdqlHUkrWpKQ8cknY3yQ4DmMRsc4kHsj65Dd38oqeV5NZDjBZSdonNEUQA-QHVLTfwsc3IG5xR-d0CYI3jX-Of-AIaa5FX0tHr5dG4MrN8AuNCU8TgzmC1VtGeBBkYS5M0cU"/>
+</div>
+</div>
+<div class="absolute bottom-1 right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-4 border-background">
+<span class="material-symbols-outlined text-on-primary text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+</div>
+<h1 class="font-headline text-3xl font-extrabold tracking-tight mb-1">Marcus Thorne</h1>
+<p class="font-body text-on-surface-variant text-sm mb-6">@marcus_athletic</p>
+<!-- Stats Row -->
+<div class="flex items-center justify-around w-full py-4 bg-surface-container-low rounded-xl">
+<div class="flex flex-col">
+<span class="font-headline text-xl font-bold text-primary">124</span>
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Games Played</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div class="flex flex-col">
+<span class="font-headline text-xl font-bold text-primary">842</span>
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Friends</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div class="flex flex-col">
+<span class="font-headline text-xl font-bold text-primary">18</span>
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Hosted</span>
+</div>
+</div>
+</section>
+<!-- Sport Preferences -->
+<section class="mb-10">
+<h2 class="font-headline text-lg font-bold mb-4 uppercase tracking-tighter">Preferred Sports</h2>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-primary-container text-on-primary-container rounded-full font-label text-xs font-semibold tracking-wide">3v3 Basketball</span>
+<span class="px-4 py-2 bg-surface-container-highest text-primary rounded-full font-label text-xs font-semibold tracking-wide">Skateboarding</span>
+<span class="px-4 py-2 bg-surface-container-highest text-primary rounded-full font-label text-xs font-semibold tracking-wide">Street Soccer</span>
+<span class="px-4 py-2 bg-surface-container-highest text-primary rounded-full font-label text-xs font-semibold tracking-wide">Calisthenics</span>
+</div>
+</section>
+<!-- Friends Horizontal Scroll -->
+<section class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<h2 class="font-headline text-lg font-bold uppercase tracking-tighter">Squad</h2>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-lg font-label text-[10px] font-bold uppercase tracking-widest shadow-[0_12px_24px_rgba(217,109,77,0.15)] active:scale-95 transition-all">Add Friends</button>
+</div>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest overflow-hidden rotate-3">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young woman with neon lighting in a high-fashion streetwear style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAisFnwLuie_k89KFejpDSsePZWLbGmjwAegSzc54jnbmgGwe1dQx5RJKyFb1-Pa4PgL0bJNDLSjDIKKRtH29KKTNQjt_KHRGwXpuIha7dOvBmaRB7dUH2WwmOXl9KRtiJ-RWgjzDdZYTTbBUKCbvmJrOTSXART9HLoJXGmdTxx-uG2t0-ybvpBdQiyJ-1QRm5jp9nGzokj8nQPMSrkWKoVQX7W4p3JCwr5M1ZkGKYXm5AqYBpUCp9_8uRmxD08V5Tj0W5Jp9LCLB0"/>
+</div>
+<span class="font-body text-[10px] text-on-surface-variant">Elena</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest overflow-hidden -rotate-2">
+<img class="w-full h-full object-cover" data-alt="Moody portrait of a man in dark athletic gear in an industrial setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAyl9hhqNbsiKVb8j4tcdgPsizgDej2x-VGW_CVId6RcZKj6nlyuSfxigIjzuQYI5JOK6ia5nso2Uq7UvLFE2kcOOzxwNUdEYQ8gXAWvVMScEdbDBEQ80LAMABg5qF2D-hSGSDVy8Wg1-2dQ91c427q9LMdEqunTlKxMRHDK1DMbKR4VtL0nm3xDoUWIHdouik4s667seTBh9AViSFonYnNC1wOYGkFipGYZTCD-1a2LqYXH7yvg0uablriDfy9iXfHt5TICtBKaU"/>
+</div>
+<span class="font-body text-[10px] text-on-surface-variant">Jaxson</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest overflow-hidden rotate-1">
+<img class="w-full h-full object-cover" data-alt="Vibrant portrait of a smiling woman with warm golden hour light hitting her face" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC3vCwYE4cMS7uCOheAycL8y7GJZ5NdNwlMRCxfIMkWAoxkozwrNEb0uyGZIfWwKMmBOM4293lwAsEkUyoBAmqKVlGwPKp_46KqgnTbJSCWw1y80t_sM1bVkKPAPy4aNxBgafcA6iDFbqQIbjTpburWrOgR_9RfY4L6EQpx9_v-J3HSm2_5R1S1fzY0jxP8Uy_tuQLL_WJG3hmEsronGV_LYYCufFht9oeH1Vch9TTj_W71B3ZGuSyDjxXafuzuQ6qTeV8fKQa1_w"/>
+</div>
+<span class="font-body text-[10px] text-on-surface-variant">Sasha</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest overflow-hidden -rotate-3">
+<img class="w-full h-full object-cover" data-alt="Close up of a man laughing in an urban park background with soft depth of field" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx8T752mpubu4UmTG9N4DA_qwVu3s4LnHfzjCljd1icBTG5ek7uDzSlgasVDnTGh0RERNouNGkt0aHSn3YwbQ_9Xc91W5V3m_es-4qnIot27vVkXXtTXC2AKc_dhOLLCGS_c6D3gd4bhLjUBtw4qrt8_hsu-3s1PiP3Bx3TMPvVVEtdhB_9oHItfQ0QHFZiS3hBFHPQO_Cf6FKL7Wd9pcdKJyVCcHJ-T3_vykYxHofgkps546xsyUkWN3gxrYPdpVDwkUR1DcNtSU"/>
+</div>
+<span class="font-body text-[10px] text-on-surface-variant">Dante</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest overflow-hidden rotate-6">
+<img class="w-full h-full object-cover" data-alt="Urban portrait of a young person in stylish sports apparel against a concrete wall" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmWlPq_oqWABbMQoOSA0mtZpVhCVXooZXT3o-EuBirCIxdwd8paCoi-jRqqNCExKzZpmnizsucABqtmH7bqyjHGE_s4xLXMCcFP4WdL29X_9SqgMCwrR-V29YFwZSbIFyw2_MqWQALDd1avc8UjUuKQqTT4rvd4YwzNDQG6U3uXOz05JoUDEOcyP26ucKO1LT6_h3eCUXSDTBXhwrh9ePZHbOSKzhKRkfg9YL8rSAOa5bsGqyW7ATPALaYSc4s15j-nLq4HR-3a00"/>
+</div>
+<span class="font-body text-[10px] text-on-surface-variant">Miki</span>
+</div>
+</div>
+</section>
+<!-- Recent Activity List -->
+<section>
+<h2 class="font-headline text-lg font-bold mb-4 uppercase tracking-tighter">Recent Activity</h2>
+<div class="space-y-4">
+<!-- Activity Card 1 -->
+<div class="bg-surface-container-low p-4 rounded-2xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="sports_basketball">sports_basketball</span>
+</div>
+<div class="flex-1">
+<p class="font-body text-sm font-semibold text-on-surface">Joined 3v3 Basketball</p>
+<p class="font-body text-xs text-on-surface-variant">Underground Arena · 2 days ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-lg" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Activity Card 2 -->
+<div class="bg-surface-container-low p-4 rounded-2xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="skateboarding">skateboarding</span>
+</div>
+<div class="flex-1">
+<p class="font-body text-sm font-semibold text-on-surface">Hosted Skate Jam</p>
+<p class="font-body text-xs text-on-surface-variant">Pier 45 · 5 days ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-lg" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Activity Card 3 -->
+<div class="bg-surface-container-low p-4 rounded-2xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-tertiary-dim/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary-dim" data-icon="fitness_center">fitness_center</span>
+</div>
+<div class="flex-1">
+<p class="font-body text-sm font-semibold text-on-surface">New Personal Best</p>
+<p class="font-body text-xs text-on-surface-variant">Iron Yard · 1 week ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-lg" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#0e0e0e]/70 backdrop-blur-xl rounded-t-[24px] shadow-[0_-12px_24px_rgba(217,109,77,0.08)]">
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#D96D4D] drop-shadow-[0_0_10px_rgba(217,109,77,0.4)] scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+</a>
+</nav>
+</body></html>
+
+<!-- Host a Game -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#d7383b",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-container": "#550b6d",
+              "inverse-primary": "#9f4225",
+              "on-tertiary-fixed": "#320043",
+              "error": "#ff716c",
+              "on-background": "#ffffff",
+              "surface-bright": "#2c2c2c",
+              "primary-dim": "#ef7e5d",
+              "surface-container": "#1a1919",
+              "error-container": "#9f0519",
+              "on-secondary-container": "#ffc1be",
+              "on-tertiary-fixed-variant": "#5f1977",
+              "inverse-surface": "#fcf9f8",
+              "outline-variant": "#484847",
+              "inverse-on-surface": "#565555",
+              "surface-container-high": "#201f1f",
+              "on-primary-fixed": "#1f0300",
+              "tertiary-dim": "#d589eb",
+              "tertiary-fixed": "#e496fa",
+              "secondary-fixed": "#ffc3c0",
+              "surface-tint": "#ff8f6f",
+              "secondary-container": "#842326",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#f57775",
+              "on-primary-fixed-variant": "#641700",
+              "tertiary-fixed-dim": "#d589eb",
+              "on-primary-container": "#470e00",
+              "primary-container": "#f2815f",
+              "surface": "#0e0e0e",
+              "on-secondary": "#58000b",
+              "tertiary": "#eda8ff",
+              "on-surface": "#ffffff",
+              "on-surface-variant": "#adaaaa",
+              "background": "#0e0e0e",
+              "on-secondary-fixed-variant": "#922d2f",
+              "primary": "#ff8f6f",
+              "surface-container-low": "#131313",
+              "primary-fixed": "#fc8866",
+              "tertiary-container": "#e496fa",
+              "primary-fixed-dim": "#ec7b5a",
+              "secondary": "#ff7f7d",
+              "surface-variant": "#262626",
+              "outline": "#767575",
+              "on-secondary-fixed": "#6a0e16",
+              "surface-dim": "#0e0e0e",
+              "on-error": "#490006",
+              "on-error-container": "#ffa8a3",
+              "on-primary": "#5c1400",
+              "secondary-fixed-dim": "#ffafac",
+              "on-tertiary": "#601a78"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #0e0e0e;
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .custom-blur {
+        backdrop-filter: blur(20px);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#0e0e0e]/70 backdrop-blur-xl fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3 scale-95 active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-[#D96D4D]">arrow_back</span>
+</div>
+<h1 class="font-['Epilogue'] font-extrabold tracking-tighter uppercase text-2xl text-[#D96D4D]">HOST A GAME</h1>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="close up portrait of a confident athlete with focused expression in dramatic urban lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4YWuj0iMArfppHIC9m-wjjWGP5deL_j1hFtJdBa3fS0sfsyejCQuzdhQHjTrxoVXwdIYL8O2nbPX8zsj6c_V78rBq2HtS13A1f3WUFzBzbi9zN-Yl1APG81c9Gcry8VEBCnrsnWkQ__CpjXEGaLqqd1SHq4_za4AE5-xVtBMqmdQT4hyXPUhsVmuATrqx89KpS6N3PAtheXh_XKOAutlDFW4X4rvcKJVShQqFGxkQCjxohi_2HKMD1Yye200-P3DjsTKGBxQuLMA"/>
+</div>
+</header>
+<main class="mt-20 px-6 space-y-10">
+<!-- Sport Selection Grid -->
+<section class="space-y-4">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Select Sport</label>
+<div class="grid grid-cols-4 gap-3">
+<button class="flex flex-col items-center justify-center p-4 rounded-xl bg-primary-container text-on-primary-container gap-2 transition-all">
+<span class="material-symbols-outlined" data-icon="sports_basketball">sports_basketball</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container-highest text-outline gap-2 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined" data-icon="sports_soccer">sports_soccer</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container-highest text-outline gap-2 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined" data-icon="sports_tennis">sports_tennis</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 rounded-xl bg-surface-container-highest text-outline gap-2 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined" data-icon="sports_volleyball">sports_volleyball</span>
+</button>
+</div>
+</section>
+<!-- Form Fields -->
+<section class="space-y-8">
+<!-- Game Title -->
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Game Title</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl p-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body" placeholder="e.g. Sunset 3v3 Pick-up" type="text"/>
+</div>
+<!-- Location & Map -->
+<div class="space-y-4">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Location</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">location_on</span>
+<input class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body" placeholder="Search court or address" type="text"/>
+</div>
+<div class="h-32 w-full rounded-2xl overflow-hidden relative grayscale opacity-60">
+<img class="w-full h-full object-cover" data-alt="stylized dark monochrome city map view with pin location for urban sports court" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMzIl7LLPiisk5BFV5c3FWJxl9YCqxDY2GVefKRrm-od5lEWkXy2gHdmk9utp1k4OlVBxhpAKSZCS0Gdo39DIzMHxX4APMTwTy1wrqAB997JyheRpd7D3uqSV_xRtz7kaccZq3e-hYUmSP7ckl07m5EsTQ8hBFhERCvKchs584ZZDwcktYa08na7TwRbO-tcjKJF8rIOkHY2ik7UnFS6abKOrHgCufV-uU0L-CenKH_fpRY3ag9F9eriaKenajHtoDm6JIzI4fggw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+</div>
+</div>
+<!-- Date & Time -->
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Date</label>
+<div class="bg-surface-container-low rounded-xl p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="calendar_today">calendar_today</span>
+<span class="text-on-surface font-body">Oct 24</span>
+</div>
+</div>
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Time</label>
+<div class="bg-surface-container-low rounded-xl p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="schedule">schedule</span>
+<span class="text-on-surface font-body">18:00</span>
+</div>
+</div>
+</div>
+<!-- Max Players Stepper -->
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Max Players</label>
+<div class="flex items-center justify-between bg-surface-container-low rounded-xl p-2">
+<button class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-lg text-on-surface active:scale-95 transition-all">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<span class="text-2xl font-headline font-bold text-primary">12</span>
+<button class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-lg text-on-surface active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Competitive Level Segmented Control -->
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Competitive Level</label>
+<div class="flex bg-surface-container-low p-1 rounded-xl">
+<button class="flex-1 py-3 text-sm font-label rounded-lg bg-surface-container-highest text-primary">Casual</button>
+<button class="flex-1 py-3 text-sm font-label rounded-lg text-outline">Intermediate</button>
+<button class="flex-1 py-3 text-sm font-label rounded-lg text-outline">Pro</button>
+</div>
+</div>
+<!-- Notes -->
+<div class="space-y-3">
+<label class="font-label text-label-sm tracking-widest text-on-surface-variant uppercase">Notes/Requirements</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl p-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body resize-none" placeholder="Bring water, sneakers required..." rows="3"></textarea>
+</div>
+</section>
+<!-- Submit Button -->
+<section class="pb-10">
+<button class="w-full bg-primary text-on-primary py-5 rounded-2xl font-headline font-extrabold text-xl tracking-tight shadow-[0_12px_24px_rgba(255,143,111,0.2)] active:scale-[0.98] transition-all">
+                POST GAME
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#0e0e0e]/70 backdrop-blur-xl rounded-t-[24px] shadow-[0_-12px_24px_rgba(217,109,77,0.08)]">
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#D96D4D] drop-shadow-[0_0_10px_rgba(217,109,77,0.4)] scale-110 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</a>
+</nav>
+</body></html>
+
+<!-- Activity -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#d7383b",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-container": "#550b6d",
+              "inverse-primary": "#9f4225",
+              "on-tertiary-fixed": "#320043",
+              "error": "#ff716c",
+              "on-background": "#ffffff",
+              "surface-bright": "#2c2c2c",
+              "primary-dim": "#ef7e5d",
+              "surface-container": "#1a1919",
+              "error-container": "#9f0519",
+              "on-secondary-container": "#ffc1be",
+              "on-tertiary-fixed-variant": "#5f1977",
+              "inverse-surface": "#fcf9f8",
+              "outline-variant": "#484847",
+              "inverse-on-surface": "#565555",
+              "surface-container-high": "#201f1f",
+              "on-primary-fixed": "#1f0300",
+              "tertiary-dim": "#d589eb",
+              "tertiary-fixed": "#e496fa",
+              "secondary-fixed": "#ffc3c0",
+              "surface-tint": "#ff8f6f",
+              "secondary-container": "#842326",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#f57775",
+              "on-primary-fixed-variant": "#641700",
+              "tertiary-fixed-dim": "#d589eb",
+              "on-primary-container": "#470e00",
+              "primary-container": "#f2815f",
+              "surface": "#0e0e0e",
+              "on-secondary": "#58000b",
+              "tertiary": "#eda8ff",
+              "on-surface": "#ffffff",
+              "on-surface-variant": "#adaaaa",
+              "background": "#0e0e0e",
+              "on-secondary-fixed-variant": "#922d2f",
+              "primary": "#ff8f6f",
+              "surface-container-low": "#131313",
+              "primary-fixed": "#fc8866",
+              "tertiary-container": "#e496fa",
+              "primary-fixed-dim": "#ec7b5a",
+              "secondary": "#ff7f7d",
+              "surface-variant": "#262626",
+              "outline": "#767575",
+              "on-secondary-fixed": "#6a0e16",
+              "surface-dim": "#0e0e0e",
+              "on-error": "#490006",
+              "on-error-container": "#ffa8a3",
+              "on-primary": "#5c1400",
+              "secondary-fixed-dim": "#ffafac",
+              "on-tertiary": "#601a78"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e]/70 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20 scale-95 active:scale-90 transition-transform">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close up portrait of a young athletic man with a determined expression, sharp lighting against a dark urban background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAh6XjMhmYDEGmdhjblELb5uugW1eC5-JolivsjveAdxwyO7iI4ZKYhCmKxfdwHO3fN41r8U_aa-t8sttG-_5EyJfqpRk6sIV8QbZbk4RgjptkPPBkUhO8j2n_xl-jafq3sZB8SzftjXRCtxmSm1XSWeCsqyIPXJc18JqvHfJR-YeIw7SPfEAsWGanNrDCLPpzmIuYYmyI0Uqm8zOYm-FubgTIp--XBzdgFl8G5wJaVH2y8WxD_7yAOZxwBbHWov5CLV4GNHEz4Xc"/>
+</div>
+<h1 class="font-['Epilogue'] font-extrabold tracking-tighter uppercase text-2xl font-extrabold tracking-[-0.02em] text-[#D96D4D]">KINETIC</h1>
+</div>
+<div class="relative scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#D96D4D] text-2xl" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="absolute top-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></span>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-24 pb-32 px-6 min-h-screen">
+<!-- Screen Title Section -->
+<div class="mb-10">
+<h2 class="font-headline text-4xl font-extrabold tracking-tighter uppercase mb-2">Alerts</h2>
+<p class="text-on-surface-variant font-body text-sm">Stay synchronized with the arena.</p>
+</div>
+<!-- Filter Chips (Social Chips) -->
+<div class="flex gap-3 mb-8 overflow-x-auto no-scrollbar py-2">
+<button class="bg-primary-container text-on-primary-container px-5 py-2 rounded-full font-label text-[10px] uppercase tracking-widest whitespace-nowrap transition-all">All</button>
+<button class="outline outline-1 outline-outline/40 text-on-surface px-5 py-2 rounded-full font-label text-[10px] uppercase tracking-widest whitespace-nowrap hover:bg-surface-container-highest transition-all">Games</button>
+<button class="outline outline-1 outline-outline/40 text-on-surface px-5 py-2 rounded-full font-label text-[10px] uppercase tracking-widest whitespace-nowrap hover:bg-surface-container-highest transition-all">Social</button>
+<button class="outline outline-1 outline-outline/40 text-on-surface px-5 py-2 rounded-full font-label text-[10px] uppercase tracking-widest whitespace-nowrap hover:bg-surface-container-highest transition-all">Reminders</button>
+</div>
+<!-- Notifications List -->
+<div class="flex flex-col gap-6">
+<!-- Group Header -->
+<h3 class="font-label text-[10px] uppercase tracking-[0.2em] text-outline px-1">Newest</h3>
+<!-- Friend Request Alert -->
+<div class="bg-surface-container-low rounded-xl p-5 flex gap-4 items-center group active:scale-95 transition-transform">
+<div class="relative flex-shrink-0">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close up profile of a young woman with braided hair, sporty attire, neon lighting accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAorTENbiEdNcloE1z36yli1jIqk7EJwRXhMAQy2wSgJEGfOAquBaMyVUU9e8yl4zLdFLgDybGn25C-pFiyBsrwjdbtOMEV4FdoYqHz4sptGqc-Ei2OFs4iNgq4OxT0IarvIMKGh_2Rrgl-W77S5j5ss3hay4ZJnng68gEQkWzGupuCzzGVq-qp6Hyia3I5idZRA9lx_MkCAoiFc1UFPYzjUrc1VOtOcWHOp_YdZXCoSLZtbu5fn8mgG00DARV7CgQJRhCdr4kz5E8"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-surface-container-low shadow-lg">
+<span class="material-symbols-outlined text-[14px] text-on-primary" data-icon="person_add" style="font-variation-settings: 'FILL' 1;">person_add</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-headline text-sm font-bold leading-snug">
+<span class="text-primary">MAYA R.</span> sent you a friend request.
+                    </p>
+<p class="text-on-surface-variant font-body text-xs mt-1">2 minutes ago</p>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(255,143,111,0.6)]"></div>
+</div>
+<!-- Game Reminder -->
+<div class="bg-surface-container-low rounded-xl p-5 flex gap-4 items-center group active:scale-95 transition-transform">
+<div class="w-14 h-14 rounded-full bg-secondary-container/30 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary text-2xl" data-icon="schedule" style="font-variation-settings: 'FILL' 1;">schedule</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-headline text-sm font-bold leading-snug">
+                        Starts in 30m: <span class="text-secondary">Street Hoops 3v3</span> at Central Court.
+                    </p>
+<p class="text-on-surface-variant font-body text-xs mt-1">15 minutes ago</p>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(255,143,111,0.6)]"></div>
+</div>
+<!-- Group Header -->
+<h3 class="font-label text-[10px] uppercase tracking-[0.2em] text-outline px-1 mt-4">Earlier</h3>
+<!-- New Game Near You -->
+<div class="bg-surface-container-low/50 rounded-xl p-5 flex gap-4 items-center active:scale-95 transition-transform">
+<div class="relative flex-shrink-0">
+<div class="w-14 h-14 rounded-xl overflow-hidden bg-surface-container-highest">
+<img alt="Court Thumbnail" class="w-full h-full object-cover" data-alt="dynamic shot of a basketball court at night with bright stadium lights and long shadows on the asphalt" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu8y-XxjyDikANqUSInNco1pkUeHv0xf1kvEPnYaP3gr23KDath-RA7nlnUfBlQSgfULqabtS25JOKccq769hMbVwYZnzo4jW00fDIfYxwhrXwMcPiSOZ8sl9Tid1oMk-kC1jdqkSnKZ7I5uO4BEQ7HWJoV_q9Z5rRwdvv1EG3Ho1lvKX2qnE0lbnSM3Z0NtIJBXDcNTVlpTdzLdaG9ZU3lonb6hHHKeytyX0qiJ95GGFncB3uLGH0VGuACiXWDbaK0gSWN9Obfg8"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-surface-bright rounded-full flex items-center justify-center border-2 border-surface-container-low">
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="explore" style="font-variation-settings: 'FILL' 1;">explore</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-headline text-sm font-bold text-on-surface/80 leading-snug">
+<span class="text-on-surface">Night Run</span> organized by 5 people near you.
+                    </p>
+<p class="text-on-surface-variant font-body text-xs mt-1">2 hours ago</p>
+</div>
+</div>
+<!-- Profile Mention -->
+<div class="bg-surface-container-low/50 rounded-xl p-5 flex gap-4 items-center active:scale-95 transition-transform">
+<div class="flex-shrink-0">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close up of a bearded man with an intense look, low-key lighting, gritty high-contrast photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl1Ftev76jJ_MOYlkKS1Nijpx7lCMS1vKRIFWrG7e_ftkwsrZel6bxhoTP7r5IfFMc2AGUk2WuON3Z7eHXNsLAxAgkzMb5d0JDyVfaU9EnMmVnU4BWUHGPfQMXMsPq-ylD21HBiNLQMiRWTIoY6hBEWSXbDFHH11mpE1W3CE50BGvStNgvmWrziNMjlh4WgiUyLDoBS14lVz2FhF1a8XPyDk70CyF9XIj3zRCV3ZMtFyUlvzWWYSMLxoWcvYXeNjGyn4LZWISqEr4"/>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-headline text-sm font-bold text-on-surface/80 leading-snug">
+<span class="text-on-surface">JAXSON T.</span> mentioned you in a comment.
+                    </p>
+<p class="text-on-surface-variant font-body text-xs mt-1">5 hours ago</p>
+</div>
+</div>
+<!-- Achievement Unlocked (Bento Style Inset) -->
+<div class="bg-surface-container-highest rounded-2xl p-6 border border-primary/10 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+<div class="flex items-start justify-between">
+<div>
+<span class="bg-primary/20 text-primary font-label text-[9px] px-2 py-0.5 rounded tracking-widest uppercase mb-3 inline-block">Achievement</span>
+<h4 class="font-headline text-lg font-bold">STADIUM CHASER</h4>
+<p class="text-on-surface-variant font-body text-xs mt-1 max-w-[200px]">You've played in 10 different courts this month!</p>
+</div>
+<span class="material-symbols-outlined text-4xl text-primary drop-shadow-[0_0_10px_rgba(255,143,111,0.4)]" data-icon="trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#0e0e0e]/70 backdrop-blur-xl flex justify-around items-center px-4 pb-8 pt-4 rounded-t-[24px] shadow-[0_-12px_24px_rgba(217,109,77,0.08)]">
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#D96D4D] drop-shadow-[0_0_10px_rgba(217,109,77,0.4)] scale-110 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+</a>
+</nav>
+</body></html>
+
+<!-- Game Details -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-dim": "#d7383b",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary-container": "#550b6d",
+                        "inverse-primary": "#9f4225",
+                        "on-tertiary-fixed": "#320043",
+                        "error": "#ff716c",
+                        "on-background": "#ffffff",
+                        "surface-bright": "#2c2c2c",
+                        "primary-dim": "#ef7e5d",
+                        "surface-container": "#1a1919",
+                        "error-container": "#9f0519",
+                        "on-secondary-container": "#ffc1be",
+                        "on-tertiary-fixed-variant": "#5f1977",
+                        "inverse-surface": "#fcf9f8",
+                        "outline-variant": "#484847",
+                        "inverse-on-surface": "#565555",
+                        "surface-container-high": "#201f1f",
+                        "on-primary-fixed": "#1f0300",
+                        "tertiary-dim": "#d589eb",
+                        "tertiary-fixed": "#e496fa",
+                        "secondary-fixed": "#ffc3c0",
+                        "surface-tint": "#ff8f6f",
+                        "secondary-container": "#842326",
+                        "surface-container-highest": "#262626",
+                        "secondary-dim": "#f57775",
+                        "on-primary-fixed-variant": "#641700",
+                        "tertiary-fixed-dim": "#d589eb",
+                        "on-primary-container": "#470e00",
+                        "primary-container": "#f2815f",
+                        "surface": "#0e0e0e",
+                        "on-secondary": "#58000b",
+                        "tertiary": "#eda8ff",
+                        "on-surface": "#ffffff",
+                        "on-surface-variant": "#adaaaa",
+                        "background": "#0e0e0e",
+                        "on-secondary-fixed-variant": "#922d2f",
+                        "primary": "#ff8f6f",
+                        "surface-container-low": "#131313",
+                        "primary-fixed": "#fc8866",
+                        "tertiary-container": "#e496fa",
+                        "primary-fixed-dim": "#ec7b5a",
+                        "secondary": "#ff7f7d",
+                        "surface-variant": "#262626",
+                        "outline": "#767575",
+                        "on-secondary-fixed": "#6a0e16",
+                        "surface-dim": "#0e0e0e",
+                        "on-error": "#490006",
+                        "on-error-container": "#ffa8a3",
+                        "on-primary": "#5c1400",
+                        "secondary-fixed-dim": "#ffafac",
+                        "on-tertiary": "#601a78"
+                    },
+                    fontFamily: {
+                        "headline": ["Epilogue"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hero-gradient {
+            background: linear-gradient(180deg, rgba(14,14,14,0) 0%, rgba(217,109,77,0.4) 50%, rgba(14,14,14,1) 100%);
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body select-none">
+<!-- Top Navigation (Shell Supression for focus) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-[#0e0e0e]/70 backdrop-blur-xl">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest transition-transform active:scale-90">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+</button>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">share</span>
+<span class="material-symbols-outlined text-on-surface">more_vert</span>
+</div>
+</header>
+<main class="pb-32">
+<!-- Hero Section -->
+<section class="relative h-[440px] w-full overflow-hidden">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="dynamic low angle shot of a concrete basketball court at dusk with orange stadium lights creating dramatic shadows and warm atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDL5kUy4ZcLPM4KwR4aCpO1GdAPHTkEf-FKezxtNe7KnlLW1ECk_99gZJqoeb46WNlzuW4ph5l-XVpuqN9cSXZTo_46HVhlh-rqMhGtJYKRM2HbFM3O_zceTjOO9tLlV4tp8FDz8tbyuDxmukhYgunVAUgJZRG9wPndNdtNCNd4cSUiaeSt5CrsKzw85kTsIQ7F_rDs0gwo6KKaq7tR_Cwc0QRXw3wkZQYBXunmndcUQOZuKBQ2AGRPilAJcPmBmxHmSwl_9tUTnc8"/>
+<div class="absolute inset-0 hero-gradient"></div>
+<div class="absolute bottom-0 left-0 p-6 w-full">
+<div class="flex items-center gap-2 mb-3">
+<div class="bg-primary px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-on-primary" style="font-variation-settings: 'FILL' 1;">sports_basketball</span>
+<span class="font-label text-[10px] font-bold tracking-widest text-on-primary uppercase">BASKETBALL</span>
+</div>
+<div class="bg-surface-bright/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+<span class="font-label text-[10px] font-medium tracking-widest text-on-surface uppercase">COMPETITIVE</span>
+</div>
+</div>
+<h1 class="font-headline text-4xl font-extrabold tracking-tighter text-white uppercase leading-none mb-4 max-w-[80%]">
+                    Sunset Pro-Run Invitational
+                </h1>
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-10 h-10 rounded-full border-2 border-primary object-cover" data-alt="professional portrait of a young athletic man with short hair looking confidently at the camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwQAalSMKyIzOUIx9wSmHCi3bdaZmG6iA0ZCFsMC9fhKvKmAPafHr6f9tEW5FDZu1_Z2JhnI1ic7lQK54Mnhhji8TFV8uVnM1BxRXbQDG5p2jitJvJRPk5dEP3a1_wXnLi7xUqoW-7Ohl7qzYgWOmMLwmORuEVYaqwbEWTrpG9FSJrt6t_Qat0j4kfFlvQYKLwpTB1eEbYTBn5l93lFDc0m4Ili-2LVDkdMJBBN6n6VOlv6OSfjW-lBx77YgckVlbXKBz-DSZrPFg"/>
+<div class="absolute -bottom-1 -right-1 bg-primary w-4 h-4 rounded-full flex items-center justify-center border-2 border-background">
+<span class="material-symbols-outlined text-[10px] text-on-primary font-bold">verified</span>
+</div>
+</div>
+<div>
+<p class="text-[10px] font-label text-primary uppercase tracking-widest leading-none mb-1">Organized By</p>
+<p class="font-headline text-sm font-bold text-white uppercase">Marcus "Viper" Chen</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Grid (Bento Style) -->
+<section class="px-6 -mt-4 relative z-10 grid grid-cols-2 gap-4">
+<div class="bg-surface-container-high p-5 rounded-[24px] flex flex-col justify-between h-32">
+<span class="material-symbols-outlined text-primary text-3xl">calendar_today</span>
+<div>
+<p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase">Date &amp; Time</p>
+<p class="font-body text-sm font-semibold text-on-surface">Oct 24, 18:30 PM</p>
+</div>
+</div>
+<div class="bg-surface-container-high p-5 rounded-[24px] flex flex-col justify-between h-32">
+<span class="material-symbols-outlined text-primary text-3xl">groups</span>
+<div>
+<p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase">Capacity</p>
+<p class="font-body text-sm font-semibold text-on-surface">12 / 15 Players</p>
+</div>
+</div>
+</section>
+<!-- Location Section -->
+<section class="px-6 mt-8">
+<div class="flex justify-between items-end mb-4">
+<div>
+<p class="font-label text-[10px] text-primary tracking-widest uppercase mb-1">The Arena</p>
+<h3 class="font-headline text-xl font-bold uppercase">Concrete Heights Court</h3>
+</div>
+<p class="font-body text-xs text-on-surface-variant pb-1">2.4 miles away</p>
+</div>
+<div class="relative h-44 w-full rounded-[24px] overflow-hidden group">
+<img class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-700" data-alt="stylized satellite map view of an urban park with a distinct blue basketball court surrounded by greenery" data-location="Brooklyn, NY" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2s_ehhaso8jfOpdMCaWP9o35U8KFw64YjkVsinWdDnEoS-LEkkNzC1N4hZGjeC0wYNnxVVP6_Og9KNj1mCJVfVOd67IYOx8rVA_YCuZSbjVe44-e0CXDnab5QeSw3iqb2TSKspftnwwJYJw9wYXt5ptapMsl5i3PffRUG5BfqnUmB2G8CDEKsTBqK9EuPutBorD8XpoRZG1C_iEvBMdOfg7lKq6JTxcOFnQ8zoL-ZUvSx1_P_X0P8Mx7ZIxofUndouacwbERm1dI"/>
+<div class="absolute inset-0 bg-primary/10"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(217,109,77,0.5)] animate-pulse">
+<span class="material-symbols-outlined text-on-primary text-2xl" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+<div class="absolute bottom-4 left-4 bg-background/80 backdrop-blur-md px-4 py-2 rounded-xl">
+<p class="text-xs font-medium text-white">458 Industrial Way, Brooklyn</p>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section class="px-6 mt-10">
+<h3 class="font-headline text-lg font-bold uppercase mb-4 tracking-tight">The Brief</h3>
+<p class="font-body text-on-surface-variant leading-relaxed mb-6">
+                Full-court runs only. High intensity. We're looking for experienced players who understand defensive rotations and transition offense. Bring both a white and black jersey. Water is provided, but bring your own towels.
+            </p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-lg text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">3-POINT SHOOTERS</span>
+<span class="bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-lg text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">STREET RULES</span>
+<span class="bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-lg text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">GEAR REQ.</span>
+</div>
+</section>
+<!-- Roster -->
+<section class="px-6 mt-10">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline text-lg font-bold uppercase tracking-tight">Current Roster</h3>
+<span class="text-xs font-bold text-primary uppercase tracking-widest">View All</span>
+</div>
+<div class="flex items-center gap-[-12px]">
+<img class="w-12 h-12 rounded-full border-4 border-background object-cover -mr-3 relative z-10" data-alt="close-up of a young man with beard wearing a sports headband" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkoO3bexRM6wpBlSkv-XPyfrVMuK7XJnMRHmvbDerNEqYp4o4oZaoXy-SBT6JDXX_R6S-zSFrsO-JafDCAH1xDnqDRPs0INwmWHGeHM7X5Tc0WiKc_lCRo6nQukYqdYCbS06WidUILO5VfU_wXhyrupAYPz7H1RrJMeyrTYklHYsqyC3ynS6d6Ya6mZEyXE3NJ8Oit7SwhaqfvuLfTWT1lLtGjM8IyClq9qUGv-4VaF8iLlCtRQ74AbgxZ08Rn5eetpdKTLpxhYAE"/>
+<img class="w-12 h-12 rounded-full border-4 border-background object-cover -mr-3 relative z-20" data-alt="portrait of a young woman with braided hair and athletic wear" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ54ISICxScNYo7v_ELuW7PWPG0Jfahj2Zg4uGd8geHLefUlVv6WpyT-_1CnjVRok97Bm5v0qVvnpVt6G_qjpu28s27w5PwJyjZYNOa7ymULW1KZXhWbEVNtKnH0UOso-sj1Q64t-g6k0m_jiXRuL4wI6vH01LaZJwGRu89jCxsroD6-CL0W1PRS2A7bgZmPyW3X5_Dh3XP34k4XBJFNRnUg-8jyGN4fAfHavjXqByAdYHJ47jJMahCUIBrTtRrN70H3wKEe50gK4"/>
+<img class="w-12 h-12 rounded-full border-4 border-background object-cover -mr-3 relative z-30" data-alt="headshot of a smiling middle-eastern man in a gym setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhG5Oy0eB_3noYjJdNJjz_Xn_PHlLZKhSHSUucav8KbAPwXsN0Lima5K2r-0ky5TZgb0cZ_vTWYnFs5zzE60krkOyYt8efOLH28-hshtsL-8UeR8Uqf5ILvCglPgEVgNUlDb48gInSCiVQkZaLIQu3SbU2AzPO9k48i-MU8RXcyagwzNaPG7Wo7SyxHVjcBI8rd3gjs2HUlvpwdfp4VTJqV_LZtApFNws1WBkJVzcEkODLCYTRHpUpy_hFNcztode54Q1BQman8Jc"/>
+<img class="w-12 h-12 rounded-full border-4 border-background object-cover -mr-3 relative z-40" data-alt="vibrant portrait of a woman in high-performance sports apparel" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpFJ6kMg2e6-4e34zCBl0fB3ovVtaq1u9pgbanBxUUAre3oCklKVWvho1JQGflzYekau-_NQu37GmhxYQ244WuYjfohlZ8JUcTRbg0Npc2v6Uo8X0y78m6J4GP3xWlkBnODyj2rHbV7lxSWtRrImYCO8k88U5NZJjRuiJ9hQolm9iPMIcbfBPsJqrfI96-GK-cxfaje0hvalgQcGfZ05cM1A-Cf-GNlZDIblb_5u_OTre4fntGlAIsD7_hFra7OQvTc6NPaAzCx-0"/>
+<div class="w-12 h-12 rounded-full border-4 border-background bg-surface-container-highest flex items-center justify-center relative z-50">
+<span class="text-xs font-bold text-on-surface-variant">+8</span>
+</div>
+<div class="ml-4">
+<p class="text-xs font-medium text-on-surface">Join the squad</p>
+<p class="text-[10px] text-primary-dim font-bold uppercase tracking-widest">3 spots left</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Bar -->
+<footer class="fixed bottom-0 left-0 w-full p-6 bg-background/80 backdrop-blur-2xl z-50">
+<div class="flex gap-4">
+<button class="flex-1 bg-primary text-on-primary py-4 rounded-xl font-headline font-extrabold uppercase tracking-tight text-lg shadow-[0_12px_24px_rgba(217,109,77,0.2)] active:scale-95 transition-transform">
+                Join Game
+            </button>
+<button class="w-16 h-16 bg-surface-container-highest flex items-center justify-center rounded-xl text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl">bookmark</span>
+</button>
+</div>
+</footer>
+</body></html>
+
+<!-- Find Your Next Game -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#d7383b",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-container": "#550b6d",
+              "inverse-primary": "#9f4225",
+              "on-tertiary-fixed": "#320043",
+              "error": "#ff716c",
+              "on-background": "#ffffff",
+              "surface-bright": "#2c2c2c",
+              "primary-dim": "#ef7e5d",
+              "surface-container": "#1a1919",
+              "error-container": "#9f0519",
+              "on-secondary-container": "#ffc1be",
+              "on-tertiary-fixed-variant": "#5f1977",
+              "inverse-surface": "#fcf9f8",
+              "outline-variant": "#484847",
+              "inverse-on-surface": "#565555",
+              "surface-container-high": "#201f1f",
+              "on-primary-fixed": "#1f0300",
+              "tertiary-dim": "#d589eb",
+              "tertiary-fixed": "#e496fa",
+              "secondary-fixed": "#ffc3c0",
+              "surface-tint": "#ff8f6f",
+              "secondary-container": "#842326",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#f57775",
+              "on-primary-fixed-variant": "#641700",
+              "tertiary-fixed-dim": "#d589eb",
+              "on-primary-container": "#470e00",
+              "primary-container": "#f2815f",
+              "surface": "#0e0e0e",
+              "on-secondary": "#58000b",
+              "tertiary": "#eda8ff",
+              "on-surface": "#ffffff",
+              "on-surface-variant": "#adaaaa",
+              "background": "#0e0e0e",
+              "on-secondary-fixed-variant": "#922d2f",
+              "primary": "#ff8f6f",
+              "surface-container-low": "#131313",
+              "primary-fixed": "#fc8866",
+              "tertiary-container": "#e496fa",
+              "primary-fixed-dim": "#ec7b5a",
+              "secondary": "#ff7f7d",
+              "surface-variant": "#262626",
+              "outline": "#767575",
+              "on-secondary-fixed": "#6a0e16",
+              "surface-dim": "#0e0e0e",
+              "on-error": "#490006",
+              "on-error-container": "#ffa8a3",
+              "on-primary": "#5c1400",
+              "secondary-fixed-dim": "#ffafac",
+              "on-tertiary": "#601a78"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            background-color: #0e0e0e;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- Top Navigation Shell -->
+<nav class="bg-[#0e0e0e]/70 backdrop-blur-xl fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young athletic man with a friendly expression in a modern urban setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALvTNuhz27XEq3JF8FGppVTYWDXVGzuneAvhMJS8Qkw0waC59eAoEpoQcBFFLP2YRanR7XL96DGSOxcTcIV8kfApnwX6EL9aqiN3p09Io9-6ucO_-5wALGGqV5b6dHxBrKR922LYOpqCuzUsibJocrwS8EANqN3cDoZ0j9onYSbD1DfRCDABTxGXRVOzOinoxQJKgvtH-7cD0C--L6vt0-C9IIi67nz-1x09MkWLe-MC-52YY5Nx2gM_X0SIs6d5vbpraDFOyZgHw"/>
+</div>
+<span class="text-2xl font-extrabold tracking-[-0.02em] text-[#D96D4D] font-['Epilogue'] uppercase">KINETIC</span>
+</div>
+<button class="text-gray-400 hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</nav>
+<main class="pt-24 px-6">
+<!-- Header Greeting -->
+<header class="mb-8">
+<h1 class="font-headline font-extrabold text-4xl tracking-tighter mb-2">Hey, Marcus 👋</h1>
+<p class="text-on-surface-variant font-body">Ready to hit the court today?</p>
+</header>
+<!-- Search and Filter Bar -->
+<div class="flex flex-col gap-6 mb-10">
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+</div>
+<input class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search sports in Brooklyn..." type="text"/>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6">
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-primary-container text-on-primary-container font-label text-sm tracking-widest font-semibold border-none">ALL</button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm tracking-widest hover:text-primary transition-colors">BASKETBALL</button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm tracking-widest hover:text-primary transition-colors">SOCCER</button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm tracking-widest hover:text-primary transition-colors">VOLLEYBALL</button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm tracking-widest hover:text-primary transition-colors">TENNIS</button>
+</div>
+</div>
+<!-- Discovery Feed -->
+<section class="space-y-8">
+<div class="flex justify-between items-end mb-4">
+<h2 class="font-headline font-bold text-xl uppercase tracking-tight">Active Arenas</h2>
+<span class="text-primary font-label text-[10px] tracking-widest">SEE ALL</span>
+</div>
+<!-- Game Card 1 -->
+<div class="bg-surface-container-low rounded-[24px] overflow-hidden group">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover" data-alt="Intense basketball action in an urban playground court at night with dramatic overhead floodlights and gritty textures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxf8gBAwYKWM2dpf7mYHcGk6B11VP6fLAEU0POA4AM3LIYvn9acqQj7kYpOQX6U4jOQJ-2q8Yfl1wTQeHkNCnU7BFdz886LHjk3piAtVbLc1xttqApdhjkWCNtxoi0kl9Upv1wSZzQiphB-t_Ulqb6L5hSEAsJ4tyzfTl3cIuyeCGPW3cqsL5-1Kd5v9hSwlRzk1lniDyr_AijpxguepMG40AhEyBJVUn3fm_9mPOhLfYSwDks2iE3psR7Lls5O4B5cbLtke4ypO0"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent"></div>
+<div class="absolute top-4 right-4 bg-surface-container-highest/80 backdrop-blur-md px-3 py-1 rounded-full border border-outline-variant/20">
+<span class="text-[10px] font-label tracking-widest text-secondary font-bold uppercase">Competitive</span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm">sports_basketball</span>
+<h3 class="font-headline font-bold text-lg leading-tight">Elite 5v5 Full Court</h3>
+</div>
+<div class="flex items-center text-on-surface-variant text-sm gap-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>The Cage, Manhattan · 0.8 mi</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between mt-6">
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-[10px] font-label tracking-widest uppercase mb-1">Time</span>
+<span class="font-body font-semibold text-sm">Today, 6:00 PM</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-on-surface-variant text-[10px] font-label tracking-widest uppercase mb-1">Players</span>
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-low overflow-hidden"><img class="w-full h-full object-cover" data-alt="Player profile thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJnqeRGqTOVwJ0v0LVLeB-qItnbphGSYxXtzwvnsA-nQBr7wBbclbXNjlqgGcNz1Zx7QAyiUQ9g2OPDiH3jbj84cBKbePuTjn40KQ7L_iNxVyIoAdu1M61CdRYpwwYDKLndYf_z7RITqXZMVWaZYSpBmba5O9JJ5wEwIUfYJIktIfrlrw5Hrwf5VPWS_xKcZ4fLDGwP8T_kC4qqWrxhTo_-2fCaporpDYPtVCnqE6Y6dZprMIdnefHw-H5cYNYE_Ok5vQI2rxFGaM"/></div>
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-low overflow-hidden"><img class="w-full h-full object-cover" data-alt="Player profile thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBUXP34tHM9KRYqHqefSUoeboGd2hEvEha8_HqCL9CGMM8gIu4WhtV6L3Q3LC0nrJ76Tyoeigcu_PyhT3Bn7AZy_XneJZ-0-227OT1V47KgWeUYjWWpKyY2hvThcKmd5yzfEFs-D5jXDZgy_6S6-_TqvA9WlsEdn-DphcuFykVsj6e-lPxkMmRKrWme_k7erQFNmYytgQYJHAeBEqUxdEkAPbcIYTuGhEVq00krYUXKgUbIXWgOCNbUUBJJt5i5mFV4wSOEhK0mXE"/></div>
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[8px]">+6</div>
+</div>
+<span class="font-body font-bold text-sm">8/10</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 bg-primary text-on-primary py-4 rounded-xl font-headline font-bold uppercase tracking-widest text-sm hover:scale-[0.98] active:scale-95 transition-all shadow-[0_12px_24px_rgba(255,143,111,0.15)]">
+                        JOIN GAME
+                    </button>
+</div>
+</div>
+<!-- Game Card 2 -->
+<div class="bg-surface-container-low rounded-[24px] overflow-hidden group">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover" data-alt="Green soccer pitch at twilight with high contrast lighting and sharp focus on the ball near the white goal line" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDpG_m8ZA9F70ECt7fVh71COYacDpDDlhvRGthFa_E-EgK0eJhmL9WFnfnVU6JigNigqfbL_J_BoUuDWDxEifcvsNxSesSWmOfgTJLFPcjLba17LCz0iW_Di8jsPui-PV18D71zt4LjNTuu1Z_OZQy8i0AEHwMuHIkCogWBwo1emcxdS9JqaiCAMFhNMLKvE1HG-5tV_w97BlYbfDw9PWMCEWtmoydTUOgVkyWmOm9vqCYMuYAsrQ6aMq_eC1wXjyHOOdRkspqX70"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent"></div>
+<div class="absolute top-4 right-4 bg-surface-container-highest/80 backdrop-blur-md px-3 py-1 rounded-full border border-outline-variant/20">
+<span class="text-[10px] font-label tracking-widest text-primary-dim font-bold uppercase">Casual</span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm">sports_soccer</span>
+<h3 class="font-headline font-bold text-lg leading-tight">Sunset Scrimmage</h3>
+</div>
+<div class="flex items-center text-on-surface-variant text-sm gap-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>Prospect Park · 1.2 mi</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between mt-6">
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-[10px] font-label tracking-widest uppercase mb-1">Time</span>
+<span class="font-body font-semibold text-sm">Sat, 5:30 PM</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-on-surface-variant text-[10px] font-label tracking-widest uppercase mb-1">Players</span>
+<div class="flex items-center gap-2">
+<span class="font-body font-bold text-sm">12/16 joined</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 bg-surface-container-highest text-primary py-4 rounded-xl font-headline font-bold uppercase tracking-widest text-sm hover:bg-surface-bright transition-all">
+                        JOIN GAME
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#0e0e0e]/70 backdrop-blur-xl rounded-t-[24px] shadow-[0_-12px_24px_rgba(217,109,77,0.08)]">
+<button class="flex flex-col items-center justify-center text-[#D96D4D] drop-shadow-[0_0_10px_rgba(217,109,77,0.4)] scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">map</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined text-4xl">add_circle</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">group</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+</nav>
+</body></html>
+
+<!-- Games Nearby -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#d7383b",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-container": "#550b6d",
+              "inverse-primary": "#9f4225",
+              "on-tertiary-fixed": "#320043",
+              "error": "#ff716c",
+              "on-background": "#ffffff",
+              "surface-bright": "#2c2c2c",
+              "primary-dim": "#ef7e5d",
+              "surface-container": "#1a1919",
+              "error-container": "#9f0519",
+              "on-secondary-container": "#ffc1be",
+              "on-tertiary-fixed-variant": "#5f1977",
+              "inverse-surface": "#fcf9f8",
+              "outline-variant": "#484847",
+              "inverse-on-surface": "#565555",
+              "surface-container-high": "#201f1f",
+              "on-primary-fixed": "#1f0300",
+              "tertiary-dim": "#d589eb",
+              "tertiary-fixed": "#e496fa",
+              "secondary-fixed": "#ffc3c0",
+              "surface-tint": "#ff8f6f",
+              "secondary-container": "#842326",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#f57775",
+              "on-primary-fixed-variant": "#641700",
+              "tertiary-fixed-dim": "#d589eb",
+              "on-primary-container": "#470e00",
+              "primary-container": "#f2815f",
+              "surface": "#0e0e0e",
+              "on-secondary": "#58000b",
+              "tertiary": "#eda8ff",
+              "on-surface": "#ffffff",
+              "on-surface-variant": "#adaaaa",
+              "background": "#0e0e0e",
+              "on-secondary-fixed-variant": "#922d2f",
+              "primary": "#ff8f6f",
+              "surface-container-low": "#131313",
+              "primary-fixed": "#fc8866",
+              "tertiary-container": "#e496fa",
+              "primary-fixed-dim": "#ec7b5a",
+              "secondary": "#ff7f7d",
+              "surface-variant": "#262626",
+              "outline": "#767575",
+              "on-secondary-fixed": "#6a0e16",
+              "surface-dim": "#0e0e0e",
+              "on-error": "#490006",
+              "on-error-container": "#ffa8a3",
+              "on-primary": "#5c1400",
+              "secondary-fixed-dim": "#ffafac",
+              "on-tertiary": "#601a78"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0e0e0e;
+            width: 390px;
+            height: 844px;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+        }
+        .map-gradient-overlay {
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(14, 14, 14, 0.4) 100%);
+        }
+        .custom-marker-shadow {
+            filter: drop-shadow(0 0 8px rgba(217, 109, 77, 0.6));
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body text-on-surface">
+<!-- Top Navigation Bar -->
+<header class="bg-[#0e0e0e]/70 backdrop-blur-xl fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a young athletic man with a determined expression, urban concrete background, cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD2VoOS5mnppCoXByoPSVOiwxN6yeJnDKtm7-Q2Z5maKlCJqXWCZkdeDRVKljOse4ioqBt_AARQXk7hJoIExz5QmezO8kirmCCngLIF7kpFX1j06L0t08Nspwo_v5I-kAH8Yu05BXIvhvgnUUoUTOBkwERaGhIVMBY4ws7IYN-KikPZs4LxcsLIoYYl5tZEwFwnKcBulwtoDVA92J2sdEh7ti5BycFAyS0jwFv3msywxlZ_RaaQlrLhzi7j9BDasfTLqjxVyePcLM"/>
+</div>
+<h1 class="font-['Epilogue'] font-extrabold tracking-tighter uppercase text-2xl text-[#D96D4D]">KINETIC</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#D96D4D] hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Map Canvas (Full Screen) -->
+<main class="absolute inset-0 z-0">
+<div class="relative w-full h-full">
+<img class="w-full h-full object-cover grayscale contrast-125 brightness-50" data-alt="Atmospheric dark night-time aerial map view of an urban grid with glowing orange street lights and deep black shadows" data-location="New York City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzWJRbJ34-vS0N3ej7V_md-9qT0VYOgIQt7SdfPXq-oxQablHC1KlQdN9aoLqjxSFWB1vFR3UXKVWuFaIPMvOr0N79G2fnmKqV8akm_Mwq8GXPhTPuu3LML8wI6PaaKxUSA5adfi53fG8_qJNO5SMMtB06rENIKTzYwb81bj9u1EVKGv2g9KLfRtrucY7s6JOC42wTnIEMCZOGyh-RzrPkB0fwC9reV3iGcffkqKAICVnqe1s9gOjkTSFAhLB2gzfb6A0k_LZyqcc"/>
+<div class="absolute inset-0 map-gradient-overlay pointer-events-none"></div>
+<!-- View Toggle -->
+<div class="absolute top-24 left-1/2 -translate-x-1/2 z-10">
+<div class="flex bg-surface-container-highest/80 backdrop-blur-md p-1 rounded-full border border-outline-variant/20">
+<button class="px-6 py-2 rounded-full text-sm font-label font-medium tracking-wider bg-primary text-on-primary transition-all duration-200">MAP</button>
+<button class="px-6 py-2 rounded-full text-sm font-label font-medium tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-200">LIST</button>
+</div>
+</div>
+<!-- Floating Map Markers -->
+<!-- Marker 1 (Active/Nearest) -->
+<div class="absolute top-[45%] left-[30%] -translate-x-1/2 -translate-y-1/2 group">
+<div class="relative flex flex-col items-center">
+<div class="bg-primary text-on-primary p-2 rounded-full custom-marker-shadow scale-110">
+<span class="material-symbols-outlined text-xl" data-icon="sports_basketball" style="font-variation-settings: 'FILL' 1;">sports_basketball</span>
+</div>
+<div class="w-0.5 h-3 bg-primary"></div>
+<div class="absolute -top-12 whitespace-nowrap bg-surface-container-highest text-primary px-3 py-1 rounded-lg text-xs font-bold border border-primary/30">
+                        ROOFTOP RUMBLE
+                    </div>
+</div>
+</div>
+<!-- Marker 2 -->
+<div class="absolute top-[32%] left-[65%] -translate-x-1/2 -translate-y-1/2">
+<div class="relative flex flex-col items-center opacity-70">
+<div class="bg-surface-container-highest text-primary p-2 rounded-full border border-primary/40">
+<span class="material-symbols-outlined text-xl" data-icon="sports_soccer">sports_soccer</span>
+</div>
+<div class="w-0.5 h-2 bg-primary/40"></div>
+</div>
+</div>
+<!-- Marker 3 -->
+<div class="absolute top-[58%] left-[72%] -translate-x-1/2 -translate-y-1/2">
+<div class="relative flex flex-col items-center opacity-70">
+<div class="bg-surface-container-highest text-primary p-2 rounded-full border border-primary/40">
+<span class="material-symbols-outlined text-xl" data-icon="fitness_center">fitness_center</span>
+</div>
+<div class="w-0.5 h-2 bg-primary/40"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Drawer/Sheet -->
+<section class="fixed bottom-24 left-0 w-full z-40 px-6">
+<div class="bg-surface-container-highest/90 backdrop-blur-2xl rounded-[32px] p-5 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] border-t border-outline-variant/10">
+<!-- Drag Handle -->
+<div class="flex justify-center mb-4">
+<div class="w-12 h-1 bg-outline-variant/40 rounded-full"></div>
+</div>
+<!-- Card Content -->
+<div class="flex gap-4">
+<div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
+<img alt="Rooftop Court" class="w-full h-full object-cover" data-alt="Cinematic wide angle shot of a gritty rooftop basketball court at twilight with glowing orange city lights in background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGRhSZV8tKYQC4t0rl5JqYfNosIAcZ_xlu1fW7QrRv89zY3j2CPY6S5JhH6NxiLGqSui1w0MEcientPkLfCBSououCF0Uev7wOYhWdTd5q1PIjZ9Q4uvHHhLBGkFAjBJZOlgCGclrNu_lwIxYBuUDURzVo7svqYdNjHxnEu6A8u8vA-YxpZknSnVNOSAwY0nwdVKKxfrccs4XV0q1fCO5QFhI9hl9ks5k9N_JDE79-yk6i8cVFh4fxl6tA4KCkxN4tQdFLslESQnk"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<span class="bg-secondary/20 text-secondary text-[10px] font-label font-bold px-2 py-0.5 rounded-full flex items-center gap-1 mb-1">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span> LIVE
+                        </span>
+<span class="text-on-surface-variant text-xs">0.4 miles away</span>
+</div>
+<h3 class="font-headline text-lg leading-tight mb-1">ROOFTOP RUMBLE</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+                        Skyline Courts, NYC
+                    </p>
+</div>
+</div>
+<!-- Footer Stats -->
+<div class="flex justify-between items-center mt-5 pt-4 border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<img class="w-7 h-7 rounded-full border-2 border-surface-container-highest object-cover" data-alt="Avatar of male athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABQIJPmI6oJw7bb3KpaTq60_hQJIn3h4-qT74d1nY2EqDOkz9GEC5MZivbMQBFYY3t7VN0n3mV0VudEtNX6MH7-sxpnRf_uN1IOJfn6CKTau_pS-8CRe1tCgkKhbVnznO-LVStfpQv28paKRZzROyoRw_PsBdLRbPHX6J28BamBRWWxy9o1mtygcwWSiuZU2H-jIj1mEwcA2NwLUeVSakdUXtXJ4LIWmAII8UQK4PPBqQhJCkgZcWZVyZCuvcsOgna-LVkEa19QD0"/>
+<img class="w-7 h-7 rounded-full border-2 border-surface-container-highest object-cover" data-alt="Avatar of female athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgFiJUFUWRwj4eHQVg8yLcPyG0eTOJ0zG_wwT5s2KGfpkpNHe0QhHvLs7QX5JisQoNfafnrJxl7NUkOsIJOdyEaMlYBuMbNHC5Q0fbAUGUscpjk7FhpiUIarlFQiOYv7NH9bDL1BUk8eI-uHyVZsBbkqPnFWYhnUDqvgxr7SLE-b5-nEuU0dcrDNl_6E0dl8bzNxp4wNYIdWNcO8Cfh8ppn3DAYwf87b_OT46q61cu6owD3x9ngkH84L-sfcPS4iwCLSDtc94eBps"/>
+<img class="w-7 h-7 rounded-full border-2 border-surface-container-highest object-cover" data-alt="Avatar of male athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTGdF_Uw3gwo_5mnlL_zYIaq1IikHY6Z36lE2WdXiK6fnw-oabTiDfCxZQJqIGONL56phZqlXaND0dmQLoObxXwG_bWHSOZhgb-so-6Lxrps0Atuq0380BElbazDMl7hnvBeglDwy4arcBl1p3nKLPs0ZrIyLsurMjUw_4kUVHJ34PPSXGuj_qle--TqhgpvCESw3oS0dPlVcHXugLyKWwfovYAvgxehjsNLqrmZClHNjmDdQYwDTPXZ7TtTNfsY77nNqcmVazLro"/>
+<div class="w-7 h-7 rounded-full bg-surface-container border-2 border-surface-container-highest flex items-center justify-center text-[8px] font-bold">+5</div>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-xl font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 active:scale-95 transition-all">
+                    JOIN GAME
+                </button>
+</div>
+</div>
+</section>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#0e0e0e]/70 backdrop-blur-xl rounded-t-[24px] shadow-[0_-12px_24px_rgba(217,109,77,0.08)]">
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#D96D4D] drop-shadow-[0_0_10px_rgba(217,109,77,0.4)] scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="map" style="font-variation-settings: 'FILL' 1;">map</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</button>
+<button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#D96D4D] transition-colors scale-110 active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</nav>
+</body></html>
+
+<!-- Welcome to Pickup Sports Finder -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-dim": "#d7383b",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-container": "#550b6d",
+              "inverse-primary": "#9f4225",
+              "on-tertiary-fixed": "#320043",
+              "error": "#ff716c",
+              "on-background": "#ffffff",
+              "surface-bright": "#2c2c2c",
+              "primary-dim": "#ef7e5d",
+              "surface-container": "#1a1919",
+              "error-container": "#9f0519",
+              "on-secondary-container": "#ffc1be",
+              "on-tertiary-fixed-variant": "#5f1977",
+              "inverse-surface": "#fcf9f8",
+              "outline-variant": "#484847",
+              "inverse-on-surface": "#565555",
+              "surface-container-high": "#201f1f",
+              "on-primary-fixed": "#1f0300",
+              "tertiary-dim": "#d589eb",
+              "tertiary-fixed": "#e496fa",
+              "secondary-fixed": "#ffc3c0",
+              "surface-tint": "#ff8f6f",
+              "secondary-container": "#842326",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#f57775",
+              "on-primary-fixed-variant": "#641700",
+              "tertiary-fixed-dim": "#d589eb",
+              "on-primary-container": "#470e00",
+              "primary-container": "#f2815f",
+              "surface": "#0e0e0e",
+              "on-secondary": "#58000b",
+              "tertiary": "#eda8ff",
+              "on-surface": "#ffffff",
+              "on-surface-variant": "#adaaaa",
+              "background": "#0e0e0e",
+              "on-secondary-fixed-variant": "#922d2f",
+              "primary": "#ff8f6f",
+              "surface-container-low": "#131313",
+              "primary-fixed": "#fc8866",
+              "tertiary-container": "#e496fa",
+              "primary-fixed-dim": "#ec7b5a",
+              "secondary": "#ff7f7d",
+              "surface-variant": "#262626",
+              "outline": "#767575",
+              "on-secondary-fixed": "#6a0e16",
+              "surface-dim": "#0e0e0e",
+              "on-error": "#490006",
+              "on-error-container": "#ffa8a3",
+              "on-primary": "#5c1400",
+              "secondary-fixed-dim": "#ffafac",
+              "on-tertiary": "#601a78"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-blur-overlay {
+            background: linear-gradient(180deg, rgba(14, 14, 14, 0.4) 0%, rgba(14, 14, 14, 0.95) 85%);
+        }
+        .orange-glow {
+            filter: blur(80px);
+            background: radial-gradient(circle, rgba(255, 143, 111, 0.15) 0%, rgba(255, 143, 111, 0) 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body antialiased overflow-hidden">
+<!-- Onboarding Container (390x844px context) -->
+<main class="relative h-screen w-full max-w-[390px] mx-auto overflow-hidden bg-surface-container-lowest">
+<!-- Background Action Image -->
+<div class="absolute inset-0 z-0">
+<img alt="Blurred action shot of a basketball player mid-air in an urban court setting" class="w-full h-full object-cover blur-[2px]" data-alt="dramatic low-angle shot of a basketball player jumping towards the hoop at dusk, urban court setting with moody city lights and motion blur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC57Qrn9Ekhhm__I2b-tQyjU98aHZlDPCUFB9KxLryZWS8hUqpimsZlEwQ00dI9bF8cB2CABAWzHiolKzaokmJ3Jb6ggxF3tpMyE0ISOR0U9WGekGrbODdrtbU7KI5BaA57mrfs2RP8Zwpv_g2NnTrWo_8NqzuNjmtPNgeiCUHEBkwLQQBvV_CjJy0zm_-YER22E767b7cob9XfWv7UuC1xw7mQK23JPL1u3ZsoIq1idRqYxqdR0jjjzfEsvIl9DbEX7kHaHuOysVQ"/>
+<div class="absolute inset-0 kinetic-blur-overlay"></div>
+</div>
+<!-- Signature Glow Effect -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none z-10 orange-glow"></div>
+<!-- Content Canvas -->
+<div class="relative z-20 h-full flex flex-col justify-between px-6 pt-20 pb-12">
+<!-- Branding Section -->
+<div class="space-y-6">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center transform -rotate-12">
+<span class="material-symbols-outlined text-on-primary font-bold" data-icon="bolt">bolt</span>
+</div>
+<h1 class="font-headline font-extrabold text-4xl tracking-tighter text-primary uppercase">
+                        KINETIC
+                    </h1>
+</div>
+<div class="space-y-3">
+<h2 class="font-headline font-bold text-5xl leading-[0.95] tracking-tight">
+                        Find your <span class="text-primary-dim">game.</span><br/>
+                        Join your <span class="text-secondary">crew.</span>
+</h2>
+<p class="text-on-surface-variant font-body text-lg leading-relaxed max-w-[280px]">
+                        The ultimate arena for urban athletes and street sports enthusiasts.
+                    </p>
+</div>
+</div>
+<!-- Bottom Action Cluster -->
+<div class="space-y-4">
+<!-- Social Proof / Context Layering -->
+<div class="flex items-center gap-3 py-4">
+<div class="flex -space-x-3">
+<img alt="User profile" class="w-10 h-10 rounded-full ring-2 ring-background object-cover" data-alt="close-up portrait of a young athletic man with sweat on brow, intense focused expression, outdoor urban lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK2IU8kQHMVGYrdDBKjY0hVlJn_K9ZI33giJ_3isEddyTlAW64M_nLyV6YLmsqxs-FC0uY7ut_IYuayfcJ4Zr4Uit_buo4vHAgQ82vXVwN1EXz5qxFLZOVFIsEz2k_7PMKcfRzBCvQ3r7KXqg2u8H89muLbQlQtyNm4IFKUOpNGARnPYnzuBqANJp_FOHA4RN-cj7gDrGXBd3xOPFPO31z_AjZ2Nbvq0PuVW2Avb2Gais9co8OAjkAsoF2t5AttqOtB_9RiH1eyBU"/>
+<img alt="User profile" class="w-10 h-10 rounded-full ring-2 ring-background object-cover" data-alt="young woman with braided hair, athletic wear, smiling confidently in an urban gym setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDrSWB02V5j1MBg8ysTCyzAhLlw0jTKiD6F7mffgPYDhCVexhjTpRDHaWJCdeTD5dqQQi3e7AarpzWtj-PYfWrQt48o0Pty0t-xvGjvmAWLCkic3TPpCx_S2cpFfP3fQwvr6oETeLmtGDtFEGA1XmzU6DsR3GIrAb-qRvISIY3cdPuPJZodm_WCuaPh2-nBSdPyNTqVtMPt7epL2lJnLkYpf8RvNfzQJi9O5OjmJnSiVzX1IaSgY5yKTt2ctMD_oGdhQb-ldOXmtA"/>
+<img alt="User profile" class="w-10 h-10 rounded-full ring-2 ring-background object-cover" data-alt="portrait of a focused female athlete in street sports apparel, vibrant city background with soft bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDd_JVEfbI_BDwJOumRamQaefUQXgMJGzqzQY5V6cbmTt75yVF0T3sojjVEvXYfUGQMkc3AKxLeIE-fiseRNtGElRIp0Ts5oNM1iNXDh7QEceELHKBMMj-QkckHkSxQ-YRMIJ-D7VErMRZ03SdVDrVqedFpkhSpwcYgkr_eGn7eF7nQVbGEdfzEi7kb97G5UQsIqIFmWFPf1VdFxKUt6z1hk3PlciN8jZxTNOXY4hx9OyD3u616_5iS_Oy67w47so_x6LgqQ7APImg"/>
+<div class="w-10 h-10 rounded-full ring-2 ring-background bg-surface-bright flex items-center justify-center">
+<span class="text-[10px] font-bold">+2k</span>
+</div>
+</div>
+<p class="text-label-sm font-label text-xs tracking-widest text-on-surface-variant uppercase">
+                        Active in your area
+                    </p>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary font-headline font-bold py-5 rounded-xl flex items-center justify-center gap-2 group active:scale-95 transition-all shadow-[0_12px_24px_rgba(255,143,111,0.2)]">
+                    FIND A GAME
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- Secondary Action -->
+<button class="w-full bg-surface-container-highest text-primary font-headline font-bold py-5 rounded-xl active:scale-95 transition-all">
+                    SIGN UP
+                </button>
+<!-- Legal/Footer -->
+<p class="text-center text-[10px] text-outline font-label uppercase tracking-widest pt-4 opacity-50">
+                    By continuing you agree to our terms of service
+                </p>
+</div>
+</div>
+</main>
+<!-- Navigation Suppressed for Onboarding Screen per UI Rules -->
+</body></html>

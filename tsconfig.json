@@ -15,6 +15,18 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"],
+  "include": [
+    "src/main.tsx",
+    "src/vite-env.d.ts",
+    "src/app/App.tsx",
+    "src/app/routes.tsx",
+    "src/app/context/**/*.ts",
+    "src/app/context/**/*.tsx",
+    "src/app/pages/**/*.ts",
+    "src/app/pages/**/*.tsx",
+    "src/app/components/layout.tsx",
+    "src/app/components/game-card.tsx",
+    "src/app/components/ui/sonner.tsx"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
