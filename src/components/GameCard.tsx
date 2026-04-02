@@ -1,5 +1,5 @@
 import React from 'react';
-import { Game } from '../types';
+import { Game } from '../types/game';
 
 interface GameCardProps {
   game: Game;
@@ -8,10 +8,14 @@ interface GameCardProps {
 const GameCard: React.FC<GameCardProps> = ({ game }) => {
   return (
     <div className="game-card">
-      <h2>{game.title}</h2>
-      <p>{game.description}</p>
-      <p>{game.date}</p>
-      <p>{game.location}</p>
+      <h3>{game.sport}</h3>
+      <p>Location: {game.location}</p>
+      <p>Date/Time: {new Date(game.dateTime).toLocaleString()}</p>
+      <p>Organizer: {game.organizer}</p>
+      <p>
+        Players Joined: {game.playersJoined}/{game.maxPlayers}
+      </p>
+      <button className="join-button">Join</button>
     </div>
   );
 };

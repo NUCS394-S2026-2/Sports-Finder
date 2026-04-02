@@ -1,27 +1,28 @@
-import './styles/App.css';
-import PostGameForm from './components/PostGameForm';
-import GameCard from './components/GameCard';
-import { useGames } from './hooks/useGames';
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import FindGames from './pages/FindGames';
+import PostGame from './pages/PostGame';
+import About from './pages/About';
+import './styles/globals.css';
 
-function App() {
-  const { games } = useGames();
-
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>🏀 Pickup Sports Finder</h1>
-        <p>Find and post pickup games in your city</p>
-      </header>
-      <main>
-        <PostGameForm />
-        <div className="game-list">
-          {games.map((game) => (
-            <GameCard key={game.id} game={game} />
-          ))}
-        </div>
-      </main>
-    </div>
+    <Router>
+      <div>
+        <Navbar />
+        <Switch>
+          <Route path="/" exact component={Home} />
+          <Route path="/find-games" component={FindGames} />
+          <Route path="/post-game" component={PostGame} />
+          <Route path="/about" component={About} />
+        </Switch>
+        <Footer />
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
