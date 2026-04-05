@@ -1,36 +1,46 @@
 import './App.css';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { GameCard } from './components/GameCard';
 import { GameForm } from './components/GameForm';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
-import {
-  ageRanges,
-  emptyDraft,
-  featuredSports,
-  genders,
-  initialGames,
-  skillLevels,
-} from './data';
+import { ageRanges, emptyDraft, featuredSports, genders, skillLevels } from './data';
 import { toLocalDateTimeValue } from './lib/datetime';
+import { createGame, fetchGames, joinGame } from './lib/games';
 import type { GameDraft, PickupGame } from './types';
 
 type TagValue<T extends string> = 'All' | T;
 
 function App() {
   const [view, setView] = useState<ViewName>('home');
-  const [games, setGames] = useState<PickupGame[]>(initialGames);
+  const [games, setGames] = useState<PickupGame[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     skillLevel: 'All' as TagValue<PickupGame['skillLevel']>,
     ageRange: 'All' as TagValue<PickupGame['ageRange']>,
     gender: 'All' as TagValue<PickupGame['gender']>,
   });
-  const [draft, setDraft] = useState<GameDraft>(() => ({
+  const [draft, setDraft] = useState<GameDraft>({
     ...emptyDraft,
     startTime: toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000)),
-  }));
+  });
+
+  useEffect(() => {
+    async function loadGames() {
+      try {
+        const data = await fetchGames();
+        setGames(data);
+      } catch (err) {
+        console.error('Failed to load games:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGames();
+  }, []);
 
   const upcomingGames = useMemo(() => games.slice(0, 2), [games]);
 
@@ -45,37 +55,42 @@ function App() {
     });
   }, [filters, games]);
 
-  function handleJoinGame(id: number) {
-    setGames((currentGames) =>
-      currentGames.map((game) =>
-        game.id === id && game.spotsFilled < game.capacity
-          ? { ...game, spotsFilled: game.spotsFilled + 1 }
-          : game,
-      ),
-    );
+  async function handleJoinGame(id: string) {
+    try {
+      await joinGame(id);
+      const updated = await fetchGames();
+      setGames(updated);
+    } catch (err) {
+      console.error('Failed to join game:', err);
+    }
   }
 
-  function handleCreateGame() {
-    const nextGame: PickupGame = {
-      id: Date.now(),
-      sport: draft.sport.trim() || 'Basketball',
-      location: draft.location.trim() || 'New local venue',
-      startTime: draft.startTime,
-      capacity: Math.max(2, Math.round(draft.capacity)),
-      spotsFilled: 0,
-      organizer: draft.organizer.trim() || 'Community host',
-      note: draft.note.trim() || 'Bring water and arrive a few minutes early.',
-      skillLevel: draft.skillLevel,
-      ageRange: draft.ageRange,
-      gender: draft.gender,
-    };
+  async function handleCreateGame() {
+    try {
+      await createGame(draft);
+      const updated = await fetchGames();
+      setGames(updated);
 
-    setGames((currentGames) => [nextGame, ...currentGames]);
-    setDraft({
-      ...emptyDraft,
-      startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
-    });
-    setView('find');
+      setDraft({
+        ...emptyDraft,
+        startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
+      });
+      setView('find');
+    } catch (err) {
+      console.error('Failed to create game:', err);
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="app-shell">
+        <div className="app-background" aria-hidden="true" />
+        <Toolbar activeView={view} onNavigate={setView} />
+        <section className="page-panel">
+          <p>Loading games...</p>
+        </section>
+      </main>
+    );
   }
 
   const homeSection = (
@@ -244,9 +259,7 @@ function App() {
   return (
     <main className="app-shell">
       <div className="app-background" aria-hidden="true" />
-
       <Toolbar activeView={view} onNavigate={setView} />
-
       {currentSection}
     </main>
   );

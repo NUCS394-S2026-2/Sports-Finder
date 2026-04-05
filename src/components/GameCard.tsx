@@ -3,7 +3,7 @@ import type { PickupGame } from '../types';
 
 type GameCardProps = {
   game: PickupGame;
-  onJoin: (id: number) => void;
+  onJoin: (id: string) => void;
 };
 
 export function GameCard({ game, onJoin }: GameCardProps) {
