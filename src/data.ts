@@ -9,7 +9,7 @@ export const featuredSports: SportName[] = [
 
 export const initialGames: PickupGame[] = [
   {
-    id: 1,
+    id: '1',
     sport: 'Basketball',
     location: 'West Campus Courts',
     startTime: '2026-04-01T17:30',
@@ -22,7 +22,7 @@ export const initialGames: PickupGame[] = [
     gender: 'Mixed',
   },
   {
-    id: 2,
+    id: '2',
     sport: 'Soccer',
     location: 'Riverside Turf Field',
     startTime: '2026-04-01T18:15',
@@ -35,7 +35,7 @@ export const initialGames: PickupGame[] = [
     gender: 'Open',
   },
   {
-    id: 3,
+    id: '3',
     sport: 'Volleyball',
     location: 'Student Center Gym B',
     startTime: '2026-04-01T19:00',

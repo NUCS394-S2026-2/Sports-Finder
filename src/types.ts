@@ -1,7 +1,7 @@
 export type SportName = 'Basketball' | 'Soccer' | 'Football' | 'Volleyball' | string;
 
 export type PickupGame = {
-  id: number;
+  id: string;
   sport: SportName;
   location: string;
   startTime: string;
