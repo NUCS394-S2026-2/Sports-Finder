@@ -1,16 +1,36 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import App from './App';
+import { initialGames } from './data';
+import { createGame, fetchGames, joinGame } from './lib/games';
+import type { PickupGame } from './types';
+
+vi.mock('./lib/games', () => ({
+  fetchGames: vi.fn(),
+  createGame: vi.fn(),
+  joinGame: vi.fn(),
+}));
+
+const mockedFetchGames = vi.mocked(fetchGames);
+const mockedCreateGame = vi.mocked(createGame);
+const mockedJoinGame = vi.mocked(joinGame);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockedFetchGames.mockResolvedValue(initialGames as PickupGame[]);
+  mockedCreateGame.mockResolvedValue();
+  mockedJoinGame.mockResolvedValue();
+});
 
 describe('App', () => {
-  test('renders the toolbar and homepage', () => {
+  test('renders the toolbar and homepage', async () => {
     render(<App />);
 
-    expect(screen.getByRole('button', { name: 'Homepage' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Homepage' })).toBeInTheDocument();
     expect(
-      screen.getByText(/Find a pickup game without digging through group chats/i),
+      await screen.findByText(/Find a pickup game without digging through group chats/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Find local games' })).toBeInTheDocument();
   });
@@ -19,6 +39,8 @@ describe('App', () => {
     const user = userEvent.setup();
 
     render(<App />);
+
+    await screen.findByRole('button', { name: 'Homepage' });
 
     await user.click(screen.getByRole('button', { name: 'Find Local Games' }));
 
@@ -32,7 +54,27 @@ describe('App', () => {
   test('can add a new pickup game to the local games grid', async () => {
     const user = userEvent.setup();
 
+    const newGame: PickupGame = {
+      id: 'new-game-id',
+      sport: 'Basketball',
+      location: 'North Field',
+      startTime: '2026-04-02T18:30',
+      capacity: 8,
+      spotsFilled: 0,
+      organizer: 'Taylor',
+      note: 'Bring water and cleats.',
+      skillLevel: 'Advanced',
+      ageRange: '35-44',
+      gender: 'Mixed',
+    };
+
+    mockedFetchGames
+      .mockResolvedValueOnce(initialGames as PickupGame[])
+      .mockResolvedValueOnce([newGame, ...(initialGames as PickupGame[])]);
+
     render(<App />);
+
+    await screen.findByRole('button', { name: 'Homepage' });
 
     await user.click(screen.getByRole('button', { name: 'Create a Game' }));
     await user.type(screen.getByLabelText(/location/i), 'North Field');
@@ -49,13 +91,17 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /publish game/i }));
 
-    expect(screen.getByRole('heading', { name: 'North Field' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'North Field' }),
+    ).toBeInTheDocument();
   });
 
   test('shows the about page mission statement', async () => {
     const user = userEvent.setup();
 
     render(<App />);
+
+    await screen.findByRole('button', { name: 'Homepage' });
 
     await user.click(screen.getByRole('button', { name: /about/i }));
 
