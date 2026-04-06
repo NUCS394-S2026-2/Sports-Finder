@@ -105,7 +105,7 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /about/i }));
 
-    expect(screen.getByRole('heading', { name: /why this exists/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /who are we/i })).toBeInTheDocument();
     expect(
       screen.getByText(/make recreational sports more accessible/i),
     ).toBeInTheDocument();

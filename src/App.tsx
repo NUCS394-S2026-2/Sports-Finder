@@ -99,7 +99,7 @@ function App() {
         <p className="eyebrow">Homepage</p>
         <h1>Find a pickup game without digging through group chats.</h1>
         <p className="hero-text">
-          Play Local helps adults discover casual recreational sports nearby, join a
+          Sports Finder helps adults discover casual recreational sports nearby, join a
           roster that fits, and post a new game when the court or field needs one more
           player.
         </p>
@@ -125,11 +125,11 @@ function App() {
       <div className="home-upcoming">
         <div className="section-header compact">
           <div>
-            <p className="eyebrow">Upcoming games</p>
-            <h2>Tonight and tomorrow</h2>
+            <p className="eyebrow">Want to Join?</p>
+            <h2>Upcoming Games</h2>
           </div>
           <p className="section-copy">
-            A couple of active games to show what is happening right now.
+            Checkout the Find Local Games tab for more options.
           </p>
         </div>
 
@@ -232,16 +232,29 @@ function App() {
     <section className="page-panel about-layout">
       <div className="about-card">
         <p className="eyebrow">About</p>
-        <h2>Why this exists</h2>
+        <h2>Who Are We?</h2>
         <p>
-          The idea comes from how hard it can be to turn casual interest into an actual
-          game. Adults often want a low-friction way to find a court, fill a roster, and
-          know they are joining a group that feels like a fit.
+          We&apos;re a group of students and sports enthusiasts who believe that staying
+          active shouldn&apos;t feel like a chore — or a challenge to figure out. Born out
+          of a shared frustration with how hard it can be for adults to find local games,
+          leagues, and courts, we built SportsFinder to make getting moving as easy as
+          possible. Whether you&apos;re a seasoned athlete or just looking to try
+          something new, we&apos;re here to connect you with the sports community right in
+          your backyard.
         </p>
+        <br></br>
+        <h2>Our Mission</h2>
         <p>
           Our mission is to make recreational sports more accessible, welcoming, and
           easier to join for adults who want to stay active, meet people, and play without
           unnecessary barriers.
+        </p>
+        <br></br>
+        <h2>Why This Exists</h2>
+        <p>
+          The idea comes from how hard it can be to turn casual interest into an actual
+          game. Adults often want a low-friction way to find a court, fill a roster, and
+          know they are joining a group that feels like a fit.
         </p>
       </div>
     </section>
