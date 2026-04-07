@@ -1,17 +1,45 @@
+import type { KeyboardEvent } from 'react';
+
 import { formatGameTime } from '../lib/datetime';
 import type { PickupGame } from '../types';
 
 type GameCardProps = {
   game: PickupGame;
   onJoin: (id: string) => void;
+  onOpen?: (game: PickupGame) => void;
+  cardId?: string;
+  highlighted?: boolean;
 };
 
-export function GameCard({ game, onJoin }: GameCardProps) {
+export function GameCard({
+  game,
+  onJoin,
+  onOpen,
+  cardId,
+  highlighted = false,
+}: GameCardProps) {
   const spotsRemaining = game.capacity - game.spotsFilled;
   const isFull = spotsRemaining <= 0;
+  const clickableProps = onOpen
+    ? {
+        onClick: () => onOpen(game),
+        onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpen(game);
+          }
+        },
+        role: 'button' as const,
+        tabIndex: 0,
+      }
+    : {};
 
   return (
-    <article className="game-card">
+    <article
+      id={cardId}
+      className={`game-card${onOpen ? ' game-card-clickable' : ''}${highlighted ? ' game-card-highlighted' : ''}`}
+      {...clickableProps}
+    >
       <div className="game-card-top">
         <span className="sport-pill">{game.sport}</span>
         <span className={isFull ? 'status status-full' : 'status'}>
@@ -46,7 +74,10 @@ export function GameCard({ game, onJoin }: GameCardProps) {
         type="button"
         className="join-button"
         disabled={isFull}
-        onClick={() => onJoin(game.id)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onJoin(game.id);
+        }}
       >
         {isFull ? 'Game full' : 'Join game'}
       </button>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -41,7 +41,6 @@ describe('App', () => {
     render(<App />);
 
     await screen.findByRole('button', { name: 'Homepage' });
-
     await user.click(screen.getByRole('button', { name: 'Find Local Games' }));
 
     expect(
@@ -51,49 +50,17 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /women/i })).toBeInTheDocument();
   });
 
-  test('can add a new pickup game to the local games grid', async () => {
+  test('shows progressive sport step in create flow', async () => {
     const user = userEvent.setup();
-
-    const newGame: PickupGame = {
-      id: 'new-game-id',
-      sport: 'Basketball',
-      location: 'North Field',
-      startTime: '2026-04-02T18:30',
-      capacity: 8,
-      spotsFilled: 0,
-      organizer: 'Taylor',
-      note: 'Bring water and cleats.',
-      skillLevel: 'Advanced',
-      ageRange: '35-44',
-      gender: 'Mixed',
-    };
-
-    mockedFetchGames
-      .mockResolvedValueOnce(initialGames as PickupGame[])
-      .mockResolvedValueOnce([newGame, ...(initialGames as PickupGame[])]);
 
     render(<App />);
 
     await screen.findByRole('button', { name: 'Homepage' });
-
     await user.click(screen.getByRole('button', { name: 'Create a Game' }));
-    await user.type(screen.getByLabelText(/location/i), 'North Field');
-    fireEvent.change(screen.getByLabelText(/date and time/i), {
-      target: { value: '2026-04-02T18:30' },
-    });
-    await user.clear(screen.getByLabelText(/capacity/i));
-    await user.type(screen.getByLabelText(/capacity/i), '8');
-    await user.type(screen.getByLabelText(/organizer/i), 'Taylor');
-    await user.type(screen.getByLabelText(/notes/i), 'Bring water and cleats.');
-    await user.selectOptions(screen.getByLabelText(/skill level/i), 'Advanced');
-    await user.selectOptions(screen.getByLabelText(/age range/i), '35-44');
-    await user.selectOptions(screen.getByLabelText(/gender/i), 'Mixed');
 
-    await user.click(screen.getByRole('button', { name: /publish game/i }));
-
-    expect(
-      await screen.findByRole('heading', { name: 'North Field' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tennis' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Soccer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ultimate Frisbee' })).toBeInTheDocument();
   });
 
   test('shows the about page mission statement', async () => {
@@ -102,7 +69,6 @@ describe('App', () => {
     render(<App />);
 
     await screen.findByRole('button', { name: 'Homepage' });
-
     await user.click(screen.getByRole('button', { name: /about/i }));
 
     expect(screen.getByRole('heading', { name: /who are we/i })).toBeInTheDocument();

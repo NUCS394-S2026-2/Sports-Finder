@@ -6,8 +6,8 @@ import { GameCard } from './components/GameCard';
 import { GameForm } from './components/GameForm';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
-import { ageRanges, emptyDraft, featuredSports, genders, skillLevels } from './data';
-import { toLocalDateTimeValue } from './lib/datetime';
+import { ageRanges, emptyDraft, genders, skillLevels } from './data';
+import { formatGameTime, toLocalDateTimeValue } from './lib/datetime';
 import { createGame, fetchGames, joinGame } from './lib/games';
 import type { GameDraft, PickupGame } from './types';
 
@@ -26,6 +26,8 @@ function App() {
     ...emptyDraft,
     startTime: toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000)),
   });
+  const [activeGame, setActiveGame] = useState<PickupGame | null>(null);
+  const [focusedGameId, setFocusedGameId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadGames() {
@@ -41,6 +43,30 @@ function App() {
 
     loadGames();
   }, []);
+
+  useEffect(() => {
+    if (view !== 'find' || !focusedGameId) {
+      return;
+    }
+
+    const id = `game-tile-${focusedGameId}`;
+    const tile = document.getElementById(id);
+    if (!tile) {
+      return;
+    }
+
+    tile.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const clearTimer = window.setTimeout(() => setFocusedGameId(null), 2200);
+
+    return () => window.clearTimeout(clearTimer);
+  }, [view, focusedGameId, games]);
+
+  function handleViewGame(gameId: string) {
+    const targetGame = games.find((game) => game.id === gameId) ?? null;
+    setView('find');
+    setFocusedGameId(gameId);
+    setActiveGame(targetGame);
+  }
 
   const upcomingGames = useMemo(() => games.slice(0, 2), [games]);
 
@@ -193,9 +219,89 @@ function App() {
 
       <div className="game-grid">
         {filteredGames.map((game) => (
-          <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
+          <GameCard
+            key={game.id}
+            game={game}
+            onJoin={handleJoinGame}
+            onOpen={setActiveGame}
+            cardId={`game-tile-${game.id}`}
+            highlighted={focusedGameId === game.id}
+          />
         ))}
       </div>
+
+      {activeGame ? (
+        <div className="game-modal-backdrop">
+          <button
+            type="button"
+            className="game-modal-dismiss"
+            onClick={() => setActiveGame(null)}
+            aria-label="Close game details"
+          />
+          <article
+            className="game-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Game details"
+          >
+            <div className="game-card-top">
+              <span className="sport-pill">{activeGame.sport}</span>
+              <span
+                className={
+                  activeGame.capacity - activeGame.spotsFilled <= 0
+                    ? 'status status-full'
+                    : 'status'
+                }
+              >
+                {activeGame.capacity - activeGame.spotsFilled <= 0
+                  ? 'Full'
+                  : `${activeGame.capacity - activeGame.spotsFilled} spots open`}
+              </span>
+            </div>
+
+            <h2>{activeGame.location}</h2>
+            <p className="game-time game-modal-time">
+              {formatGameTime(activeGame.startTime)}
+            </p>
+            <p className="game-note game-modal-note">{activeGame.note}</p>
+
+            <div className="tag-row" aria-label="Game tags">
+              <span className="tag">{activeGame.skillLevel}</span>
+              <span className="tag">Age {activeGame.ageRange}</span>
+              <span className="tag">{activeGame.gender}</span>
+            </div>
+
+            <dl className="game-details">
+              <div>
+                <dt>Organizer</dt>
+                <dd>{activeGame.organizer}</dd>
+              </div>
+              <div>
+                <dt>Players</dt>
+                <dd>
+                  {activeGame.spotsFilled}/{activeGame.capacity}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="join-button"
+                disabled={activeGame.capacity - activeGame.spotsFilled <= 0}
+                onClick={async () => {
+                  await handleJoinGame(activeGame.id);
+                  setActiveGame(null);
+                }}
+              >
+                {activeGame.capacity - activeGame.spotsFilled <= 0
+                  ? 'Game full'
+                  : 'Join game'}
+              </button>
+            </div>
+          </article>
+        </div>
+      ) : null}
 
       {filteredGames.length === 0 ? (
         <div className="empty-state">
@@ -223,7 +329,8 @@ function App() {
         onChange={setDraft}
         onClose={() => setView('find')}
         onSubmit={handleCreateGame}
-        sports={featuredSports}
+        games={games}
+        onViewGame={handleViewGame}
       />
     </section>
   );

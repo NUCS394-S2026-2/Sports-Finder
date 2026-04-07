@@ -14,6 +14,8 @@ import type { GameDraft, PickupGame } from '../types';
 import { toLocalDateTimeValue } from './datetime';
 
 const gamesCollection = collection(db, 'games');
+const allowedSports = ['Tennis', 'Soccer', 'Ultimate Frisbee'] as const;
+const allowedGenders = ['All', 'Women', 'Men'] as const;
 
 type FirestoreGameDoc = Partial<Omit<PickupGame, 'id' | 'startTime'>> & {
   startTime?: Timestamp | string;
@@ -32,10 +34,37 @@ function parseStartTime(value: FirestoreGameDoc['startTime'] | FirestoreGameDoc[
   return toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000));
 }
 
+function parseSport(value: unknown): PickupGame['sport'] {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (allowedSports.includes(trimmed as (typeof allowedSports)[number])) {
+      return trimmed as PickupGame['sport'];
+    }
+  }
+
+  return 'Tennis';
+}
+
+function parseGender(value: unknown): PickupGame['gender'] {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+
+    if (trimmed === 'Open' || trimmed === 'Mixed') {
+      return 'All';
+    }
+
+    if (allowedGenders.includes(trimmed as (typeof allowedGenders)[number])) {
+      return trimmed as PickupGame['gender'];
+    }
+  }
+
+  return 'All';
+}
+
 function toPickupGame(docId: string, data: FirestoreGameDoc): PickupGame {
   return {
     id: docId,
-    sport: data.sport?.trim() || 'Basketball',
+    sport: parseSport(data.sport),
     location: data.location?.trim() || 'New local venue',
     startTime: parseStartTime(data.startTime ?? data.time),
     capacity: Math.max(2, Math.round(data.capacity ?? 10)),
@@ -44,7 +73,7 @@ function toPickupGame(docId: string, data: FirestoreGameDoc): PickupGame {
     note: data.note?.trim() || 'Bring water and arrive a few minutes early.',
     skillLevel: data.skillLevel ?? 'Beginner',
     ageRange: data.ageRange ?? '25-34',
-    gender: data.gender ?? 'Open',
+    gender: parseGender(data.gender),
   };
 }
 
@@ -78,6 +107,14 @@ export async function fetchGames(): Promise<PickupGame[]> {
 }
 
 export async function createGame(draft: GameDraft): Promise<void> {
+  if (!draft.sport) {
+    throw new Error('Sport is required');
+  }
+
+  if (draft.capacity === '' || draft.capacity < 2 || draft.capacity > 30) {
+    throw new Error('Capacity must be between 2 and 30');
+  }
+
   const startDate = new Date(draft.startTime);
 
   if (Number.isNaN(startDate.getTime())) {
@@ -85,7 +122,7 @@ export async function createGame(draft: GameDraft): Promise<void> {
   }
 
   await addDoc(gamesCollection, {
-    sport: draft.sport.trim() || 'Basketball',
+    sport: draft.sport.trim() || 'Tennis',
     location: draft.location.trim() || 'New local venue',
     startTime: Timestamp.fromDate(startDate),
     capacity: Math.max(2, Math.round(draft.capacity)),

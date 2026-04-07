@@ -1,4 +1,4 @@
-export type SportName = 'Basketball' | 'Soccer' | 'Football' | 'Volleyball' | string;
+export type SportName = 'Tennis' | 'Soccer' | 'Ultimate Frisbee';
 
 export type PickupGame = {
   id: string;
@@ -10,15 +10,15 @@ export type PickupGame = {
   organizer: string;
   note: string;
   skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
-  ageRange: '18-24' | '25-34' | '35-44' | '45+';
-  gender: 'Open' | 'Women' | 'Men' | 'Mixed';
+  ageRange: '18-24' | '25-34' | '35-44' | '45+' | 'All ages';
+  gender: 'All' | 'Women' | 'Men';
 };
 
 export type GameDraft = {
-  sport: string;
+  sport: SportName | '';
   location: string;
   startTime: string;
-  capacity: number;
+  capacity: number | '';
   organizer: string;
   note: string;
   skillLevel: PickupGame['skillLevel'];
