@@ -76,5 +76,6 @@ export const openLocations: string[] = [
   'Norris South Lawn',
   'Shakespeare Garden',
   'North Campus Green',
+  'Hutchinson Field'
   'Vandy Christie Tennis Center',
 ];
