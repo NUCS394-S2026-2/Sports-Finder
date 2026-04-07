@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { formatGameTime } from '../lib/datetime';
 import type { PickupGame } from '../types';
+import { JoinModal } from './JoinModal';
 
 type GameCardProps = {
   game: PickupGame;
@@ -9,6 +11,12 @@ type GameCardProps = {
 export function GameCard({ game, onJoin }: GameCardProps) {
   const spotsRemaining = game.capacity - game.spotsFilled;
   const isFull = spotsRemaining <= 0;
+  const [showModal, setShowModal] = useState(false);
+
+  function handleConfirm(name: string, email: string) {
+    console.log(`Joined by: ${name} (${email})`);
+    onJoin(game.id);
+  }
 
   return (
     <article className="game-card">
@@ -36,9 +44,7 @@ export function GameCard({ game, onJoin }: GameCardProps) {
         </div>
         <div>
           <dt>Players</dt>
-          <dd>
-            {game.spotsFilled}/{game.capacity}
-          </dd>
+          <dd>{game.spotsFilled}/{game.capacity}</dd>
         </div>
       </dl>
 
@@ -46,10 +52,18 @@ export function GameCard({ game, onJoin }: GameCardProps) {
         type="button"
         className="join-button"
         disabled={isFull}
-        onClick={() => onJoin(game.id)}
+        onClick={() => setShowModal(true)}
       >
         {isFull ? 'Game full' : 'Join game'}
       </button>
+
+      {showModal && (
+        <JoinModal
+          game={game}
+          onConfirm={handleConfirm}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </article>
   );
 }
