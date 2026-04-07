@@ -1,15 +1,11 @@
 # CS394 Agile Software Engineering — Copilot Instructions
 
-
 This is a React + TypeScript web application built with Vite, using Firebase for backend
 services. The tech stack and conventions below are required for all code in this repo.
 
-
 ---
 
-
 ## Tech Stack
-
 
 - **Framework**: React 19 with React Compiler enabled
 - **Language**: TypeScript (strict mode)
@@ -18,19 +14,14 @@ services. The tech stack and conventions below are required for all code in this
 - **Testing**: Vitest + React Testing Library
 - **Backend**: Firebase (Authentication + Cloud Firestore)
 
-
 ---
 
-
 ## Code Style
-
 
 Formatting and linting are enforced by Prettier and ESLint — always ensure code passes 'npm run lint:format' and 'npm run lint' without errors or warnings
 both before considering any task complete. Do not add inline style overrides.
 
-
 Additional conventions:
-
 
 - Use `const` by default; `let` only when reassignment is required
 - Use `async/await` for all asynchronous code; wrap in `try/catch`
@@ -39,12 +30,9 @@ Additional conventions:
 - Let TypeScript infer return types of component functions
 - Use TypeScript interfaces and types in `/src/types/`; prefer `interface` for object shapes
 
-
 ---
 
-
 ## React Patterns
-
 
 - All components are functional components using React hooks
 - One component per file; filename matches component name (e.g., `UserCard.tsx`)
@@ -53,12 +41,9 @@ Additional conventions:
 - Navigation bars are required for any app with more than one route
 - Keep components small and focused on a single responsibility
 
-
 ---
 
-
 ## Project Structure
-
 
 ```
 /src
@@ -70,28 +55,21 @@ Additional conventions:
 /docs            # API specs, user guides, architecture notes
 ```
 
-
 All Firebase and network calls go in `/src/services/`. Components must not import
 Firebase SDK directly.
 
-
 ---
 
-
 ## Firebase
-
 
 - Use **Cloud Firestore** for persistent data storage (not Realtime Database)
 - Use **Firebase Authentication** with Google Sign-In for user auth
 - Wrap Firestore calls in service modules with typed return values
 - Handle loading and error states explicitly in any component that fetches data
 
-
 ---
 
-
 ## Testing
-
 
 - Test files live alongside the component or module they test (`*.test.tsx` / `*.test.ts`)
 - Use React Testing Library; query by role, label, or text — not by test ID unless necessary
@@ -99,18 +77,12 @@ Firebase SDK directly.
 - Import all functions and types explicitly by name in test files
 - Tests must pass before any task is considered complete
 
-
 ---
 
-
 ## What to Avoid
-
 
 - Do not use class components
 - Do not call Firebase SDK directly inside React components
 - Do not use `any` as a TypeScript type
 - Do not use `useEffect` for data that can be derived from existing state
 - Do not duplicate logic that belongs in a shared utility or hook
-
-
-

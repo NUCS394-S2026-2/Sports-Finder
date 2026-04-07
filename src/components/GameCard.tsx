@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { formatGameTime } from '../lib/datetime';
 import type { PickupGame } from '../types';
 import { JoinModal } from './JoinModal';
@@ -44,7 +45,9 @@ export function GameCard({ game, onJoin }: GameCardProps) {
         </div>
         <div>
           <dt>Players</dt>
-          <dd>{game.spotsFilled}/{game.capacity}</dd>
+          <dd>
+            {game.spotsFilled}/{game.capacity}
+          </dd>
         </div>
       </dl>
 

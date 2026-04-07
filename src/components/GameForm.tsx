@@ -125,7 +125,10 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           <select
             value={draft.skillLevel}
             onChange={(event) =>
-              onChange({ ...draft, skillLevel: event.target.value as GameDraft['skillLevel'] })
+              onChange({
+                ...draft,
+                skillLevel: event.target.value as GameDraft['skillLevel'],
+              })
             }
           >
             {skillLevels.map((skillLevel) => (
@@ -141,7 +144,10 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           <select
             value={draft.ageRange}
             onChange={(event) =>
-              onChange({ ...draft, ageRange: event.target.value as GameDraft['ageRange'] })
+              onChange({
+                ...draft,
+                ageRange: event.target.value as GameDraft['ageRange'],
+              })
             }
           >
             {ageRanges.map((ageRange) => (
@@ -169,8 +175,8 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
         </label>
 
         <label style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
-          <input type="checkbox" required />
-          I confirm I have secured this location and it is available for use.
+          <input type="checkbox" required />I confirm I have secured this location and it
+          is available for use.
         </label>
 
         <button className="primary-button" type="submit">

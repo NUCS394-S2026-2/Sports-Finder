@@ -10,8 +10,8 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../firebase';
-import { toLocalDateTimeValue } from './datetime';
 import type { GameDraft, PickupGame } from '../types';
+import { toLocalDateTimeValue } from './datetime';
 
 const gamesCollection = collection(db, 'games');
 
