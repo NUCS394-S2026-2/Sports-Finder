@@ -21,6 +21,23 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(game.location)}`;
 
+  const linkStyle = {
+    display: 'block',
+    textAlign: 'center' as const,
+    padding: '10px',
+    background: '#f5a623',
+    borderRadius: '8px',
+    color: '#000',
+    fontWeight: 'bold',
+    textDecoration: 'none',
+  };
+
+  const hostBoxStyle = {
+    background: '#2a2a2a',
+    borderRadius: '8px',
+    padding: '12px',
+  };
+
   if (joined) {
     return (
       <div className="modal-overlay">
@@ -30,19 +47,25 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
             You&apos;ve joined <strong>{game.sport}</strong> at{' '}
             <strong>{game.location}</strong>.
           </p>
-
-          <a href={mapsUrl} target="_blank" rel="noreferrer" className="primary-button">
-            📍 Open in Google Maps
-          </a>
-
-          <p className="eyebrow" style={{ marginTop: '16px' }}>
-            Host
-          </p>
-          <p>{game.organizer}</p>
-
-          <button type="button" className="ghost-button" onClick={onClose}>
-            Close
-          </button>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              marginTop: '16px',
+            }}
+          >
+            <a href={mapsUrl} target="_blank" rel="noreferrer" style={linkStyle}>
+              📍 Open in Google Maps
+            </a>
+            <div style={hostBoxStyle}>
+              <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>HOST</p>
+              <p style={{ margin: 0 }}>{game.organizer}</p>
+            </div>
+            <button type="button" className="ghost-button" onClick={onClose}>
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -55,7 +78,6 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
           Join {game.sport} at {game.location}
         </h2>
         <p className="game-time">{game.startTime}</p>
-
         <label>
           Your name
           <input
@@ -65,7 +87,6 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
             required
           />
         </label>
-
         <label>
           Your email
           <input
@@ -76,7 +97,6 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
             required
           />
         </label>
-
         <button
           type="button"
           className="primary-button"
@@ -85,7 +105,6 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
         >
           Confirm join
         </button>
-
         <button type="button" className="ghost-button" onClick={onClose}>
           Cancel
         </button>
