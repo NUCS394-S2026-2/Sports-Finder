@@ -1,10 +1,6 @@
 import type { GameDraft, PickupGame, SportName } from './types';
 
-export const featuredSports: SportName[] = [
-  'Soccer',
-  'Frisbee',
-  'Tennis',
-];
+export const featuredSports: SportName[] = ['Soccer', 'Frisbee', 'Tennis'];
 
 export const initialGames: PickupGame[] = [
   {
@@ -76,6 +72,6 @@ export const openLocations: string[] = [
   'Norris South Lawn',
   'Shakespeare Garden',
   'North Campus Green',
-  'Hutchinson Field'
+  'Hutchinson Field',
   'Vandy Christie Tennis Center',
 ];

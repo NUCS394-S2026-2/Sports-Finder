@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import type { PickupGame } from '../types';
 
 type JoinModalProps = {
@@ -24,14 +25,19 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
     return (
       <div className="modal-overlay">
         <div className="modal-card">
-          <h2>You're in! 🎉</h2>
-          <p>You've joined <strong>{game.sport}</strong> at <strong>{game.location}</strong>.</p>
+          <h2>You&apos;re in! 🎉</h2>
+          <p>
+            You&apos;ve joined <strong>{game.sport}</strong> at{' '}
+            <strong>{game.location}</strong>.
+          </p>
 
           <a href={mapsUrl} target="_blank" rel="noreferrer" className="primary-button">
             📍 Open in Google Maps
           </a>
 
-          <p className="eyebrow" style={{ marginTop: '16px' }}>Host</p>
+          <p className="eyebrow" style={{ marginTop: '16px' }}>
+            Host
+          </p>
           <p>{game.organizer}</p>
 
           <button type="button" className="ghost-button" onClick={onClose}>
@@ -45,7 +51,9 @@ export function JoinModal({ game, onConfirm, onClose }: JoinModalProps) {
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-        <h2>Join {game.sport} at {game.location}</h2>
+        <h2>
+          Join {game.sport} at {game.location}
+        </h2>
         <p className="game-time">{game.startTime}</p>
 
         <label>
