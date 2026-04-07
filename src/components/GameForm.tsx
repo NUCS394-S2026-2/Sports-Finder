@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 
-import { ageRanges, genders, skillLevels } from '../data';
+import { ageRanges, genders, openLocations, skillLevels } from '../data';
 import type { GameDraft, SportName } from '../types';
 
 type GameFormProps = {
@@ -16,6 +16,16 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
     event.preventDefault();
     onSubmit();
   }
+
+  function handleSportChange(sport: string) {
+    if (sport === 'Tennis') {
+      onChange({ ...draft, sport, location: 'Northwestern Tennis Courts' });
+    } else {
+      onChange({ ...draft, sport, location: '' });
+    }
+  }
+
+  const isTennis = draft.sport === 'Tennis';
 
   return (
     <section className="form-card" aria-label="Create a pickup game">
@@ -34,7 +44,7 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           Sport
           <select
             value={draft.sport}
-            onChange={(event) => onChange({ ...draft, sport: event.target.value })}
+            onChange={(event) => handleSportChange(event.target.value)}
           >
             {sports.map((sport) => (
               <option key={sport} value={sport}>
@@ -46,12 +56,24 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
 
         <label>
           Location
-          <input
-            value={draft.location}
-            onChange={(event) => onChange({ ...draft, location: event.target.value })}
-            placeholder="Campus gym, park, or field"
-            required
-          />
+          {isTennis ? (
+            <input value="Northwestern Tennis Courts" disabled />
+          ) : (
+            <select
+              value={draft.location}
+              onChange={(event) => onChange({ ...draft, location: event.target.value })}
+              required
+            >
+              <option value="">Select a location</option>
+              {openLocations
+                .filter((loc) => loc !== 'Northwestern Tennis Courts')
+                .map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+            </select>
+          )}
         </label>
 
         <label>
@@ -72,10 +94,7 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
             max={30}
             value={draft.capacity}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                capacity: Number(event.target.value),
-              })
+              onChange({ ...draft, capacity: Number(event.target.value) })
             }
             required
           />
@@ -106,10 +125,7 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           <select
             value={draft.skillLevel}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                skillLevel: event.target.value as GameDraft['skillLevel'],
-              })
+              onChange({ ...draft, skillLevel: event.target.value as GameDraft['skillLevel'] })
             }
           >
             {skillLevels.map((skillLevel) => (
@@ -125,10 +141,7 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           <select
             value={draft.ageRange}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                ageRange: event.target.value as GameDraft['ageRange'],
-              })
+              onChange({ ...draft, ageRange: event.target.value as GameDraft['ageRange'] })
             }
           >
             {ageRanges.map((ageRange) => (
@@ -153,6 +166,11 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
               </option>
             ))}
           </select>
+        </label>
+
+        <label style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+          <input type="checkbox" required />
+          I confirm I have secured this location and it is available for use.
         </label>
 
         <button className="primary-button" type="submit">
