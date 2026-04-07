@@ -26,6 +26,7 @@ function App() {
     ...emptyDraft,
     startTime: toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000)),
   });
+  const [conflictGame, setConflictGame] = useState<PickupGame | null>(null);
 
   useEffect(() => {
     async function loadGames() {
@@ -38,7 +39,6 @@ function App() {
         setLoading(false);
       }
     }
-
     loadGames();
   }, []);
 
@@ -46,14 +46,22 @@ function App() {
 
   const filteredGames = useMemo(() => {
     return games.filter((game) => {
-      const matchesSkill =
-        filters.skillLevel === 'All' || game.skillLevel === filters.skillLevel;
+      const matchesSkill = filters.skillLevel === 'All' || game.skillLevel === filters.skillLevel;
       const matchesAge = filters.ageRange === 'All' || game.ageRange === filters.ageRange;
       const matchesGender = filters.gender === 'All' || game.gender === filters.gender;
-
       return matchesSkill && matchesAge && matchesGender;
     });
   }, [filters, games]);
+
+  // Games at risk: under 30 min away and less than half capacity filled
+  const atRiskGames = useMemo(() => {
+    const now = Date.now();
+    return games.filter((game) => {
+      const gameTime = new Date(game.startTime).getTime();
+      const minutesUntil = (gameTime - now) / 60000;
+      return minutesUntil <= 30 && minutesUntil > 0 && game.spotsFilled < game.capacity / 2;
+    });
+  }, [games]);
 
   async function handleJoinGame(id: string) {
     try {
@@ -66,11 +74,24 @@ function App() {
   }
 
   async function handleCreateGame() {
+    // Check for duplicate location + time (within 1 hour)
+    const newTime = new Date(draft.startTime).getTime();
+    const duplicate = games.find((game) => {
+      const existingTime = new Date(game.startTime).getTime();
+      const sameLocation = game.location === draft.location;
+      const closeInTime = Math.abs(existingTime - newTime) <= 60 * 60 * 1000;
+      return sameLocation && closeInTime;
+    });
+
+    if (duplicate) {
+      setConflictGame(duplicate);
+      return;
+    }
+
     try {
       await createGame(draft);
       const updated = await fetchGames();
       setGames(updated);
-
       setDraft({
         ...emptyDraft,
         startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
@@ -100,23 +121,13 @@ function App() {
         <h1>Find a pickup game without digging through group chats.</h1>
         <p className="hero-text">
           Play Local helps adults discover casual recreational sports nearby, join a
-          roster that fits, and post a new game when the court or field needs one more
-          player.
+          roster that fits, and post a new game when the court or field needs one more player.
         </p>
-
         <div className="hero-actions">
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => setView('find')}
-          >
+          <button className="primary-button" type="button" onClick={() => setView('find')}>
             Find local games
           </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => setView('create')}
-          >
+          <button className="secondary-button" type="button" onClick={() => setView('create')}>
             Create a game
           </button>
         </div>
@@ -128,141 +139,12 @@ function App() {
             <p className="eyebrow">Upcoming games</p>
             <h2>Tonight and tomorrow</h2>
           </div>
-          <p className="section-copy">
-            A couple of active games to show what is happening right now.
-          </p>
+          <p className="section-copy">A couple of active games happening right now.</p>
         </div>
 
-        <div className="game-grid home-grid">
-          {upcomingGames.map((game) => (
-            <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-
-  const findSection = (
-    <section className="page-panel">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Find local games</p>
-          <h2>Filter by the fit that matters</h2>
-        </div>
-        <p className="section-copy">
-          Browse tiles, then narrow the list using skill level, age range, and gender
-          tags.
-        </p>
-      </div>
-
-      <div className="filter-stack">
-        <TagFilterGroup
-          label="Skill level"
-          value={filters.skillLevel}
-          options={['All', ...skillLevels]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              skillLevel: value as TagValue<PickupGame['skillLevel']>,
-            }))
-          }
-        />
-        <TagFilterGroup
-          label="Age range"
-          value={filters.ageRange}
-          options={['All', ...ageRanges]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              ageRange: value as TagValue<PickupGame['ageRange']>,
-            }))
-          }
-        />
-        <TagFilterGroup
-          label="Gender"
-          value={filters.gender}
-          options={['All', ...genders]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              gender: value as TagValue<PickupGame['gender']>,
-            }))
-          }
-        />
-      </div>
-
-      <div className="game-grid">
-        {filteredGames.map((game) => (
-          <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-        ))}
-      </div>
-
-      {filteredGames.length === 0 ? (
-        <div className="empty-state">
-          <h3>No games match these filters.</h3>
-          <p>Try relaxing one of the tag filters or add a new listing.</p>
-        </div>
-      ) : null}
-    </section>
-  );
-
-  const createSection = (
-    <section className="page-panel create-layout">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Create a game</p>
-          <h2>Post a new pickup listing</h2>
-        </div>
-        <p className="section-copy">
-          Fill out the form and the game will appear in the local games grid.
-        </p>
-      </div>
-
-      <GameForm
-        draft={draft}
-        onChange={setDraft}
-        onClose={() => setView('find')}
-        onSubmit={handleCreateGame}
-        sports={featuredSports}
-      />
-    </section>
-  );
-
-  const aboutSection = (
-    <section className="page-panel about-layout">
-      <div className="about-card">
-        <p className="eyebrow">About</p>
-        <h2>Why this exists</h2>
-        <p>
-          The idea comes from how hard it can be to turn casual interest into an actual
-          game. Adults often want a low-friction way to find a court, fill a roster, and
-          know they are joining a group that feels like a fit.
-        </p>
-        <p>
-          Our mission is to make recreational sports more accessible, welcoming, and
-          easier to join for adults who want to stay active, meet people, and play without
-          unnecessary barriers.
-        </p>
-      </div>
-    </section>
-  );
-
-  const currentSection =
-    view === 'home'
-      ? homeSection
-      : view === 'find'
-        ? findSection
-        : view === 'create'
-          ? createSection
-          : aboutSection;
-
-  return (
-    <main className="app-shell">
-      <div className="app-background" aria-hidden="true" />
-      <Toolbar activeView={view} onNavigate={setView} />
-      {currentSection}
-    </main>
-  );
-}
-
-export default App;
+        {atRiskGames.length > 0 && (
+          <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px' }}>
+            <strong>⚠️ Heads up!</strong> The following games start in under 30 minutes and may not have enough players:
+            <ul style={{ margin: '8px 0 0 16px' }}>
+              {atRiskGames.map((g) => (
+                <li key={g.id}>{g.sport} at {g.locati
