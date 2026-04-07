@@ -12,6 +12,7 @@ export type PickupGame = {
   skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
   ageRange: '18-24' | '25-34' | '35-44' | '45+' | 'All ages';
   gender: 'All' | 'Women' | 'Men';
+  attendees: string[];
 };
 
 export type GameDraft = {
@@ -27,3 +28,11 @@ export type GameDraft = {
 };
 
 export type SportFilter = 'All' | SportName;
+
+export type UserProfile = {
+  uid: string;
+  email: string;
+  name: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+};

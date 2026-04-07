@@ -85,6 +85,46 @@
   gap: 10px;
 }
 
+.toolbar-auth {
+  margin-left: auto;
+  position: relative;
+}
+
+.profile-menu-wrap {
+  position: relative;
+}
+
+.profile-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #f8d36a;
+  color: #09131f;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(9, 15, 24, 0.96);
+  display: grid;
+  gap: 6px;
+  z-index: 12;
+}
+
+.profile-menu p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .toolbar-link,
 .primary-button,
 .secondary-button,
@@ -365,6 +405,22 @@
 .game-details dd {
   margin: 6px 0 0;
   font-weight: 700;
+}
+
+.attendees-list {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.attendees-title {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(247, 244, 236, 0.7);
 }
 
 .join-button:disabled {
@@ -755,4 +811,24 @@
 
 .game-modal-note {
   font-size: 1rem;
+}
+
+.auth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 11, 20, 0.74);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 30;
+}
+
+.auth-modal {
+  width: min(460px, 100%);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(9, 15, 24, 0.98);
+  display: grid;
+  gap: 12px;
 }

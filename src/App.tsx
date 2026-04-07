@@ -7,11 +7,46 @@ import { GameForm } from './components/GameForm';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
 import { ageRanges, emptyDraft, genders, skillLevels } from './data';
+import {
+  fetchUserProfile,
+  loginWithEmail,
+  logout,
+  registerWithProfile,
+  subscribeToAuth,
+} from './lib/auth';
 import { formatGameTime, toLocalDateTimeValue } from './lib/datetime';
 import { createGame, fetchGames, joinGame } from './lib/games';
-import type { GameDraft, PickupGame } from './types';
+import type { GameDraft, PickupGame, UserProfile } from './types';
 
 type TagValue<T extends string> = 'All' | T;
+
+function getAuthErrorMessage(error: unknown): string {
+  const errorCode =
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code?: unknown }).code === 'string'
+      ? (error as { code: string }).code
+      : '';
+
+  if (errorCode === 'auth/configuration-not-found') {
+    return 'Firebase Auth is not configured for this project yet. In Firebase Console, enable Authentication and turn on the Email/Password sign-in provider.';
+  }
+
+  if (errorCode === 'auth/invalid-credential') {
+    return 'Invalid email or password.';
+  }
+
+  if (errorCode === 'auth/email-already-in-use') {
+    return 'That email is already in use. Try logging in instead.';
+  }
+
+  if (errorCode === 'auth/weak-password') {
+    return 'Password is too weak. Use at least 6 characters.';
+  }
+
+  return error instanceof Error ? error.message : 'Authentication failed';
+}
 
 function App() {
   const [view, setView] = useState<ViewName>('home');
@@ -28,6 +63,17 @@ function App() {
   });
   const [activeGame, setActiveGame] = useState<PickupGame | null>(null);
   const [focusedGameId, setFocusedGameId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authForm, setAuthForm] = useState({
+    email: '',
+    password: '',
+    name: '',
+    age: '',
+    gender: 'Other' as UserProfile['gender'],
+  });
 
   useEffect(() => {
     async function loadGames() {
@@ -42,6 +88,20 @@ function App() {
     }
 
     loadGames();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth(async (user) => {
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      const userProfile = await fetchUserProfile(user);
+      setProfile(userProfile);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -82,8 +142,14 @@ function App() {
   }, [filters, games]);
 
   async function handleJoinGame(id: string) {
+    if (!profile) {
+      setAuthMode('login');
+      setAuthOpen(true);
+      return;
+    }
+
     try {
-      await joinGame(id);
+      await joinGame(id, profile.name);
       const updated = await fetchGames();
       setGames(updated);
     } catch (err) {
@@ -91,7 +157,43 @@ function App() {
     }
   }
 
+  async function handleAuthSubmit() {
+    setAuthError(null);
+
+    try {
+      if (authMode === 'login') {
+        await loginWithEmail(authForm.email, authForm.password);
+      } else {
+        const parsedAge = Number(authForm.age);
+        await registerWithProfile({
+          email: authForm.email,
+          password: authForm.password,
+          name: authForm.name,
+          age: Number.isFinite(parsedAge) ? parsedAge : 18,
+          gender: authForm.gender,
+        });
+      }
+
+      setAuthOpen(false);
+      setAuthForm({
+        email: '',
+        password: '',
+        name: '',
+        age: '',
+        gender: 'Other',
+      });
+    } catch (error) {
+      setAuthError(getAuthErrorMessage(error));
+    }
+  }
+
   async function handleCreateGame() {
+    if (!profile) {
+      setAuthMode('login');
+      setAuthOpen(true);
+      return;
+    }
+
     try {
       await createGame(draft);
       const updated = await fetchGames();
@@ -111,7 +213,19 @@ function App() {
     return (
       <main className="app-shell">
         <div className="app-background" aria-hidden="true" />
-        <Toolbar activeView={view} onNavigate={setView} />
+        <Toolbar
+          activeView={view}
+          onNavigate={setView}
+          profile={profile}
+          onOpenAuth={() => {
+            setAuthMode('login');
+            setAuthOpen(true);
+          }}
+          onLogout={async () => {
+            await logout();
+            setActiveGame(null);
+          }}
+        />
         <section className="page-panel">
           <p>Loading games...</p>
         </section>
@@ -161,7 +275,13 @@ function App() {
 
         <div className="game-grid home-grid">
           {upcomingGames.map((game) => (
-            <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
+            <GameCard
+              key={game.id}
+              game={game}
+              onJoin={handleJoinGame}
+              canSeePrivateDetails={Boolean(profile)}
+              canJoin={Boolean(profile)}
+            />
           ))}
         </div>
       </div>
@@ -226,6 +346,8 @@ function App() {
             onOpen={setActiveGame}
             cardId={`game-tile-${game.id}`}
             highlighted={focusedGameId === game.id}
+            canSeePrivateDetails={Boolean(profile)}
+            canJoin={Boolean(profile)}
           />
         ))}
       </div>
@@ -259,7 +381,7 @@ function App() {
               </span>
             </div>
 
-            <h2>{activeGame.location}</h2>
+            <h2>{profile ? activeGame.location : 'Login to view location'}</h2>
             <p className="game-time game-modal-time">
               {formatGameTime(activeGame.startTime)}
             </p>
@@ -274,7 +396,7 @@ function App() {
             <dl className="game-details">
               <div>
                 <dt>Organizer</dt>
-                <dd>{activeGame.organizer}</dd>
+                <dd>{profile ? activeGame.organizer : 'Login required'}</dd>
               </div>
               <div>
                 <dt>Players</dt>
@@ -284,11 +406,22 @@ function App() {
               </div>
             </dl>
 
+            {profile ? (
+              <div className="attendees-list">
+                <p className="attendees-title">Attendees</p>
+                <p>
+                  {activeGame.attendees.length > 0
+                    ? activeGame.attendees.join(', ')
+                    : 'No attendees yet.'}
+                </p>
+              </div>
+            ) : null}
+
             <div className="form-actions">
               <button
                 type="button"
                 className="join-button"
-                disabled={activeGame.capacity - activeGame.spotsFilled <= 0}
+                disabled={activeGame.capacity - activeGame.spotsFilled <= 0 || !profile}
                 onClick={async () => {
                   await handleJoinGame(activeGame.id);
                   setActiveGame(null);
@@ -296,7 +429,9 @@ function App() {
               >
                 {activeGame.capacity - activeGame.spotsFilled <= 0
                   ? 'Game full'
-                  : 'Join game'}
+                  : profile
+                    ? 'Join game'
+                    : 'Login to join'}
               </button>
             </div>
           </article>
@@ -324,14 +459,33 @@ function App() {
         </p>
       </div>
 
-      <GameForm
-        draft={draft}
-        onChange={setDraft}
-        onClose={() => setView('find')}
-        onSubmit={handleCreateGame}
-        games={games}
-        onViewGame={handleViewGame}
-      />
+      {profile ? (
+        <GameForm
+          draft={draft}
+          onChange={setDraft}
+          onClose={() => setView('find')}
+          onSubmit={handleCreateGame}
+          games={games}
+          onViewGame={handleViewGame}
+        />
+      ) : (
+        <section className="form-card" aria-label="Login required to create games">
+          <h3>Log in required</h3>
+          <p>You need an account to create and host a game.</p>
+          <div className="form-actions">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => {
+                setAuthMode('login');
+                setAuthOpen(true);
+              }}
+            >
+              Log in to create
+            </button>
+          </div>
+        </section>
+      )}
     </section>
   );
 
@@ -379,8 +533,128 @@ function App() {
   return (
     <main className="app-shell">
       <div className="app-background" aria-hidden="true" />
-      <Toolbar activeView={view} onNavigate={setView} />
+      <Toolbar
+        activeView={view}
+        onNavigate={setView}
+        profile={profile}
+        onOpenAuth={() => {
+          setAuthMode('login');
+          setAuthOpen(true);
+        }}
+        onLogout={async () => {
+          await logout();
+          setActiveGame(null);
+        }}
+      />
       {currentSection}
+
+      {authOpen ? (
+        <div className="auth-modal-backdrop">
+          <article
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Authentication"
+          >
+            <h2>{authMode === 'login' ? 'Log in' : 'Create account'}</h2>
+
+            <label>
+              Email
+              <input
+                type="email"
+                value={authForm.email}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, email: event.target.value }))
+                }
+              />
+            </label>
+
+            <label>
+              Password
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, password: event.target.value }))
+                }
+              />
+            </label>
+
+            {authMode === 'register' ? (
+              <>
+                <label>
+                  Name
+                  <input
+                    value={authForm.name}
+                    onChange={(event) =>
+                      setAuthForm((current) => ({ ...current, name: event.target.value }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Age
+                  <input
+                    type="number"
+                    min={13}
+                    max={120}
+                    value={authForm.age}
+                    onChange={(event) =>
+                      setAuthForm((current) => ({ ...current, age: event.target.value }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Gender
+                  <select
+                    value={authForm.gender}
+                    onChange={(event) =>
+                      setAuthForm((current) => ({
+                        ...current,
+                        gender: event.target.value as UserProfile['gender'],
+                      }))
+                    }
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+              </>
+            ) : null}
+
+            {authError ? (
+              <p className="notification notification-error">{authError}</p>
+            ) : null}
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setAuthOpen(false)}
+              >
+                Cancel
+              </button>
+              <button type="button" className="primary-button" onClick={handleAuthSubmit}>
+                {authMode === 'login' ? 'Log in' : 'Sign up'}
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() =>
+                setAuthMode((current) => (current === 'login' ? 'register' : 'login'))
+              }
+            >
+              {authMode === 'login'
+                ? 'Need an account? Sign up'
+                : 'Already have an account? Log in'}
+            </button>
+          </article>
+        </div>
+      ) : null}
     </main>
   );
 }
