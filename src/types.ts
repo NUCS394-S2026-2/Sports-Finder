@@ -1,4 +1,4 @@
-export type SportName = 'Basketball' | 'Soccer' | 'Football' | 'Volleyball' | string;
+export type SportName = 'Soccer' | 'Frisbee' | 'Tennis';
 
 export type PickupGame = {
   id: string;
