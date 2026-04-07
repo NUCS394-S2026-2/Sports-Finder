@@ -259,19 +259,32 @@ function App() {
         <div
           style={{
             background: '#fff3cd',
-            border: '1px solid #ffc107',
-            borderRadius: '8px',
-            padding: '16px',
+            border: '2px solid #f5a623',
+            borderRadius: '12px',
+            padding: '20px',
             marginBottom: '16px',
+            color: '#1a1a1a',
           }}
         >
-          <strong>A game already exists at this location around this time!</strong>
-          <p style={{ margin: '8px 0' }}>
+          <p
+            style={{
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginBottom: '8px',
+              color: '#1a1a1a',
+            }}
+          >
+            ⚠️ A game already exists at this location around this time!
+          </p>
+          <p style={{ margin: '0 0 8px 0', color: '#1a1a1a' }}>
             <strong>{conflictGame.sport}</strong> at{' '}
             <strong>{conflictGame.location}</strong> — {conflictGame.spotsFilled}/
             {conflictGame.capacity} players
           </p>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <p style={{ margin: '0 0 12px 0', color: '#1a1a1a' }}>
+            Want to join that one instead?
+          </p>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               className="primary-button"
               type="button"
@@ -286,6 +299,7 @@ function App() {
             <button
               className="ghost-button"
               type="button"
+              style={{ color: '#1a1a1a', border: '1px solid #1a1a1a' }}
               onClick={() => setConflictGame(null)}
             >
               Post anyway
