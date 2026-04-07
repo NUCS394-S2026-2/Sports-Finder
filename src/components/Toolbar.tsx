@@ -1,8 +1,12 @@
-export type ViewName = 'home' | 'find' | 'create' | 'about';
+import type { User } from '../types';
+
+export type ViewName = 'home' | 'find' | 'create' | 'about' | 'game';
 
 type ToolbarProps = {
   activeView: ViewName;
   onNavigate: (view: ViewName) => void;
+  user: User | null;
+  onLogout: () => void;
 };
 
 const items: Array<{ view: ViewName; label: string }> = [
@@ -12,7 +16,7 @@ const items: Array<{ view: ViewName; label: string }> = [
   { view: 'about', label: 'About' },
 ];
 
-export function Toolbar({ activeView, onNavigate }: ToolbarProps) {
+export function Toolbar({ activeView, onNavigate, user, onLogout }: ToolbarProps) {
   return (
     <header className="toolbar" aria-label="Primary navigation">
       <div className="toolbar-brand">
@@ -35,6 +39,7 @@ export function Toolbar({ activeView, onNavigate }: ToolbarProps) {
             {item.label}
           </button>
         ))}
+        {user && <button onClick={onLogout}>Logout ({user.name})</button>}
       </nav>
     </header>
   );

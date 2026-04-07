@@ -1,108 +1,56 @@
-import {
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  increment,
-  serverTimestamp,
-  Timestamp,
-  updateDoc,
-} from 'firebase/firestore';
+import { initialGames } from '../data';
+import type { GameDraft, PickupGame, SportName, User } from '../types';
 
-import { db } from '../firebase';
-import { toLocalDateTimeValue } from './datetime';
-import type { GameDraft, PickupGame } from '../types';
-
-const gamesCollection = collection(db, 'games');
-
-type FirestoreGameDoc = Partial<Omit<PickupGame, 'id' | 'startTime'>> & {
-  startTime?: Timestamp | string;
-  time?: Timestamp | string;
-};
-
-function parseStartTime(value: FirestoreGameDoc['startTime'] | FirestoreGameDoc['time']) {
-  if (value && typeof value === 'object' && 'toDate' in value) {
-    return toLocalDateTimeValue(value.toDate());
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  return toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000));
+export function fetchGames(): PickupGame[] {
+  // In prototype, return initial games. In real app, this would load from storage.
+  return initialGames;
 }
 
-function toPickupGame(docId: string, data: FirestoreGameDoc): PickupGame {
-  return {
-    id: docId,
-    sport: data.sport?.trim() || 'Basketball',
-    location: data.location?.trim() || 'New local venue',
-    startTime: parseStartTime(data.startTime ?? data.time),
-    capacity: Math.max(2, Math.round(data.capacity ?? 10)),
-    spotsFilled: Math.max(0, Math.round(data.spotsFilled ?? 0)),
-    organizer: data.organizer?.trim() || 'Community host',
-    note: data.note?.trim() || 'Bring water and arrive a few minutes early.',
-    skillLevel: data.skillLevel ?? 'Beginner',
-    ageRange: data.ageRange ?? '25-34',
-    gender: data.gender ?? 'Open',
-  };
-}
-
-export async function fetchGames(): Promise<PickupGame[]> {
-  const snapshot = await getDocs(gamesCollection);
-
-  const games = snapshot.docs.map((docSnapshot) =>
-    toPickupGame(docSnapshot.id, docSnapshot.data() as FirestoreGameDoc),
+export function createGame(
+  draft: GameDraft,
+  games: PickupGame[],
+): { game?: PickupGame; conflict?: PickupGame } {
+  // Check for conflict: same sport, location, and start times within 30 minutes
+  const conflict = games.find(
+    (g) =>
+      g.sport === draft.sport &&
+      g.location === draft.location &&
+      Math.abs(new Date(g.startTime).getTime() - new Date(draft.startTime).getTime()) <
+        30 * 60 * 1000,
   );
 
-  games.sort((a, b) => {
-    const aTime = new Date(a.startTime).getTime();
-    const bTime = new Date(b.startTime).getTime();
-
-    if (Number.isNaN(aTime) && Number.isNaN(bTime)) {
-      return 0;
-    }
-
-    if (Number.isNaN(aTime)) {
-      return 1;
-    }
-
-    if (Number.isNaN(bTime)) {
-      return -1;
-    }
-
-    return bTime - aTime;
-  });
-
-  return games;
-}
-
-export async function createGame(draft: GameDraft): Promise<void> {
-  const startDate = new Date(draft.startTime);
-
-  if (Number.isNaN(startDate.getTime())) {
-    throw new Error('Invalid startTime value');
+  if (conflict) {
+    return { conflict };
   }
 
-  await addDoc(gamesCollection, {
-    sport: draft.sport.trim() || 'Basketball',
-    location: draft.location.trim() || 'New local venue',
-    startTime: Timestamp.fromDate(startDate),
-    capacity: Math.max(2, Math.round(draft.capacity)),
-    spotsFilled: 0,
-    organizer: draft.organizer.trim() || 'Community host',
-    note: draft.note.trim() || 'Bring water and arrive a few minutes early.',
+  const newGame: PickupGame = {
+    id: Date.now().toString(), // simple ID
+    sport: draft.sport as SportName,
+    location: draft.location,
+    startTime: draft.startTime,
+    endTime: draft.endTime,
+    capacity: draft.capacity,
+    organizer: draft.organizer,
+    note: draft.note,
     skillLevel: draft.skillLevel,
     ageRange: draft.ageRange,
     gender: draft.gender,
-    createdAt: serverTimestamp(),
-  });
+    requirements: draft.requirements,
+    players: [{ name: draft.organizer.split('@')[0], email: draft.organizer }], // organizer as first player
+  };
+
+  return { game: newGame };
 }
 
-export async function joinGame(gameId: string): Promise<void> {
-  const gameRef = doc(db, 'games', gameId);
-
-  await updateDoc(gameRef, {
-    spotsFilled: increment(1),
+export function joinGame(gameId: string, user: User, games: PickupGame[]): PickupGame[] {
+  return games.map((g) => {
+    if (
+      g.id === gameId &&
+      g.players.length < g.capacity &&
+      !g.players.some((p) => p.email === user.email)
+    ) {
+      return { ...g, players: [...g.players, user] };
+    }
+    return g;
   });
 }

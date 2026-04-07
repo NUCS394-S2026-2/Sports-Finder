@@ -7,7 +7,7 @@ type GameCardProps = {
 };
 
 export function GameCard({ game, onJoin }: GameCardProps) {
-  const spotsRemaining = game.capacity - game.spotsFilled;
+  const spotsRemaining = game.capacity - game.players.length;
   const isFull = spotsRemaining <= 0;
 
   return (
@@ -25,19 +25,19 @@ export function GameCard({ game, onJoin }: GameCardProps) {
 
       <div className="tag-row" aria-label="Game tags">
         <span className="tag">{game.skillLevel}</span>
-        <span className="tag">Age {game.ageRange}</span>
+        <span className="tag">{game.ageRange}</span>
         <span className="tag">{game.gender}</span>
       </div>
 
       <dl className="game-details">
         <div>
           <dt>Organizer</dt>
-          <dd>{game.organizer}</dd>
+          <dd>{game.players[0]?.name || game.organizer}</dd>
         </div>
         <div>
           <dt>Players</dt>
           <dd>
-            {game.spotsFilled}/{game.capacity}
+            {game.players.length}/{game.capacity}
           </dd>
         </div>
       </dl>
@@ -48,7 +48,7 @@ export function GameCard({ game, onJoin }: GameCardProps) {
         disabled={isFull}
         onClick={() => onJoin(game.id)}
       >
-        {isFull ? 'Game full' : 'Join game'}
+        {isFull ? 'Full' : 'Join Game'}
       </button>
     </article>
   );

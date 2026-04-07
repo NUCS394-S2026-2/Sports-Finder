@@ -1,29 +1,42 @@
-export type SportName = 'Basketball' | 'Soccer' | 'Football' | 'Volleyball' | string;
+export type SportName = 'Soccer' | 'Frisbee' | 'Tennis';
+
+export type User = {
+  name: string;
+  email: string;
+};
+
+export type Player = {
+  name: string;
+  email: string;
+};
 
 export type PickupGame = {
   id: string;
   sport: SportName;
   location: string;
   startTime: string;
+  endTime: string;
   capacity: number;
-  spotsFilled: number;
-  organizer: string;
+  organizer: string; // email
   note: string;
   skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
-  ageRange: '18-24' | '25-34' | '35-44' | '45+';
-  gender: 'Open' | 'Women' | 'Men' | 'Mixed';
+  ageRange: string;
+  gender: 'Any' | 'Men' | 'Women' | 'Mixed';
+  requirements: string;
+  players: Player[];
 };
 
 export type GameDraft = {
-  sport: string;
+  sport: SportName | '';
   location: string;
+  date: string;
   startTime: string;
+  endTime: string;
   capacity: number;
   organizer: string;
   note: string;
   skillLevel: PickupGame['skillLevel'];
-  ageRange: PickupGame['ageRange'];
+  ageRange: string;
   gender: PickupGame['gender'];
+  requirements: string;
 };
-
-export type SportFilter = 'All' | SportName;

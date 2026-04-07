@@ -393,6 +393,20 @@
   resize: vertical;
 }
 
+.warning {
+  background: rgba(255, 193, 7, 0.16);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 16px;
+  padding: 1.1rem;
+  color: #ffe066;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.warning p {
+  margin: 0;
+}
+
 .game-form input::placeholder,
 .game-form textarea::placeholder {
   color: rgba(247, 244, 236, 0.42);
@@ -459,4 +473,70 @@
   .game-details {
     grid-template-columns: 1fr;
   }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.modal-content {
+  background: rgba(9, 15, 24, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  max-width: 400px;
+  width: 100%;
+}
+
+.modal-content input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.modal-content button {
+  margin: 5px;
+}
+
+select option {
+  color: black;
+  background: white;
+}
+
+.game-details-card {
+  background: rgba(9, 15, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.game-details-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.game-details-card li {
+  margin: 5px 0;
+}
+
+.conflict-game {
+  margin: 20px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
 }

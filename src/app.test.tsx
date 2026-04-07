@@ -17,11 +17,27 @@ const mockedFetchGames = vi.mocked(fetchGames);
 const mockedCreateGame = vi.mocked(createGame);
 const mockedJoinGame = vi.mocked(joinGame);
 
+const newGame: PickupGame = {
+  id: 'new-game-id',
+  sport: 'Soccer',
+  location: 'North Field',
+  startTime: '2026-04-02T18:30',
+  endTime: '2026-04-02T20:00',
+  capacity: 8,
+  organizer: 'taylor@example.com',
+  note: 'Bring water and cleats.',
+  skillLevel: 'Advanced',
+  ageRange: '18+',
+  gender: 'Any',
+  requirements: 'Cleats required.',
+  players: [{ name: 'Taylor', email: 'taylor@example.com' }],
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockedFetchGames.mockResolvedValue(initialGames as PickupGame[]);
-  mockedCreateGame.mockResolvedValue();
-  mockedJoinGame.mockResolvedValue();
+  mockedCreateGame.mockReturnValue({ game: newGame });
+  mockedJoinGame.mockReturnValue([newGame]);
 });
 
 describe('App', () => {
@@ -53,20 +69,6 @@ describe('App', () => {
 
   test('can add a new pickup game to the local games grid', async () => {
     const user = userEvent.setup();
-
-    const newGame: PickupGame = {
-      id: 'new-game-id',
-      sport: 'Basketball',
-      location: 'North Field',
-      startTime: '2026-04-02T18:30',
-      capacity: 8,
-      spotsFilled: 0,
-      organizer: 'Taylor',
-      note: 'Bring water and cleats.',
-      skillLevel: 'Advanced',
-      ageRange: '35-44',
-      gender: 'Mixed',
-    };
 
     mockedFetchGames
       .mockResolvedValueOnce(initialGames as PickupGame[])

@@ -1,17 +1,83 @@
 import type { FormEvent } from 'react';
+import { useMemo } from 'react';
 
-import { ageRanges, genders, skillLevels } from '../data';
-import type { GameDraft, SportName } from '../types';
+import { locations, skillLevels } from '../data';
+import type { GameDraft, PickupGame, SportName } from '../types';
 
 type GameFormProps = {
   draft: GameDraft;
   sports: SportName[];
+  games: PickupGame[];
   onChange: (nextDraft: GameDraft) => void;
   onSubmit: () => void;
   onClose: () => void;
 };
 
-export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFormProps) {
+export function GameForm({
+  draft,
+  sports,
+  games,
+  onChange,
+  onSubmit,
+  onClose,
+}: GameFormProps) {
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 6; hour <= 22; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        slots.push(
+          `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+        );
+      }
+    }
+    return slots;
+  }, []);
+
+  const availableLocations = useMemo(() => {
+    if (!draft.sport) return [];
+    return Object.keys(locations).filter((loc) =>
+      locations[loc].sports.includes(draft.sport as SportName),
+    );
+  }, [draft.sport]);
+
+  const availableStartTimes = useMemo(() => {
+    if (!draft.location || !draft.date || !locations[draft.location]) return [];
+    const locInfo = locations[draft.location];
+    let allowedSlots = timeSlots;
+    if (locInfo.availability !== 'anytime') {
+      const date = new Date(draft.date);
+      const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const day = days[date.getDay()];
+      const avail = locInfo.availability[day];
+      if (avail) {
+        allowedSlots = timeSlots.filter(
+          (slot) => slot >= avail.start && slot <= avail.end,
+        );
+      }
+    }
+    // Filter out conflicts
+    return allowedSlots.filter((slot) => {
+      const slotTime = new Date(`${draft.date}T${slot}:00`).getTime();
+      return !games.some(
+        (g) =>
+          g.location === draft.location &&
+          new Date(g.startTime).toDateString() === new Date(draft.date).toDateString() &&
+          Math.abs(new Date(g.startTime).getTime() - slotTime) < 30 * 60 * 1000,
+      );
+    });
+  }, [draft.location, draft.date, games, timeSlots]);
+
+  const availableEndTimes = useMemo(() => {
+    if (!draft.startTime) return [];
+    const startTime = new Date(draft.startTime).getTime();
+    const slots = [];
+    for (let offset = 15; offset <= 180; offset += 15) {
+      const endTime = new Date(startTime + offset * 60 * 1000);
+      slots.push(endTime.toTimeString().slice(0, 5));
+    }
+    return slots;
+  }, [draft.startTime]);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit();
@@ -34,8 +100,18 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
           Sport
           <select
             value={draft.sport}
-            onChange={(event) => onChange({ ...draft, sport: event.target.value })}
+            onChange={(event) =>
+              onChange({
+                ...draft,
+                sport: event.target.value as SportName,
+                location: '',
+                date: '',
+                startTime: '',
+                endTime: '',
+              })
+            }
           >
+            <option value="">Select a sport</option>
             {sports.map((sport) => (
               <option key={sport} value={sport}>
                 {sport}
@@ -45,23 +121,83 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
         </label>
 
         <label>
-          Location
+          Date
           <input
-            value={draft.location}
-            onChange={(event) => onChange({ ...draft, location: event.target.value })}
-            placeholder="Campus gym, park, or field"
-            required
+            type="date"
+            value={draft.date}
+            onChange={(event) =>
+              onChange({ ...draft, date: event.target.value, startTime: '', endTime: '' })
+            }
+            disabled={!draft.sport}
+            min={new Date().toISOString().split('T')[0]}
           />
         </label>
 
         <label>
-          Date and time
-          <input
-            type="datetime-local"
-            value={draft.startTime}
-            onChange={(event) => onChange({ ...draft, startTime: event.target.value })}
-            required
-          />
+          Location
+          <select
+            value={draft.location}
+            onChange={(event) =>
+              onChange({
+                ...draft,
+                location: event.target.value,
+                startTime: '',
+                endTime: '',
+              })
+            }
+            disabled={!draft.sport}
+          >
+            <option value="">Select a location</option>
+            {availableLocations.map((loc: string) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Start Time
+          <select
+            value={
+              draft.startTime ? new Date(draft.startTime).toTimeString().slice(0, 5) : ''
+            }
+            onChange={(event) =>
+              onChange({
+                ...draft,
+                startTime: `${draft.date}T${event.target.value}:00`,
+                endTime: '',
+              })
+            }
+            disabled={!draft.location || !draft.date}
+          >
+            <option value="">Select start time</option>
+            {availableStartTimes.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          End Time
+          <select
+            value={
+              draft.endTime ? new Date(draft.endTime).toTimeString().slice(0, 5) : ''
+            }
+            onChange={(event) =>
+              onChange({ ...draft, endTime: `${draft.date}T${event.target.value}:00` })
+            }
+            disabled={!draft.startTime}
+          >
+            <option value="">Select end time</option>
+            {availableEndTimes.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>
@@ -82,27 +218,7 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
         </label>
 
         <label>
-          Organizer
-          <input
-            value={draft.organizer}
-            onChange={(event) => onChange({ ...draft, organizer: event.target.value })}
-            placeholder="Your name"
-            required
-          />
-        </label>
-
-        <label>
-          Notes
-          <textarea
-            value={draft.note}
-            onChange={(event) => onChange({ ...draft, note: event.target.value })}
-            placeholder="Skill level, what to bring, game format..."
-            rows={4}
-          />
-        </label>
-
-        <label>
-          Skill level
+          Skill Level
           <select
             value={draft.skillLevel}
             onChange={(event) =>
@@ -121,22 +237,14 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
         </label>
 
         <label>
-          Age range
-          <select
+          Age Range
+          <input
+            type="text"
             value={draft.ageRange}
-            onChange={(event) =>
-              onChange({
-                ...draft,
-                ageRange: event.target.value as GameDraft['ageRange'],
-              })
-            }
-          >
-            {ageRanges.map((ageRange) => (
-              <option key={ageRange} value={ageRange}>
-                {ageRange}
-              </option>
-            ))}
-          </select>
+            onChange={(event) => onChange({ ...draft, ageRange: event.target.value })}
+            placeholder="e.g. 18+ or 16-25"
+            required
+          />
         </label>
 
         <label>
@@ -147,16 +255,43 @@ export function GameForm({ draft, sports, onChange, onSubmit, onClose }: GameFor
               onChange({ ...draft, gender: event.target.value as GameDraft['gender'] })
             }
           >
-            {genders.map((gender) => (
-              <option key={gender} value={gender}>
-                {gender}
-              </option>
-            ))}
+            <option value="Any">Any</option>
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+            <option value="Mixed">Mixed</option>
           </select>
         </label>
 
+        <label>
+          Description
+          <textarea
+            value={draft.note}
+            onChange={(event) => onChange({ ...draft, note: event.target.value })}
+            placeholder="Details about the game..."
+            rows={4}
+          />
+        </label>
+
+        <label>
+          Requirements
+          <textarea
+            value={draft.requirements}
+            onChange={(event) => onChange({ ...draft, requirements: event.target.value })}
+            placeholder="Any requirements..."
+            rows={2}
+          />
+        </label>
+
+        <div className="warning">
+          <p>
+            <strong>Important:</strong> We are unable to guarantee the availability of the
+            play area. Creators of a game are responsible for ensuring that the location
+            is usable at the time of the game.
+          </p>
+        </div>
+
         <button className="primary-button" type="submit">
-          Publish game
+          Create Game
         </button>
       </form>
     </section>

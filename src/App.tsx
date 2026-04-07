@@ -6,78 +6,123 @@ import { GameCard } from './components/GameCard';
 import { GameForm } from './components/GameForm';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
-import { ageRanges, emptyDraft, featuredSports, genders, skillLevels } from './data';
-import { toLocalDateTimeValue } from './lib/datetime';
+import { emptyDraft, featuredSports, locations } from './data';
+import { formatGameTime } from './lib/datetime';
 import { createGame, fetchGames, joinGame } from './lib/games';
-import type { GameDraft, PickupGame } from './types';
-
-type TagValue<T extends string> = 'All' | T;
+import type { GameDraft, PickupGame, User } from './types';
 
 function App() {
   const [view, setView] = useState<ViewName>('home');
   const [games, setGames] = useState<PickupGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginName, setLoginName] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [selectedGame, setSelectedGame] = useState<PickupGame | null>(null);
+  const [pendingJoinId, setPendingJoinId] = useState<string | null>(null);
+  const [showConflict, setShowConflict] = useState(false);
+  const [conflictGame, setConflictGame] = useState<PickupGame | null>(null);
   const [filters, setFilters] = useState({
-    skillLevel: 'All' as TagValue<PickupGame['skillLevel']>,
-    ageRange: 'All' as TagValue<PickupGame['ageRange']>,
-    gender: 'All' as TagValue<PickupGame['gender']>,
+    sport: 'All' as 'All' | PickupGame['sport'],
+    location: 'All' as 'All' | string,
+    search: '',
   });
-  const [draft, setDraft] = useState<GameDraft>({
-    ...emptyDraft,
-    startTime: toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000)),
-  });
+  const [draft, setDraft] = useState<GameDraft>(emptyDraft);
 
   useEffect(() => {
-    async function loadGames() {
-      try {
-        const data = await fetchGames();
-        setGames(data);
-      } catch (err) {
-        console.error('Failed to load games:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadGames();
+    const data = fetchGames();
+    setGames(data);
+    setLoading(false);
   }, []);
 
-  const upcomingGames = useMemo(() => games.slice(0, 2), [games]);
+  const availableGames = useMemo(
+    () =>
+      games
+        .filter((g) => g.players.length < g.capacity)
+        .sort(
+          (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+        ),
+    [games],
+  );
+
+  const hasCreatedGame = useMemo(
+    () => games.some((g) => g.organizer === user?.email),
+    [games, user],
+  );
+
+  const upcomingGames = useMemo(() => availableGames.slice(0, 4), [availableGames]);
 
   const filteredGames = useMemo(() => {
-    return games.filter((game) => {
-      const matchesSkill =
-        filters.skillLevel === 'All' || game.skillLevel === filters.skillLevel;
-      const matchesAge = filters.ageRange === 'All' || game.ageRange === filters.ageRange;
-      const matchesGender = filters.gender === 'All' || game.gender === filters.gender;
+    return availableGames.filter((game) => {
+      const matchesSport = filters.sport === 'All' || game.sport === filters.sport;
+      const matchesLocation =
+        filters.location === 'All' || game.location === filters.location;
+      const matchesSearch =
+        filters.search === '' ||
+        game.location.toLowerCase().includes(filters.search.toLowerCase()) ||
+        game.sport.toLowerCase().includes(filters.search.toLowerCase());
 
-      return matchesSkill && matchesAge && matchesGender;
+      return matchesSport && matchesLocation && matchesSearch;
     });
-  }, [filters, games]);
+  }, [filters, availableGames]);
 
-  async function handleJoinGame(id: string) {
-    try {
-      await joinGame(id);
-      const updated = await fetchGames();
-      setGames(updated);
-    } catch (err) {
-      console.error('Failed to join game:', err);
+  function handleLogin() {
+    if (loginName && loginEmail) {
+      setUser({ name: loginName, email: loginEmail });
+      setShowLogin(false);
+      setLoginName('');
+      setLoginEmail('');
+      if (pendingJoinId) {
+        const updated = joinGame(
+          pendingJoinId,
+          { name: loginName, email: loginEmail },
+          games,
+        );
+        setGames(updated);
+        setPendingJoinId(null);
+      }
     }
   }
 
-  async function handleCreateGame() {
-    try {
-      await createGame(draft);
-      const updated = await fetchGames();
-      setGames(updated);
+  function handleLogout() {
+    setUser(null);
+  }
 
-      setDraft({
-        ...emptyDraft,
-        startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
-      });
+  function handleJoinGame(id: string) {
+    if (!user) {
+      setPendingJoinId(id);
+      setShowLogin(true);
+      return;
+    }
+    const game = games.find((g) => g.id === id);
+    if (!game) return;
+    const updated = joinGame(id, user, games);
+    setGames(updated);
+    setSelectedGame(updated.find((g) => g.id === id) || null);
+    setView('game');
+  }
+
+  function handleCreateGame() {
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+    if (games.some((g) => g.organizer === user.email)) {
+      alert('You have already created a game.');
+      return;
+    }
+    const draftWithOrganizer = { ...draft, organizer: user.email };
+    const result = createGame(draftWithOrganizer, games);
+    if (result.conflict) {
+      setConflictGame(result.conflict);
+      setShowConflict(true);
+      return;
+    }
+    if (result.game) {
+      setGames([...games, result.game]);
+      setDraft(emptyDraft);
       setView('find');
-    } catch (err) {
-      console.error('Failed to create game:', err);
     }
   }
 
@@ -85,7 +130,12 @@ function App() {
     return (
       <main className="app-shell">
         <div className="app-background" aria-hidden="true" />
-        <Toolbar activeView={view} onNavigate={setView} />
+        <Toolbar
+          activeView={view}
+          onNavigate={setView}
+          user={user}
+          onLogout={handleLogout}
+        />
         <section className="page-panel">
           <p>Loading games...</p>
         </section>
@@ -147,48 +197,42 @@ function App() {
       <div className="section-header">
         <div>
           <p className="eyebrow">Find local games</p>
-          <h2>Filter by the fit that matters</h2>
+          <h2>Browse available games</h2>
         </div>
         <p className="section-copy">
-          Browse tiles, then narrow the list using skill level, age range, and gender
-          tags.
+          Search and filter games by sport, location, and more.
         </p>
       </div>
 
       <div className="filter-stack">
-        <TagFilterGroup
-          label="Skill level"
-          value={filters.skillLevel}
-          options={['All', ...skillLevels]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              skillLevel: value as TagValue<PickupGame['skillLevel']>,
-            }))
-          }
+        <input
+          type="text"
+          placeholder="Search by location or sport"
+          value={filters.search}
+          onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
         />
-        <TagFilterGroup
-          label="Age range"
-          value={filters.ageRange}
-          options={['All', ...ageRanges]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              ageRange: value as TagValue<PickupGame['ageRange']>,
-            }))
-          }
+        <TagFilterGroup<'All' | PickupGame['sport']>
+          label="Sport"
+          value={filters.sport}
+          options={['All', ...featuredSports] as Array<'All' | PickupGame['sport']>}
+          onChange={(value) => setFilters((f) => ({ ...f, sport: value }))}
         />
-        <TagFilterGroup
-          label="Gender"
-          value={filters.gender}
-          options={['All', ...genders]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              gender: value as TagValue<PickupGame['gender']>,
-            }))
-          }
-        />
+        <label>
+          Location
+          <select
+            value={filters.location}
+            onChange={(event) =>
+              setFilters({ ...filters, location: event.target.value as 'All' | string })
+            }
+          >
+            <option value="All">All locations</option>
+            {Object.keys(locations).map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="game-grid">
@@ -200,7 +244,7 @@ function App() {
       {filteredGames.length === 0 ? (
         <div className="empty-state">
           <h3>No games match these filters.</h3>
-          <p>Try relaxing one of the tag filters or add a new listing.</p>
+          <p>Try relaxing the filters or create a new game.</p>
         </div>
       ) : null}
     </section>
@@ -213,18 +257,30 @@ function App() {
           <p className="eyebrow">Create a game</p>
           <h2>Post a new pickup listing</h2>
         </div>
-        <p className="section-copy">
-          Fill out the form and the game will appear in the local games grid.
-        </p>
+        <p className="section-copy">Fill out the form to create a new game.</p>
       </div>
 
-      <GameForm
-        draft={draft}
-        onChange={setDraft}
-        onClose={() => setView('find')}
-        onSubmit={handleCreateGame}
-        sports={featuredSports}
-      />
+      {user ? (
+        hasCreatedGame ? (
+          <div>
+            <p>You have already created a game. You cannot create multiple games.</p>
+          </div>
+        ) : (
+          <GameForm
+            draft={draft}
+            onChange={setDraft}
+            onClose={() => setView('find')}
+            onSubmit={handleCreateGame}
+            sports={featuredSports}
+            games={games}
+          />
+        )
+      ) : (
+        <div>
+          <p>You must be logged in to create a game.</p>
+          <button onClick={() => setShowLogin(true)}>Login</button>
+        </div>
+      )}
     </section>
   );
 
@@ -247,6 +303,49 @@ function App() {
     </section>
   );
 
+  const gameSection = selectedGame ? (
+    <section className="page-panel">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Game Details</p>
+          <h2>
+            You&apos;ve joined {selectedGame.sport} at {selectedGame.location}
+          </h2>
+        </div>
+      </div>
+      <div className="game-details-card">
+        <p>
+          <strong>Time:</strong> {formatGameTime(selectedGame.startTime)} -{' '}
+          {formatGameTime(selectedGame.endTime)}
+        </p>
+        <p>
+          <strong>Location:</strong> {selectedGame.location}
+        </p>
+        <p>
+          <strong>Skill level:</strong> {selectedGame.skillLevel}
+        </p>
+        <p>
+          <strong>Age range:</strong> {selectedGame.ageRange}
+        </p>
+        <p>
+          <strong>Gender:</strong> {selectedGame.gender}
+        </p>
+        <p>
+          <strong>Players:</strong>
+        </p>
+        <ul>
+          {selectedGame.players.map((p) => (
+            <li key={p.email}>{p.name}</li>
+          ))}
+        </ul>
+        <p>
+          <strong>Host Email:</strong> {selectedGame.organizer}
+        </p>
+        <button onClick={() => setView('find')}>Back to Games</button>
+      </div>
+    </section>
+  ) : null;
+
   const currentSection =
     view === 'home'
       ? homeSection
@@ -254,13 +353,74 @@ function App() {
         ? findSection
         : view === 'create'
           ? createSection
-          : aboutSection;
+          : view === 'game'
+            ? gameSection
+            : aboutSection;
 
   return (
     <main className="app-shell">
       <div className="app-background" aria-hidden="true" />
-      <Toolbar activeView={view} onNavigate={setView} />
+      <Toolbar
+        activeView={view}
+        onNavigate={setView}
+        user={user}
+        onLogout={handleLogout}
+      />
       {currentSection}
+      {showLogin && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Login</h3>
+            <input
+              type="text"
+              placeholder="Name"
+              value={loginName}
+              onChange={(e) => setLoginName(e.target.value)}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+            />
+            <button onClick={handleLogin}>Login</button>
+            <button onClick={() => setShowLogin(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {showConflict && conflictGame && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Game Conflict</h3>
+            <p>There&apos;s already a similar game. Would you like to join it instead?</p>
+            <div className="conflict-game">
+              <p>
+                <strong>Sport:</strong> {conflictGame.sport}
+              </p>
+              <p>
+                <strong>Location:</strong> {conflictGame.location}
+              </p>
+              <p>
+                <strong>Time:</strong> {formatGameTime(conflictGame.startTime)} -{' '}
+                {formatGameTime(conflictGame.endTime)}
+              </p>
+              <p>
+                <strong>Players:</strong> {conflictGame.players.length}/
+                {conflictGame.capacity}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                handleJoinGame(conflictGame.id);
+                setShowConflict(false);
+              }}
+            >
+              Join This Game
+            </button>
+            <button onClick={() => setShowConflict(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
