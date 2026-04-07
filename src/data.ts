@@ -1,56 +1,55 @@
 import type { GameDraft, PickupGame, SportName } from './types';
 
 export const featuredSports: SportName[] = [
-  'Basketball',
   'Soccer',
-  'Football',
-  'Volleyball',
+  'Frisbee',
+  'Tennis',
 ];
 
 export const initialGames: PickupGame[] = [
   {
     id: '1',
-    sport: 'Basketball',
-    location: 'West Campus Courts',
-    startTime: '2026-04-01T17:30',
-    capacity: 10,
-    spotsFilled: 7,
-    organizer: 'Maya',
-    note: 'Friendly run with mixed skill levels. Bring a dark and light jersey.',
-    skillLevel: 'Intermediate',
-    ageRange: '25-34',
-    gender: 'Mixed',
-  },
-  {
-    id: '2',
     sport: 'Soccer',
-    location: 'Riverside Turf Field',
-    startTime: '2026-04-01T18:15',
+    location: 'Deering Meadow',
+    startTime: '2026-04-10T17:30',
     capacity: 14,
-    spotsFilled: 11,
-    organizer: 'Jordan',
-    note: 'Small-sided game with quick rotations and plenty of subs.',
+    spotsFilled: 9,
+    organizer: 'Maya',
+    note: 'Casual small-sided game, all levels welcome.',
     skillLevel: 'Beginner',
     ageRange: '18-24',
     gender: 'Open',
   },
   {
-    id: '3',
-    sport: 'Volleyball',
-    location: 'Student Center Gym B',
-    startTime: '2026-04-01T19:00',
+    id: '2',
+    sport: 'Frisbee',
+    location: 'Lakefill North Lawn',
+    startTime: '2026-04-10T16:00',
     capacity: 12,
-    spotsFilled: 8,
-    organizer: 'Avery',
-    note: 'Open gym, all levels welcome. Kneepads recommended.',
+    spotsFilled: 5,
+    organizer: 'Jordan',
+    note: 'Ultimate frisbee, spirit of the game rules.',
     skillLevel: 'Intermediate',
-    ageRange: '35-44',
-    gender: 'Women',
+    ageRange: '18-24',
+    gender: 'Mixed',
+  },
+  {
+    id: '3',
+    sport: 'Tennis',
+    location: 'Vandy Christie Tennis Center',
+    startTime: '2026-04-10T18:00',
+    capacity: 4,
+    spotsFilled: 2,
+    organizer: 'Avery',
+    note: 'Doubles match, bring your own racket.',
+    skillLevel: 'Intermediate',
+    ageRange: '18-24',
+    gender: 'Open',
   },
 ];
 
 export const emptyDraft: GameDraft = {
-  sport: 'Basketball',
+  sport: 'Soccer',
   location: '',
   startTime: '',
   capacity: 10,
@@ -70,3 +69,12 @@ export const skillLevels: GameDraft['skillLevel'][] = [
 export const ageRanges: GameDraft['ageRange'][] = ['18-24', '25-34', '35-44', '45+'];
 
 export const genders: GameDraft['gender'][] = ['Open', 'Women', 'Men', 'Mixed'];
+
+export const openLocations: string[] = [
+  'Deering Meadow',
+  'Lakefill North Lawn',
+  'Norris South Lawn',
+  'Shakespeare Garden',
+  'North Campus Green',
+  'Vandy Christie Tennis Center',
+];
