@@ -1,21 +1,17 @@
-import {
-  Calendar,
-  ChevronRight,
-  Clock,
-  Dumbbell,
-  MapPin,
-  Users,
-  Zap,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
+import { useAuth } from '../context/auth-context';
 import { Game, useGames } from '../context/games-context';
+import { PrimaryButton } from './ui/app-buttons';
 
 interface GameCardProps {
   game: Game;
 }
 
-const sportIcons: Record<string, React.ReactNode> = {
+const sportIcons: Record<string, string> = {
   Basketball: '🏀',
   Soccer: '⚽',
   Skateboarding: '🛹',
@@ -24,127 +20,152 @@ const sportIcons: Record<string, React.ReactNode> = {
   Cycling: '🚴',
   Running: '🏃',
   Swimming: '🏊',
+  Frisbee: '🥏',
 };
 
-const levelColors = {
-  Casual: 'bg-[#eda8ff]/10 text-[#eda8ff]',
-  Intermediate: 'bg-primary/10 text-primary',
-  Pro: 'bg-secondary/10 text-secondary',
+const levelStyles: Record<Game['competitiveLevel'], string> = {
+  Casual: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+  Intermediate: 'bg-amber-50 text-amber-900 border border-amber-200',
+  Competitive: 'bg-red-50 text-red-800 border border-red-200',
 };
 
 export function GameCard({ game }: GameCardProps) {
+  const navigate = useNavigate();
   const { joinGame, leaveGame } = useGames();
-  const [isJoined, setIsJoined] = useState(game.players.includes('You'));
-  const isFull = game.currentPlayers >= game.maxPlayers;
+  const { user } = useAuth();
+  const playerName = user?.displayName ?? 'You';
 
-  const handleJoinLeave = () => {
+  const [isJoined, setIsJoined] = useState(
+    () => game.players.includes(playerName) || game.players.includes('You'),
+  );
+
+  useEffect(() => {
+    setIsJoined(game.players.includes(playerName) || game.players.includes('You'));
+  }, [game.id, game.players, playerName]);
+
+  const isFull = game.currentPlayers >= game.maxPlayers;
+  const needsPlayers = !game.cancelled && game.currentPlayers < game.minPlayers;
+
+  const handleJoinLeave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      navigate(`/sign-in?next=${encodeURIComponent(`/games/${game.id}`)}`);
+      return;
+    }
+    if (game.cancelled && !isJoined) {
+      toast.error(
+        'This game was cancelled — not enough players signed up before start time.',
+      );
+      return;
+    }
     if (isJoined) {
-      leaveGame(game.id, 'You');
+      await leaveGame(game.id, playerName);
+      if (game.players.includes('You')) await leaveGame(game.id, 'You');
       setIsJoined(false);
-    } else {
-      if (!isFull) {
-        joinGame(game.id, 'You');
-        setIsJoined(true);
+    } else if (!isFull) {
+      const joinedOk = await joinGame(game.id, playerName);
+      if (!joinedOk) {
+        toast.error(
+          "You're already in another game that overlaps with this time. Leave that game first or pick a different time.",
+        );
+        return;
       }
+      setIsJoined(true);
+      navigate(`/games/${game.id}`);
     }
   };
 
-  const spotsLeft = game.maxPlayers - game.currentPlayers;
+  const pct = Math.min(100, Math.round((game.currentPlayers / game.maxPlayers) * 100));
 
   return (
-    <div className="bg-[#131313] p-5 lg:p-6 rounded-2xl space-y-4 border border-[#262626]/50 hover:border-primary/20 transition-all hover:shadow-[0_8px_24px_rgba(255,143,111,0.08)] group">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl bg-primary/10 flex items-center justify-center text-2xl lg:text-3xl shrink-0 group-hover:scale-105 transition-transform">
-            {sportIcons[game.sport] || <Dumbbell className="w-6 h-6 text-primary" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-['Epilogue'] text-lg lg:text-xl font-bold tracking-tight text-foreground truncate">
-              {game.title}
-            </h3>
-            <span
-              className={`inline-block mt-1 px-2 py-1 rounded-full text-[10px] font-semibold tracking-widest uppercase ${levelColors[game.competitiveLevel]}`}
-            >
-              {game.competitiveLevel}
-            </span>
-          </div>
-        </div>
-        <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-2">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Info Grid */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <MapPin className="w-4 h-4 text-primary shrink-0" />
-          <span className="truncate">{game.location}</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Calendar className="w-4 h-4 text-primary shrink-0" />
-          <span className="truncate">{game.date}</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Clock className="w-4 h-4 text-primary shrink-0" />
-          <span>{game.time}</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Users className="w-4 h-4 text-primary shrink-0" />
-          <span>
-            {game.currentPlayers}/{game.maxPlayers} players
-          </span>
-        </div>
-      </div>
-
-      {/* Notes */}
-      {game.notes && (
-        <p className="text-xs text-muted-foreground bg-[#1a1919] p-3 rounded-lg line-clamp-2">
-          {game.notes}
-        </p>
-      )}
-
-      {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="w-full h-2 bg-[#1a1919] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300"
-            style={{ width: `${(game.currentPlayers / game.maxPlayers) * 100}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
-            {spotsLeft > 0 ? (
-              <>
-                {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
-              </>
-            ) : (
-              'Full'
-            )}
-          </span>
-          {isJoined && (
-            <div className="flex items-center gap-1 text-primary">
-              <Zap className="w-3 h-3 fill-current" />
-              <span className="font-semibold">Joined</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Action Button */}
-      <button
-        onClick={handleJoinLeave}
-        disabled={!isJoined && isFull}
-        className={`w-full py-3 lg:py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all active:scale-[0.98] ${
-          isJoined
-            ? 'bg-[#262626] text-foreground hover:bg-[#2c2c2c] border border-primary/20'
-            : isFull
-              ? 'bg-[#1a1919] text-muted-foreground cursor-not-allowed'
-              : 'bg-primary text-primary-foreground shadow-[0_8px_16px_rgba(255,143,111,0.15)] hover:shadow-[0_12px_24px_rgba(255,143,111,0.2)]'
-        }`}
+    <div
+      className={`rounded-2xl border border-gray-100 bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] ${game.cancelled ? 'opacity-70' : ''}`}
+    >
+      <Link
+        to={`/games/${game.id}`}
+        className="block space-y-3 rounded-t-2xl p-5 pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
       >
-        {isJoined ? 'Leave Game' : isFull ? 'Game Full' : 'Join Game'}
-      </button>
+        <div className="flex items-start gap-3">
+          <span className="text-3xl" aria-hidden>
+            {sportIcons[game.sport] ?? '🏟️'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <span className="inline-block rounded-full bg-brand px-2.5 py-0.5 text-xs font-semibold text-white">
+              {game.sport}
+            </span>
+            <h3 className="mt-2 text-lg font-semibold text-text-primary">{game.title}</h3>
+            <p className="mt-1 text-sm text-text-secondary">
+              {game.location}
+              {game.address ? ` · ${game.address}` : ''}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-text-primary">
+          <span className="inline-flex items-center gap-1.5 text-text-secondary">
+            <Calendar className="h-4 w-4 text-brand" />
+            {game.date}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-text-secondary">
+            <Clock className="h-4 w-4 text-brand" />
+            {game.time}
+            {game.endTime ? ` – ${game.endTime}` : ''}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {game.cancelled ? (
+            <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-text-primary">
+              Cancelled
+            </span>
+          ) : null}
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${levelStyles[game.competitiveLevel]}`}
+          >
+            {game.competitiveLevel}
+          </span>
+          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-text-secondary">
+            {game.gender}
+          </span>
+          {needsPlayers ? (
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">
+              ⚠️ Needs more players
+            </span>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-text-primary">
+            {game.currentPlayers} / {game.maxPlayers} joined
+          </p>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-brand transition-all duration-300"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+      </Link>
+
+      <div className="border-t border-gray-50 px-5 pb-5 pt-3">
+        <PrimaryButton
+          type="button"
+          className="min-h-[44px] w-full"
+          onClick={handleJoinLeave}
+          disabled={user ? !isJoined && (isFull || !!game.cancelled) : false}
+        >
+          {!user
+            ? 'Join'
+            : isJoined
+              ? 'Leave'
+              : game.cancelled
+                ? 'Cancelled'
+                : isFull
+                  ? 'Full'
+                  : 'Join'}
+        </PrimaryButton>
+      </div>
     </div>
   );
 }

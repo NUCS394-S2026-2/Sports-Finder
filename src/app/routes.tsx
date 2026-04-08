@@ -1,52 +1,34 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, createMemoryRouter, Navigate } from 'react-router';
 
-import { Layout } from './components/layout';
+import { RootLayout } from './components/root-layout';
 import { AddGamePage } from './pages/add-game-page';
+import { GameDetailPage } from './pages/game-detail-page';
 import { GamesPage } from './pages/games-page';
+import { HomePage } from './pages/home-page';
+import { NotificationsPage } from './pages/notifications-page';
+import { ProfilePage } from './pages/profile-page';
+import { SignInPage } from './pages/sign-in-page';
 
-// Placeholder components for other routes
-function MapPage() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-      <div className="text-6xl">🗺️</div>
-      <h2 className="font-['Epilogue'] text-3xl font-bold text-foreground">Map View</h2>
-      <p className="text-muted-foreground">
-        Coming soon - Find games near you on the map
-      </p>
-    </div>
-  );
-}
-
-function SquadPage() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-      <div className="text-6xl">👥</div>
-      <h2 className="font-['Epilogue'] text-3xl font-bold text-foreground">Your Squad</h2>
-      <p className="text-muted-foreground">Coming soon - Connect with your teammates</p>
-    </div>
-  );
-}
-
-function ProfilePage() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-      <div className="text-6xl">👤</div>
-      <h2 className="font-['Epilogue'] text-3xl font-bold text-foreground">Profile</h2>
-      <p className="text-muted-foreground">Coming soon - View and edit your profile</p>
-    </div>
-  );
-}
-
-export const router = createBrowserRouter([
+/** Shared with tests so navigation behavior matches production. */
+export const appRoutes = [
   {
     path: '/',
-    Component: Layout,
+    Component: RootLayout,
     children: [
-      { index: true, Component: GamesPage },
+      { index: true, element: <Navigate to="/home" replace /> },
+      { path: 'sign-in', Component: SignInPage },
+      { path: 'home', Component: HomePage },
+      { path: 'games', Component: GamesPage },
+      { path: 'games/:gameId', Component: GameDetailPage },
       { path: 'add-game', Component: AddGamePage },
-      { path: 'map', Component: MapPage },
-      { path: 'squad', Component: SquadPage },
       { path: 'profile', Component: ProfilePage },
+      { path: 'notifications', Component: NotificationsPage },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(appRoutes);
+
+export function createTestMemoryRouter(initialEntries: string[]) {
+  return createMemoryRouter(appRoutes, { initialEntries });
+}

@@ -2,21 +2,22 @@ import { useEffect } from 'react';
 import { RouterProvider } from 'react-router';
 
 import { Toaster } from './components/ui/sonner';
+import { AuthProvider } from './context/auth-context';
 import { GamesProvider } from './context/games-context';
 import { router } from './routes';
 
 function App() {
   useEffect(() => {
-    document.title = 'PickUp - Find Pickup Sports Games Near You';
+    document.title = 'Pickup Sports Finder · Northwestern';
   }, []);
 
   return (
-    <div className="dark">
+    <AuthProvider>
       <GamesProvider>
         <RouterProvider router={router} />
         <Toaster />
       </GamesProvider>
-    </div>
+    </AuthProvider>
   );
 }
 

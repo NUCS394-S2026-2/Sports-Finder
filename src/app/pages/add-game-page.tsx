@@ -1,278 +1,539 @@
-import { ArrowLeft, Calendar, Clock, MapPin, Minus, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Minus, Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import { PrimaryButton } from '../components/ui/app-buttons';
+import { useAuth } from '../context/auth-context';
+import type { Game } from '../context/games-context';
 import { useGames } from '../context/games-context';
+import { meetsMinimumHostLead } from '../lib/game-schedule';
+import {
+  DEERING_MEADOW,
+  HUTCHINSON_FIELD,
+  isWithinHutchinsonHours,
+  NORTHWESTERN_TENNIS_COURTS,
+} from '../lib/venues';
 
-const sports = [
-  { id: 'Basketball', icon: '🏀' },
-  { id: 'Soccer', icon: '⚽' },
-  { id: 'Tennis', icon: '🎾' },
-  { id: 'Volleyball', icon: '🏐' },
-  { id: 'Skateboarding', icon: '🛹' },
-  { id: 'Cycling', icon: '🚴' },
-  { id: 'Running', icon: '🏃' },
-  { id: 'Swimming', icon: '🏊' },
+type SportId = 'Tennis' | 'Soccer' | 'Frisbee';
+type FrisbeeField = 'deering' | 'hutchinson';
+
+const SPORT_TILES: { id: SportId; emoji: string; label: string }[] = [
+  { id: 'Tennis', emoji: '🎾', label: 'Tennis' },
+  { id: 'Soccer', emoji: '⚽', label: 'Soccer' },
+  { id: 'Frisbee', emoji: '🥏', label: 'Frisbee' },
 ];
 
-const competitiveLevels = ['Casual', 'Intermediate', 'Pro'] as const;
+function venueFor(sport: SportId, frisbeeField: FrisbeeField) {
+  if (sport === 'Tennis') return NORTHWESTERN_TENNIS_COURTS;
+  if (sport === 'Soccer') return HUTCHINSON_FIELD;
+  return frisbeeField === 'deering' ? DEERING_MEADOW : HUTCHINSON_FIELD;
+}
+
+const LEVELS: Game['competitiveLevel'][] = ['Casual', 'Intermediate', 'Competitive'];
+const GENDERS: Game['gender'][] = ['Co-ed', "Men's", "Women's"];
+
+function isoToDisplay(iso: string) {
+  if (!iso) return '';
+  const d = new Date(`${iso}T12:00:00`);
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function minutesBetween(startHm: string, endHm: string): number | null {
+  if (!startHm || !endHm) return null;
+  const [startH, startM] = startHm.split(':').map(Number);
+  const [endH, endM] = endHm.split(':').map(Number);
+  if (
+    Number.isNaN(startH) ||
+    Number.isNaN(startM) ||
+    Number.isNaN(endH) ||
+    Number.isNaN(endM)
+  ) {
+    return null;
+  }
+  return endH * 60 + endM - (startH * 60 + startM);
+}
 
 export function AddGamePage() {
   const navigate = useNavigate();
-  const { addGame } = useGames();
+  const { addGame, games } = useGames();
+  const { user } = useAuth();
 
-  const [selectedSport, setSelectedSport] = useState('Basketball');
+  const [sport, setSport] = useState<SportId>('Tennis');
+  const [frisbeeField, setFrisbeeField] = useState<FrisbeeField>('deering');
+  const venue = useMemo(() => venueFor(sport, frisbeeField), [sport, frisbeeField]);
+  const isHutchinson = venue.name === HUTCHINSON_FIELD.name;
   const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [maxPlayers, setMaxPlayers] = useState(12);
-  const [competitiveLevel, setCompetitiveLevel] = useState<
-    'Casual' | 'Intermediate' | 'Pro'
-  >('Casual');
+  const [endTime, setEndTime] = useState('');
+  const [minPlayers, setMinPlayers] = useState(4);
+  const [maxPlayers, setMaxPlayers] = useState(10);
+  const [competitiveLevel, setCompetitiveLevel] =
+    useState<Game['competitiveLevel']>('Casual');
+  const [gender, setGender] = useState<Game['gender']>('Co-ed');
   const [notes, setNotes] = useState('');
+  const [ignoreConflict, setIgnoreConflict] = useState(false);
+  const [nowTick, setNowTick] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dateLabel = date ? isoToDisplay(date) : '';
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const selectedDateIsPast = !!date && date < todayIso;
+
+  const conflictingGame = useMemo(() => {
+    if (!dateLabel || !time) return undefined;
+    return games.find(
+      (g) =>
+        !g.cancelled &&
+        g.location === venue.name &&
+        g.date === dateLabel &&
+        g.time === time,
+    );
+  }, [games, venue.name, dateLabel, time]);
+
+  const showConflict = !!conflictingGame && !ignoreConflict;
+
+  const hutchinsonOk =
+    !isHutchinson ||
+    !date ||
+    !time ||
+    !endTime ||
+    isWithinHutchinsonHours(date, time, endTime);
+
+  const fiveHoursLeadOk = useMemo(() => {
+    void nowTick;
+    if (!date || !time) return true;
+    return meetsMinimumHostLead(date, time, Date.now());
+  }, [date, time, nowTick]);
+
+  const durationMinutes = useMemo(() => minutesBetween(time, endTime), [time, endTime]);
+  const durationOk = durationMinutes !== null && durationMinutes >= 40;
+
+  const formComplete =
+    !!title.trim() &&
+    !!date &&
+    !!time &&
+    !!endTime &&
+    !selectedDateIsPast &&
+    minPlayers >= 0 &&
+    maxPlayers >= minPlayers &&
+    maxPlayers >= 1 &&
+    maxPlayers <= 30 &&
+    durationOk &&
+    hutchinsonOk &&
+    fiveHoursLeadOk;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!title || !location || !date || !time) {
+    if (!formComplete) {
       toast.error('Please fill in all required fields');
       return;
     }
+    if (showConflict) return;
 
-    addGame({
-      sport: selectedSport,
-      title,
-      location,
-      date,
-      time,
-      maxPlayers,
-      competitiveLevel,
-      notes: notes || undefined,
-    });
+    if (selectedDateIsPast) {
+      toast.error('Please choose today or a future date.');
+      return;
+    }
 
-    toast.success('Game created successfully!');
-    navigate('/');
+    if (!durationOk) {
+      toast.error('Game duration must be at least 40 minutes.');
+      return;
+    }
+
+    if (isHutchinson && !isWithinHutchinsonHours(date, time, endTime)) {
+      toast.error(
+        `Hutchinson Field is only open ${HUTCHINSON_FIELD.hoursLine}. Pick a time in that window.`,
+      );
+      return;
+    }
+
+    if (!meetsMinimumHostLead(date, time, Date.now())) {
+      toast.error('Games must be scheduled at least 5 hours from now.');
+      return;
+    }
+
+    try {
+      await addGame({
+        sport,
+        title: title.trim(),
+        location: venue.name,
+        address: venue.address,
+        date: dateLabel,
+        time,
+        endTime,
+        maxPlayers,
+        minPlayers,
+        competitiveLevel,
+        gender,
+        notes: notes.trim() || undefined,
+        hostName: user?.displayName ?? 'Northwestern Host',
+      });
+
+      toast.success('Game created successfully!');
+      navigate('/games');
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      if (code === 'HOST_DUPLICATE_START_TIME') {
+        toast.error('You already posted a game at this exact start time.');
+        return;
+      }
+      if (code === 'HOST_ACTIVE_GAMES_LIMIT') {
+        toast.error('You cannot have more than 3 active hosted games.');
+        return;
+      }
+      toast.error('Could not create game. Please try again.');
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Back Button & Title - Mobile Only */}
-      <div className="flex items-center gap-4 mb-8 lg:hidden">
-        <button
-          onClick={() => navigate('/')}
-          className="w-10 h-10 rounded-full bg-[#262626] flex items-center justify-center text-primary hover:bg-[#2c2c2c] transition-colors active:scale-95"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="font-['Epilogue'] text-3xl font-extrabold tracking-tight uppercase text-foreground">
-          Host a Game
-        </h1>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="hidden lg:block mb-8">
-        <p className="text-muted-foreground">
-          Create a new game and invite others to join
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            {/* Sport Selection */}
-            <section className="space-y-4">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Select Sport
-              </p>
-              <div className="grid grid-cols-4 gap-3">
-                {sports.map((sport) => (
-                  <button
-                    key={sport.id}
-                    type="button"
-                    onClick={() => setSelectedSport(sport.id)}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl gap-2 transition-all ${
-                      selectedSport === sport.id
-                        ? 'bg-primary text-primary-foreground shadow-[0_8px_16px_rgba(255,143,111,0.15)]'
-                        : 'bg-[#262626] text-muted-foreground hover:bg-[#2c2c2c]'
-                    }`}
-                  >
-                    <span className="text-2xl">{sport.icon}</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider">
-                      {sport.id}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Game Title */}
-            <section className="space-y-3">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Game Title
-              </p>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Sunset 3v3 Pick-up"
-                className="w-full bg-[#131313] border-none rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                required
-              />
-            </section>
-
-            {/* Location */}
-            <section className="space-y-3">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Location
-              </p>
-              <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Search court or address"
-                  className="w-full bg-[#131313] border-none rounded-xl py-4 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                  required
-                />
-              </div>
-            </section>
-
-            {/* Date & Time */}
-            <section className="grid grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                  Date
-                </p>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-[#131313] border-none rounded-xl py-4 pl-12 pr-4 text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-3">
-                <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                  Time
-                </p>
-                <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="w-full bg-[#131313] border-none rounded-xl py-4 pl-12 pr-4 text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Max Players */}
-            <section className="space-y-3">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Max Players
-              </p>
-              <div className="flex items-center justify-between bg-[#131313] rounded-xl p-2">
-                <button
-                  type="button"
-                  onClick={() => setMaxPlayers(Math.max(2, maxPlayers - 1))}
-                  className="w-12 h-12 flex items-center justify-center bg-[#262626] rounded-lg text-foreground active:scale-95 transition-all hover:bg-[#2c2c2c]"
-                >
-                  <Minus className="w-5 h-5" />
-                </button>
-                <span className="text-3xl font-['Epilogue'] font-bold text-primary">
-                  {maxPlayers}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMaxPlayers(Math.min(50, maxPlayers + 1))}
-                  className="w-12 h-12 flex items-center justify-center bg-[#262626] rounded-lg text-foreground active:scale-95 transition-all hover:bg-[#2c2c2c]"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-            </section>
-
-            {/* Competitive Level */}
-            <section className="space-y-3">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Competitive Level
-              </p>
-              <div className="flex bg-[#131313] p-1 rounded-xl">
-                {competitiveLevels.map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setCompetitiveLevel(level)}
-                    className={`flex-1 py-3 text-sm font-semibold rounded-lg transition-all ${
-                      competitiveLevel === level
-                        ? 'bg-[#262626] text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Notes */}
-            <section className="space-y-3">
-              <p className="text-xs tracking-widest text-muted-foreground uppercase font-semibold">
-                Notes/Requirements
-              </p>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Bring water, sneakers required..."
-                rows={5}
-                className="w-full bg-[#131313] border-none rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 transition-all resize-none"
-              />
-            </section>
-
-            {/* Preview Card - Desktop Only */}
-            <div className="hidden lg:block bg-gradient-to-br from-primary/10 to-secondary/10 p-4 rounded-2xl border border-primary/20">
-              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest font-semibold">
-                Preview
-              </p>
-              <div className="space-y-2">
-                <p className="font-['Epilogue'] text-lg font-bold text-foreground">
-                  {title || 'Your Game Title'}
-                </p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="text-xl">
-                    {sports.find((s) => s.id === selectedSport)?.icon}
-                  </span>
-                  <span>{selectedSport}</span>
-                  <span>•</span>
-                  <span>{competitiveLevel}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="lg:max-w-md lg:mx-auto">
+    <div className="mx-auto max-w-2xl px-0 pb-8">
+      <div className="rounded-2xl bg-white p-6 shadow-[0_2px_20px_rgba(0,0,0,0.06)] md:p-8">
+        <div className="mb-6 flex items-center gap-4 lg:hidden">
           <button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground py-5 rounded-2xl font-['Epilogue'] font-extrabold text-xl tracking-tight shadow-[0_12px_24px_rgba(255,143,111,0.2)] hover:shadow-[0_16px_32px_rgba(255,143,111,0.3)] active:scale-[0.98] transition-all"
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-text-primary"
+            aria-label="Back"
           >
-            POST GAME
+            <ArrowLeft className="h-5 w-5" />
           </button>
         </div>
-      </form>
+
+        <h1 className="text-3xl font-black tracking-tight text-text-primary">
+          Host a Pickup Game
+        </h1>
+        <p className="mt-2 text-text-secondary">
+          We only support Northwestern Tennis Courts, Hutchinson Field, and Deering Meadow
+          — each with the hours shown below.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-10 space-y-10">
+          <section className="space-y-4">
+            <p className="text-sm font-semibold text-text-primary">Sport</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {SPORT_TILES.map((s) => {
+                const selected = sport === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSport(s.id);
+                      setIgnoreConflict(false);
+                    }}
+                    className={`rounded-2xl border-2 p-4 text-left transition-colors ${
+                      selected
+                        ? 'border-brand bg-brand-light'
+                        : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100/80'
+                    }`}
+                  >
+                    <span className="text-3xl">{s.emoji}</span>
+                    <p className="mt-2 font-semibold text-text-primary">{s.label}</p>
+                    {selected ? (
+                      <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+                        {venue.name}
+                        <br />
+                        {venue.address}
+                        <br />
+                        <span className="mt-1 block font-medium text-text-primary">
+                          {venue.hoursLine}
+                        </span>
+                      </p>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {sport === 'Frisbee' ? (
+            <section className="space-y-3">
+              <p className="text-sm font-semibold text-text-primary">Frisbee field</p>
+              <p className="text-xs text-text-secondary">
+                Deering is open anytime. Hutchinson follows the weekday/weekend windows
+                below.
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFrisbeeField('deering');
+                    setIgnoreConflict(false);
+                  }}
+                  className={`rounded-2xl border-2 p-4 text-left text-sm transition-colors ${
+                    frisbeeField === 'deering'
+                      ? 'border-brand bg-brand-light'
+                      : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-semibold text-text-primary">{DEERING_MEADOW.name}</p>
+                  <p className="mt-1 text-text-secondary">{DEERING_MEADOW.hoursLine}</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFrisbeeField('hutchinson');
+                    setIgnoreConflict(false);
+                  }}
+                  className={`rounded-2xl border-2 p-4 text-left text-sm transition-colors ${
+                    frisbeeField === 'hutchinson'
+                      ? 'border-brand bg-brand-light'
+                      : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-semibold text-text-primary">
+                    {HUTCHINSON_FIELD.name}
+                  </p>
+                  <p className="mt-1 text-text-secondary">{HUTCHINSON_FIELD.hoursLine}</p>
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          <section className="space-y-2">
+            <label
+              htmlFor="game-title"
+              className="text-sm font-semibold text-text-primary"
+            >
+              Game title
+            </label>
+            <input
+              id="game-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Sunset 5v5 pickup"
+              className="app-input"
+              required
+            />
+          </section>
+
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-2 sm:col-span-1">
+              <label
+                htmlFor="game-date"
+                className="text-sm font-semibold text-text-primary"
+              >
+                Date
+              </label>
+              <input
+                id="game-date"
+                type="date"
+                min={todayIso}
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setIgnoreConflict(false);
+                }}
+                className="app-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="start-time"
+                className="text-sm font-semibold text-text-primary"
+              >
+                Start time
+              </label>
+              <input
+                id="start-time"
+                type="time"
+                value={time}
+                onChange={(e) => {
+                  setTime(e.target.value);
+                  setIgnoreConflict(false);
+                }}
+                className="app-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="end-time"
+                className="text-sm font-semibold text-text-primary"
+              >
+                End time
+              </label>
+              <input
+                id="end-time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="app-input"
+                required
+              />
+            </div>
+          </section>
+
+          {date && time && !fiveHoursLeadOk ? (
+            <p className="text-sm font-medium text-amber-800">
+              Start must be at least 5 hours from now — pick a later date or time.
+            </p>
+          ) : null}
+
+          {time && endTime && !durationOk ? (
+            <p className="text-sm font-medium text-amber-800">
+              End time must be at least 40 minutes after start time.
+            </p>
+          ) : null}
+
+          {isHutchinson && date && time && endTime && !hutchinsonOk ? (
+            <p className="text-sm font-medium text-amber-800">
+              <span className="font-semibold text-text-primary">
+                Hutchinson Field hours:{' '}
+              </span>
+              {HUTCHINSON_FIELD.hoursLine}. Your start and end time must fall entirely
+              inside that window.
+            </p>
+          ) : null}
+
+          <section className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-text-primary">Min players</p>
+              <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-2 py-2">
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-text-primary"
+                  onClick={() => setMinPlayers((n) => Math.max(0, n - 1))}
+                >
+                  <Minus className="h-5 w-5" />
+                </button>
+                <span className="text-xl font-bold text-text-primary">{minPlayers}</span>
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-text-primary"
+                  onClick={() => setMinPlayers((n) => Math.min(maxPlayers, n + 1))}
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-text-primary">Max players</p>
+              <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-2 py-2">
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-text-primary"
+                  onClick={() => setMaxPlayers((n) => Math.max(minPlayers, n - 1))}
+                >
+                  <Minus className="h-5 w-5" />
+                </button>
+                <span className="text-xl font-bold text-text-primary">{maxPlayers}</span>
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-text-primary"
+                  onClick={() => setMaxPlayers((n) => Math.min(30, n + 1))}
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <p className="text-sm font-semibold text-text-primary">Competitive level</p>
+            <div className="grid grid-cols-3 gap-2 rounded-xl border border-gray-200 bg-gray-50 p-1">
+              {LEVELS.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setCompetitiveLevel(level)}
+                  className={`rounded-lg py-3 text-center text-sm font-semibold transition-colors ${
+                    competitiveLevel === level
+                      ? 'bg-white text-brand shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <p className="text-sm font-semibold text-text-primary">Gender</p>
+            <p className="text-xs text-text-secondary">
+              Who this pickup is intended for — be clear so the right people show up.
+            </p>
+            <div className="grid grid-cols-3 gap-2 rounded-xl border border-gray-200 bg-gray-50 p-1">
+              {GENDERS.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGender(g)}
+                  className={`rounded-lg py-3 text-center text-sm font-semibold transition-colors ${
+                    gender === g
+                      ? 'bg-white text-brand shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <label htmlFor="notes" className="text-sm font-semibold text-text-primary">
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Cleats, bring both jersey colors, etc."
+              rows={4}
+              className="app-input min-h-[120px] resize-y"
+            />
+          </section>
+
+          <div className="rounded-lg border-l-4 border-brand bg-brand-light p-4 text-sm text-text-primary">
+            📌 You are responsible for reserving this court before posting this game.
+          </div>
+
+          {showConflict && conflictingGame ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-semibold">
+                ⚠️ A game is already scheduled at this time — want to join it instead?
+              </p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <PrimaryButton
+                  type="button"
+                  className="min-h-[44px] sm:w-auto"
+                  onClick={() => navigate(`/games/${conflictingGame.id}`)}
+                >
+                  View & Join Game
+                </PrimaryButton>
+                <button
+                  type="button"
+                  className="text-sm font-medium text-text-muted underline-offset-2 hover:text-text-primary hover:underline"
+                  onClick={() => setIgnoreConflict(true)}
+                >
+                  Post Anyway
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          <PrimaryButton
+            type="submit"
+            disabled={!formComplete || showConflict}
+            className="min-h-[48px] w-full disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Post Game
+          </PrimaryButton>
+        </form>
+      </div>
     </div>
   );
 }
