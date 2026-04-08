@@ -5,7 +5,6 @@ import { AddGamePage } from './pages/add-game-page';
 import { GameDetailPage } from './pages/game-detail-page';
 import { GamesPage } from './pages/games-page';
 import { HomePage } from './pages/home-page';
-import { NotificationsPage } from './pages/notifications-page';
 import { ProfilePage } from './pages/profile-page';
 import { SignInPage } from './pages/sign-in-page';
 
@@ -22,7 +21,6 @@ export const appRoutes = [
       { path: 'games/:gameId', Component: GameDetailPage },
       { path: 'add-game', Component: AddGamePage },
       { path: 'profile', Component: ProfilePage },
-      { path: 'notifications', Component: NotificationsPage },
     ],
   },
 ];

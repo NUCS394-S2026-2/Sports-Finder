@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../context/auth-context';
 import { AppLayout } from './layout';
 
-const AUTH_REQUIRED_PREFIXES = ['/add-game', '/profile', '/notifications'] as const;
+const AUTH_REQUIRED_PREFIXES = ['/add-game', '/profile'] as const;
 
 /** Exported for tests — must stay aligned with auth redirect rules. */
 export function pathRequiresAuth(pathname: string): boolean {

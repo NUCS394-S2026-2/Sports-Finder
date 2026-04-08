@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { PrimaryButton } from '../components/ui/app-buttons';
@@ -9,8 +9,7 @@ import { useAuth } from '../context/auth-context';
 export function SignInPage() {
   const { user, signIn } = useAuth();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const next = params.get('next') || '/home';
+  const next = '/home';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

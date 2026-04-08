@@ -1,11 +1,9 @@
-import { Bell, Home, LayoutGrid, Menu, Plus, UserRound } from 'lucide-react';
+import { Home, LayoutGrid, Menu, Plus, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../context/auth-context';
-import { NotificationsContent } from './notifications-content';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { useIsMobile } from './ui/use-mobile';
 
 function LogoLink() {
   return (
@@ -28,7 +26,6 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const content = children ?? <Outlet />;
@@ -42,10 +39,6 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
     `flex min-h-[44px] min-w-[64px] flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
       isActive ? 'text-brand' : 'text-text-muted'
     }`;
-
-  const notificationsHref = user
-    ? '/notifications'
-    : `/sign-in?next=${encodeURIComponent('/notifications')}`;
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
@@ -66,47 +59,6 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {isMobile ? (
-              <Link
-                to={notificationsHref}
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] text-text-secondary hover:bg-gray-50 hover:text-brand"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-              </Link>
-            ) : user ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] text-text-secondary hover:bg-gray-50 hover:text-brand"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="h-5 w-5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  className="w-80 overflow-hidden rounded-2xl border border-gray-100 p-0 shadow-xl"
-                >
-                  <p className="border-b border-gray-100 px-4 py-3 text-sm font-bold text-text-primary">
-                    Notifications
-                  </p>
-                  <div className="max-h-[min(70vh,420px)] overflow-y-auto">
-                    <NotificationsContent />
-                  </div>
-                </PopoverContent>
-              </Popover>
-            ) : (
-              <Link
-                to={notificationsHref}
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] text-text-secondary hover:bg-gray-50 hover:text-brand"
-                aria-label="Notifications — sign in to view"
-              >
-                <Bell className="h-5 w-5" />
-              </Link>
-            )}
-
             <div className="hidden items-center gap-2 lg:flex">
               {user ? (
                 <Popover>
