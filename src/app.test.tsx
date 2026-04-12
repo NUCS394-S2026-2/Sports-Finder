@@ -80,11 +80,12 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: /filter by the fit that matters/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /beginner/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /women/i })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: /search/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /sport/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /availability/i })).toBeInTheDocument();
   });
 
-  test('requires login before showing create game form', async () => {
+  test('shows progressive sport step in create flow', async () => {
     const user = userEvent.setup();
 
     render(<App />);
@@ -92,8 +93,9 @@ describe('App', () => {
     await screen.findByRole('button', { name: 'Homepage' });
     await user.click(screen.getByRole('button', { name: 'Create a Game' }));
 
-    expect(screen.getByRole('heading', { name: /log in required/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /log in to create/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tennis' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Soccer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ultimate Frisbee' })).toBeInTheDocument();
   });
 
   test('shows the about page mission statement', async () => {

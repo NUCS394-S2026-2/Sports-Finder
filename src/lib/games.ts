@@ -3,9 +3,10 @@ import {
   collection,
   doc,
   getDocs,
-  runTransaction,
+  increment,
   serverTimestamp,
   Timestamp,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { db } from '../firebase';
@@ -61,11 +62,6 @@ function parseGender(value: unknown): PickupGame['gender'] {
 }
 
 function toPickupGame(docId: string, data: FirestoreGameDoc): PickupGame {
-  const rawAttendees = Array.isArray(data.attendees) ? data.attendees : [];
-  const attendees = rawAttendees.filter(
-    (value): value is string => typeof value === 'string',
-  );
-
   return {
     id: docId,
     sport: parseSport(data.sport),
@@ -78,7 +74,6 @@ function toPickupGame(docId: string, data: FirestoreGameDoc): PickupGame {
     skillLevel: data.skillLevel ?? 'Beginner',
     ageRange: data.ageRange ?? '25-34',
     gender: parseGender(data.gender),
-    attendees,
   };
 }
 
@@ -137,43 +132,14 @@ export async function createGame(draft: GameDraft): Promise<void> {
     skillLevel: draft.skillLevel,
     ageRange: draft.ageRange,
     gender: draft.gender,
-    attendees: [],
     createdAt: serverTimestamp(),
   });
 }
 
-export async function joinGame(gameId: string, attendeeName: string): Promise<void> {
+export async function joinGame(gameId: string): Promise<void> {
   const gameRef = doc(db, 'games', gameId);
 
-  await runTransaction(db, async (transaction) => {
-    const gameDoc = await transaction.get(gameRef);
-    if (!gameDoc.exists()) {
-      throw new Error('Game not found');
-    }
-
-    const data = gameDoc.data() as {
-      capacity?: number;
-      spotsFilled?: number;
-      attendees?: unknown[];
-    };
-
-    const capacity = Math.max(2, Math.round(data.capacity ?? 10));
-    const spotsFilled = Math.max(0, Math.round(data.spotsFilled ?? 0));
-    const attendees = (Array.isArray(data.attendees) ? data.attendees : []).filter(
-      (value): value is string => typeof value === 'string',
-    );
-
-    if (attendees.includes(attendeeName)) {
-      return;
-    }
-
-    if (spotsFilled >= capacity) {
-      throw new Error('Game is full');
-    }
-
-    transaction.update(gameRef, {
-      spotsFilled: spotsFilled + 1,
-      attendees: [...attendees, attendeeName],
-    });
+  await updateDoc(gameRef, {
+    spotsFilled: increment(1),
   });
 }

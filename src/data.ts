@@ -15,7 +15,6 @@ export const initialGames: PickupGame[] = [
     skillLevel: 'Intermediate',
     ageRange: '25-34',
     gender: 'All',
-    attendees: ['Maya', 'Chris'],
   },
   {
     id: '2',
@@ -29,7 +28,6 @@ export const initialGames: PickupGame[] = [
     skillLevel: 'Beginner',
     ageRange: '18-24',
     gender: 'All',
-    attendees: ['Jordan', 'Sam'],
   },
   {
     id: '3',
@@ -43,7 +41,6 @@ export const initialGames: PickupGame[] = [
     skillLevel: 'Intermediate',
     ageRange: '35-44',
     gender: 'All',
-    attendees: ['Avery'],
   },
 ];
 

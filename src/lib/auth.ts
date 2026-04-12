@@ -98,13 +98,25 @@ export async function registerWithProfile(
   return profile;
 }
 
-export async function loginWithEmail(email: string, password: string): Promise<void> {
+export async function loginWithEmail(
+  email: string,
+  password: string,
+  preferredName = '',
+): Promise<void> {
   const users = readStoredUsers();
   const normalizedEmail = email.trim() || `user-${Date.now()}@local.test`;
+  const normalizedPreferredName = preferredName.trim();
 
   const existing = users.find((user) => user.email === normalizedEmail);
 
   if (existing) {
+    if (normalizedPreferredName && normalizedPreferredName !== existing.name) {
+      const updatedUsers = users.map((user) =>
+        user.uid === existing.uid ? { ...user, name: normalizedPreferredName } : user,
+      );
+      writeStoredUsers(updatedUsers);
+    }
+
     writeCurrentAuthUser({ uid: existing.uid, email: existing.email });
     return;
   }
@@ -112,7 +124,7 @@ export async function loginWithEmail(email: string, password: string): Promise<v
   const generated: StoredUser = {
     uid: `u-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     email: normalizedEmail,
-    name: normalizedEmail.split('@')[0] || 'Player',
+    name: normalizedPreferredName || normalizedEmail.split('@')[0] || 'Player',
     age: 18,
     gender: 'Other',
     password,

@@ -1,10 +1,10 @@
 import './App.css';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { GameCard } from './components/GameCard';
 import { GameForm } from './components/GameForm';
-import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
 import { ageRanges, emptyDraft, genders, skillLevels } from './data';
 import {
@@ -19,32 +19,44 @@ import { createGame, fetchGames, joinGame } from './lib/games';
 import type { GameDraft, PickupGame, UserProfile } from './types';
 
 type TagValue<T extends string> = 'All' | T;
+type TimeOfDayFilter = 'All' | 'Morning' | 'Afternoon' | 'Evening' | 'Night';
+type AvailabilityFilter = 'All' | 'Open spots' | 'Almost full' | 'Full';
+
+function getTimeOfDay(startTime: string): Exclude<TimeOfDayFilter, 'All'> | null {
+  const [datePart, timePart] = startTime.split('T');
+  if (!datePart || !timePart) {
+    return null;
+  }
+
+  const hour = Number(timePart.slice(0, 2));
+  if (!Number.isFinite(hour)) {
+    return null;
+  }
+
+  if (hour < 12) {
+    return 'Morning';
+  }
+  if (hour < 17) {
+    return 'Afternoon';
+  }
+  if (hour < 21) {
+    return 'Evening';
+  }
+  return 'Night';
+}
+
+function getAvailabilityLabel(game: PickupGame): Exclude<AvailabilityFilter, 'All'> {
+  const spotsRemaining = game.capacity - game.spotsFilled;
+  if (spotsRemaining <= 0) {
+    return 'Full';
+  }
+  if (spotsRemaining <= 2) {
+    return 'Almost full';
+  }
+  return 'Open spots';
+}
 
 function getAuthErrorMessage(error: unknown): string {
-  const errorCode =
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof (error as { code?: unknown }).code === 'string'
-      ? (error as { code: string }).code
-      : '';
-
-  if (errorCode === 'auth/configuration-not-found') {
-    return 'Firebase Auth is not configured for this project yet. In Firebase Console, enable Authentication and turn on the Email/Password sign-in provider.';
-  }
-
-  if (errorCode === 'auth/invalid-credential') {
-    return 'Invalid email or password.';
-  }
-
-  if (errorCode === 'auth/email-already-in-use') {
-    return 'That email is already in use. Try logging in instead.';
-  }
-
-  if (errorCode === 'auth/weak-password') {
-    return 'Password is too weak. Use at least 6 characters.';
-  }
-
   return error instanceof Error ? error.message : 'Authentication failed';
 }
 
@@ -53,10 +65,15 @@ function App() {
   const [games, setGames] = useState<PickupGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
+    sport: 'All' as TagValue<PickupGame['sport']>,
     skillLevel: 'All' as TagValue<PickupGame['skillLevel']>,
     ageRange: 'All' as TagValue<PickupGame['ageRange']>,
     gender: 'All' as TagValue<PickupGame['gender']>,
+    location: 'All' as 'All' | string,
+    timeOfDay: 'All' as TimeOfDayFilter,
+    availability: 'All' as AvailabilityFilter,
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const [draft, setDraft] = useState<GameDraft>({
     ...emptyDraft,
     startTime: toLocalDateTimeValue(new Date(Date.now() + 90 * 60 * 1000)),
@@ -121,6 +138,19 @@ function App() {
     return () => window.clearTimeout(clearTimer);
   }, [view, focusedGameId, games]);
 
+  useEffect(() => {
+    if (!activeGame) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeGame]);
+
   function handleViewGame(gameId: string) {
     const targetGame = games.find((game) => game.id === gameId) ?? null;
     setView('find');
@@ -129,31 +159,78 @@ function App() {
   }
 
   const upcomingGames = useMemo(() => games.slice(0, 2), [games]);
+  const locationOptions = useMemo(() => {
+    return ['All', ...new Set(games.map((game) => game.location))];
+  }, [games]);
 
   const filteredGames = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
     return games.filter((game) => {
+      const gameTimeOfDay = getTimeOfDay(game.startTime);
+      const matchesSport = filters.sport === 'All' || game.sport === filters.sport;
       const matchesSkill =
         filters.skillLevel === 'All' || game.skillLevel === filters.skillLevel;
       const matchesAge = filters.ageRange === 'All' || game.ageRange === filters.ageRange;
       const matchesGender = filters.gender === 'All' || game.gender === filters.gender;
+      const matchesLocation =
+        filters.location === 'All' || game.location === filters.location;
+      const matchesTimeOfDay =
+        filters.timeOfDay === 'All' || gameTimeOfDay === filters.timeOfDay;
+      const matchesAvailability =
+        filters.availability === 'All' ||
+        getAvailabilityLabel(game) === filters.availability;
+      const haystack = [
+        game.sport,
+        game.location,
+        game.note,
+        game.organizer,
+        game.startTime,
+        formatGameTime(game.startTime),
+        game.skillLevel,
+        game.ageRange,
+        game.gender,
+      ]
+        .join(' ')
+        .toLowerCase();
+      const matchesSearch = !normalizedQuery || haystack.includes(normalizedQuery);
 
-      return matchesSkill && matchesAge && matchesGender;
+      return (
+        matchesSport &&
+        matchesSkill &&
+        matchesAge &&
+        matchesGender &&
+        matchesLocation &&
+        matchesTimeOfDay &&
+        matchesAvailability &&
+        matchesSearch
+      );
     });
-  }, [filters, games]);
+  }, [filters, games, searchQuery]);
 
   async function handleJoinGame(id: string) {
-    if (!profile) {
-      setAuthMode('login');
-      setAuthOpen(true);
-      return;
-    }
-
     try {
-      await joinGame(id, profile.name);
+      await joinGame(id);
       const updated = await fetchGames();
       setGames(updated);
     } catch (err) {
       console.error('Failed to join game:', err);
+    }
+  }
+
+  async function handleCreateGame() {
+    try {
+      await createGame(draft);
+      const updated = await fetchGames();
+      setGames(updated);
+
+      setDraft({
+        ...emptyDraft,
+        startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
+      });
+      setView('find');
+    } catch (err) {
+      console.error('Failed to create game:', err);
     }
   }
 
@@ -162,7 +239,7 @@ function App() {
 
     try {
       if (authMode === 'login') {
-        await loginWithEmail(authForm.email, authForm.password);
+        await loginWithEmail(authForm.email, authForm.password, authForm.name);
       } else {
         const parsedAge = Number(authForm.age);
         await registerWithProfile({
@@ -187,28 +264,6 @@ function App() {
     }
   }
 
-  async function handleCreateGame() {
-    if (!profile) {
-      setAuthMode('login');
-      setAuthOpen(true);
-      return;
-    }
-
-    try {
-      await createGame(draft);
-      const updated = await fetchGames();
-      setGames(updated);
-
-      setDraft({
-        ...emptyDraft,
-        startTime: toLocalDateTimeValue(new Date(Date.now() + 120 * 60 * 1000)),
-      });
-      setView('find');
-    } catch (err) {
-      console.error('Failed to create game:', err);
-    }
-  }
-
   if (loading) {
     return (
       <main className="app-shell">
@@ -223,7 +278,6 @@ function App() {
           }}
           onLogout={async () => {
             await logout();
-            setActiveGame(null);
           }}
         />
         <section className="page-panel">
@@ -275,13 +329,7 @@ function App() {
 
         <div className="game-grid home-grid">
           {upcomingGames.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              onJoin={handleJoinGame}
-              canSeePrivateDetails={Boolean(profile)}
-              canJoin={Boolean(profile)}
-            />
+            <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
           ))}
         </div>
       </div>
@@ -296,45 +344,152 @@ function App() {
           <h2>Filter by the fit that matters</h2>
         </div>
         <p className="section-copy">
-          Browse tiles, then narrow the list using skill level, age range, and gender
-          tags.
+          Browse tiles, search by any game detail, and narrow the list with quick filters.
         </p>
       </div>
 
-      <div className="filter-stack">
-        <TagFilterGroup
-          label="Skill level"
-          value={filters.skillLevel}
-          options={['All', ...skillLevels]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              skillLevel: value as TagValue<PickupGame['skillLevel']>,
-            }))
-          }
-        />
-        <TagFilterGroup
-          label="Age range"
-          value={filters.ageRange}
-          options={['All', ...ageRanges]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              ageRange: value as TagValue<PickupGame['ageRange']>,
-            }))
-          }
-        />
-        <TagFilterGroup
-          label="Gender"
-          value={filters.gender}
-          options={['All', ...genders]}
-          onChange={(value) =>
-            setFilters((current) => ({
-              ...current,
-              gender: value as TagValue<PickupGame['gender']>,
-            }))
-          }
-        />
+      <div className="filter-toolbar" aria-label="Game filters">
+        <label className="filter-control filter-control-search">
+          <span>Search</span>
+          <input
+            type="search"
+            placeholder="Sport, location, time, organizer, notes..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </label>
+
+        <label className="filter-control">
+          <span>Sport</span>
+          <select
+            value={filters.sport}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                sport: event.target.value as TagValue<PickupGame['sport']>,
+              }))
+            }
+          >
+            <option value="All">All</option>
+            {[...new Set(games.map((game) => game.sport))].map((sport) => (
+              <option key={sport} value={sport}>
+                {sport}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Location</span>
+          <select
+            value={filters.location}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, location: event.target.value }))
+            }
+          >
+            {locationOptions.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Skill</span>
+          <select
+            value={filters.skillLevel}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                skillLevel: event.target.value as TagValue<PickupGame['skillLevel']>,
+              }))
+            }
+          >
+            <option value="All">All</option>
+            {skillLevels.map((skillLevel) => (
+              <option key={skillLevel} value={skillLevel}>
+                {skillLevel}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Age</span>
+          <select
+            value={filters.ageRange}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                ageRange: event.target.value as TagValue<PickupGame['ageRange']>,
+              }))
+            }
+          >
+            <option value="All">All</option>
+            {ageRanges.map((ageRange) => (
+              <option key={ageRange} value={ageRange}>
+                {ageRange}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Gender</span>
+          <select
+            value={filters.gender}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                gender: event.target.value as TagValue<PickupGame['gender']>,
+              }))
+            }
+          >
+            {genders.map((gender) => (
+              <option key={gender} value={gender}>
+                {gender}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Time</span>
+          <select
+            value={filters.timeOfDay}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                timeOfDay: event.target.value as TimeOfDayFilter,
+              }))
+            }
+          >
+            <option value="All">All</option>
+            <option value="Morning">Morning</option>
+            <option value="Afternoon">Afternoon</option>
+            <option value="Evening">Evening</option>
+            <option value="Night">Night</option>
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Availability</span>
+          <select
+            value={filters.availability}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                availability: event.target.value as AvailabilityFilter,
+              }))
+            }
+          >
+            <option value="All">All</option>
+            <option value="Open spots">Open spots</option>
+            <option value="Almost full">Almost full</option>
+            <option value="Full">Full</option>
+          </select>
+        </label>
       </div>
 
       <div className="game-grid">
@@ -346,97 +501,9 @@ function App() {
             onOpen={setActiveGame}
             cardId={`game-tile-${game.id}`}
             highlighted={focusedGameId === game.id}
-            canSeePrivateDetails={Boolean(profile)}
-            canJoin={Boolean(profile)}
           />
         ))}
       </div>
-
-      {activeGame ? (
-        <div className="game-modal-backdrop">
-          <button
-            type="button"
-            className="game-modal-dismiss"
-            onClick={() => setActiveGame(null)}
-            aria-label="Close game details"
-          />
-          <article
-            className="game-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Game details"
-          >
-            <div className="game-card-top">
-              <span className="sport-pill">{activeGame.sport}</span>
-              <span
-                className={
-                  activeGame.capacity - activeGame.spotsFilled <= 0
-                    ? 'status status-full'
-                    : 'status'
-                }
-              >
-                {activeGame.capacity - activeGame.spotsFilled <= 0
-                  ? 'Full'
-                  : `${activeGame.capacity - activeGame.spotsFilled} spots open`}
-              </span>
-            </div>
-
-            <h2>{profile ? activeGame.location : 'Login to view location'}</h2>
-            <p className="game-time game-modal-time">
-              {formatGameTime(activeGame.startTime)}
-            </p>
-            <p className="game-note game-modal-note">{activeGame.note}</p>
-
-            <div className="tag-row" aria-label="Game tags">
-              <span className="tag">{activeGame.skillLevel}</span>
-              <span className="tag">Age {activeGame.ageRange}</span>
-              <span className="tag">{activeGame.gender}</span>
-            </div>
-
-            <dl className="game-details">
-              <div>
-                <dt>Organizer</dt>
-                <dd>{profile ? activeGame.organizer : 'Login required'}</dd>
-              </div>
-              <div>
-                <dt>Players</dt>
-                <dd>
-                  {activeGame.spotsFilled}/{activeGame.capacity}
-                </dd>
-              </div>
-            </dl>
-
-            {profile ? (
-              <div className="attendees-list">
-                <p className="attendees-title">Attendees</p>
-                <p>
-                  {activeGame.attendees.length > 0
-                    ? activeGame.attendees.join(', ')
-                    : 'No attendees yet.'}
-                </p>
-              </div>
-            ) : null}
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="join-button"
-                disabled={activeGame.capacity - activeGame.spotsFilled <= 0 || !profile}
-                onClick={async () => {
-                  await handleJoinGame(activeGame.id);
-                  setActiveGame(null);
-                }}
-              >
-                {activeGame.capacity - activeGame.spotsFilled <= 0
-                  ? 'Game full'
-                  : profile
-                    ? 'Join game'
-                    : 'Login to join'}
-              </button>
-            </div>
-          </article>
-        </div>
-      ) : null}
 
       {filteredGames.length === 0 ? (
         <div className="empty-state">
@@ -459,33 +526,14 @@ function App() {
         </p>
       </div>
 
-      {profile ? (
-        <GameForm
-          draft={draft}
-          onChange={setDraft}
-          onClose={() => setView('find')}
-          onSubmit={handleCreateGame}
-          games={games}
-          onViewGame={handleViewGame}
-        />
-      ) : (
-        <section className="form-card" aria-label="Login required to create games">
-          <h3>Log in required</h3>
-          <p>You need an account to create and host a game.</p>
-          <div className="form-actions">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => {
-                setAuthMode('login');
-                setAuthOpen(true);
-              }}
-            >
-              Log in to create
-            </button>
-          </div>
-        </section>
-      )}
+      <GameForm
+        draft={draft}
+        onChange={setDraft}
+        onClose={() => setView('find')}
+        onSubmit={handleCreateGame}
+        games={games}
+        onViewGame={handleViewGame}
+      />
     </section>
   );
 
@@ -530,6 +578,82 @@ function App() {
           ? createSection
           : aboutSection;
 
+  const gameDetailsModal = activeGame
+    ? createPortal(
+        <div className="game-modal-backdrop">
+          <button
+            type="button"
+            className="game-modal-dismiss"
+            onClick={() => setActiveGame(null)}
+            aria-label="Close game details"
+          />
+          <article
+            className="game-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Game details"
+          >
+            <div className="game-card-top">
+              <span className="sport-pill">{activeGame.sport}</span>
+              <span
+                className={
+                  activeGame.capacity - activeGame.spotsFilled <= 0
+                    ? 'status status-full'
+                    : 'status'
+                }
+              >
+                {activeGame.capacity - activeGame.spotsFilled <= 0
+                  ? 'Full'
+                  : `${activeGame.capacity - activeGame.spotsFilled} spots open`}
+              </span>
+            </div>
+
+            <h2>{activeGame.location}</h2>
+            <p className="game-time game-modal-time">
+              {formatGameTime(activeGame.startTime)}
+            </p>
+            <p className="game-note game-modal-note">{activeGame.note}</p>
+
+            <div className="tag-row" aria-label="Game tags">
+              <span className="tag">{activeGame.skillLevel}</span>
+              <span className="tag">Age {activeGame.ageRange}</span>
+              <span className="tag">{activeGame.gender}</span>
+            </div>
+
+            <dl className="game-details">
+              <div>
+                <dt>Organizer</dt>
+                <dd>{activeGame.organizer}</dd>
+              </div>
+              <div>
+                <dt>Players</dt>
+                <dd>
+                  {activeGame.spotsFilled}/{activeGame.capacity}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="join-button"
+                disabled={activeGame.capacity - activeGame.spotsFilled <= 0}
+                onClick={async () => {
+                  await handleJoinGame(activeGame.id);
+                  setActiveGame(null);
+                }}
+              >
+                {activeGame.capacity - activeGame.spotsFilled <= 0
+                  ? 'Game full'
+                  : 'Join game'}
+              </button>
+            </div>
+          </article>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <main className="app-shell">
       <div className="app-background" aria-hidden="true" />
@@ -543,10 +667,10 @@ function App() {
         }}
         onLogout={async () => {
           await logout();
-          setActiveGame(null);
         }}
       />
       {currentSection}
+      {gameDetailsModal}
 
       {authOpen ? (
         <div className="auth-modal-backdrop">
@@ -557,6 +681,17 @@ function App() {
             aria-label="Authentication"
           >
             <h2>{authMode === 'login' ? 'Log in' : 'Create account'}</h2>
+
+            <label>
+              Name
+              <input
+                value={authForm.name}
+                onChange={(event) =>
+                  setAuthForm((current) => ({ ...current, name: event.target.value }))
+                }
+                placeholder="What should other players call you?"
+              />
+            </label>
 
             <label>
               Email
@@ -582,16 +717,6 @@ function App() {
 
             {authMode === 'register' ? (
               <>
-                <label>
-                  Name
-                  <input
-                    value={authForm.name}
-                    onChange={(event) =>
-                      setAuthForm((current) => ({ ...current, name: event.target.value }))
-                    }
-                  />
-                </label>
-
                 <label>
                   Age
                   <input

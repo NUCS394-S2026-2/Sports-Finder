@@ -65,6 +65,41 @@ export function GameForm({
     return slots;
   }
 
+  function getHudsonDefaultTimeForDate(datePart: string): string {
+    if (!datePart) {
+      return '18:00';
+    }
+
+    const selectedDate = new Date(`${datePart}T00:00:00`);
+    const dayOfWeek = selectedDate.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    return isWeekend ? '08:00' : '18:00';
+  }
+
+  function getNormalizedDraftForAvailability(nextDraft: GameDraft): GameDraft {
+    const [datePart, timePart] = nextDraft.startTime.split('T');
+    if (!datePart) {
+      return nextDraft;
+    }
+
+    const requiresHudsonWindow =
+      nextDraft.sport === 'Soccer' ||
+      (nextDraft.sport === 'Ultimate Frisbee' && nextDraft.location === HUDSON_FIELD);
+
+    if (!requiresHudsonWindow) {
+      return nextDraft;
+    }
+
+    if (!timePart || !isHudsonTimeAllowed(nextDraft.startTime)) {
+      return {
+        ...nextDraft,
+        startTime: `${datePart}T${getHudsonDefaultTimeForDate(datePart)}`,
+      };
+    }
+
+    return nextDraft;
+  }
+
   function isHudsonTimeAllowed(startTime: string): boolean {
     if (!startTime.includes('T')) {
       return true;
@@ -165,7 +200,10 @@ export function GameForm({
     const date = formatISODate(pickedDate);
     const time = draft.startTime.split('T')[1] || '08:00';
 
-    const nextDraft = { ...draft, startTime: `${date}T${time}` };
+    const nextDraft = getNormalizedDraftForAvailability({
+      ...draft,
+      startTime: `${date}T${time}`,
+    });
 
     onChange(nextDraft);
     setNotification(null);
@@ -194,6 +232,9 @@ export function GameForm({
 
   function formatDateForComparison(dateString: string): string {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
     return date.toISOString().split('T')[0];
   }
 
@@ -205,10 +246,19 @@ export function GameForm({
     const selectedDate = formatDateForComparison(draft.startTime);
     const selectedTime = draft.startTime.slice(11, 16);
 
+    if (!selectedDate || !selectedTime) {
+      return null;
+    }
+
     return (
       games.find((game) => {
         const gameDate = formatDateForComparison(game.startTime);
         const gameTime = game.startTime.slice(11, 16);
+
+        if (!gameDate || !gameTime) {
+          return false;
+        }
+
         return (
           game.sport === draft.sport &&
           gameDate === selectedDate &&
@@ -235,6 +285,11 @@ export function GameForm({
       games.find((game) => {
         const gameDate = formatDateForComparison(game.startTime);
         const gameTime = game.startTime.slice(11, 16);
+
+        if (!gameDate || !gameTime) {
+          return false;
+        }
+
         return (
           game.sport === nextDraft.sport &&
           gameDate === selectedDate &&
@@ -265,7 +320,7 @@ export function GameForm({
 
   function handleSportSelect(sport: SportName) {
     const options = getLocationOptions(sport);
-    const nextDraft: GameDraft = {
+    const nextDraft: GameDraft = getNormalizedDraftForAvailability({
       ...draft,
       sport,
       location:
@@ -274,7 +329,7 @@ export function GameForm({
           : options.includes(draft.location)
             ? draft.location
             : options[0] || '',
-    };
+    });
 
     onChange(nextDraft);
     setNotification(null);
@@ -309,11 +364,20 @@ export function GameForm({
 
   function handleTimeContinue() {
     const selectedTime = draft.startTime.split('T')[1];
+    const availableSlots = generateTimeSlots();
 
     if (!selectedTime) {
       setNotification({
         type: 'error',
         message: 'Please pick a time before continuing.',
+      });
+      return;
+    }
+
+    if (!availableSlots.includes(selectedTime)) {
+      setNotification({
+        type: 'error',
+        message: 'Please choose a valid time from the list for this field.',
       });
       return;
     }
@@ -593,10 +657,10 @@ export function GameForm({
               <select
                 value={selectedTime}
                 onChange={(event) => {
-                  const nextDraft = {
+                  const nextDraft = getNormalizedDraftForAvailability({
                     ...draft,
                     startTime: `${selectedDate}T${event.target.value}`,
-                  };
+                  });
 
                   const availabilityError = getAvailabilityError(nextDraft);
 
@@ -633,7 +697,10 @@ export function GameForm({
                 <select
                   value={draft.location}
                   onChange={(event) => {
-                    const nextDraft = { ...draft, location: event.target.value };
+                    const nextDraft = getNormalizedDraftForAvailability({
+                      ...draft,
+                      location: event.target.value,
+                    });
                     const availabilityError = getAvailabilityError(nextDraft);
 
                     onChange(nextDraft);

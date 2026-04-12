@@ -12,7 +12,6 @@ export type PickupGame = {
   skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
   ageRange: '18-24' | '25-34' | '35-44' | '45+' | 'All ages';
   gender: 'All' | 'Women' | 'Men';
-  attendees: string[];
 };
 
 export type GameDraft = {

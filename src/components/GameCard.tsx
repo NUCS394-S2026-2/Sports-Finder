@@ -9,8 +9,6 @@ type GameCardProps = {
   onOpen?: (game: PickupGame) => void;
   cardId?: string;
   highlighted?: boolean;
-  canSeePrivateDetails?: boolean;
-  canJoin?: boolean;
 };
 
 export function GameCard({
@@ -19,8 +17,6 @@ export function GameCard({
   onOpen,
   cardId,
   highlighted = false,
-  canSeePrivateDetails = true,
-  canJoin = true,
 }: GameCardProps) {
   const spotsRemaining = game.capacity - game.spotsFilled;
   const isFull = spotsRemaining <= 0;
@@ -51,7 +47,7 @@ export function GameCard({
         </span>
       </div>
 
-      <h3>{canSeePrivateDetails ? game.location : 'Login to view location'}</h3>
+      <h3>{game.location}</h3>
       <p className="game-time">{formatGameTime(game.startTime)}</p>
       <p className="game-note">{game.note}</p>
 
@@ -64,7 +60,7 @@ export function GameCard({
       <dl className="game-details">
         <div>
           <dt>Organizer</dt>
-          <dd>{canSeePrivateDetails ? game.organizer : 'Login required'}</dd>
+          <dd>{game.organizer}</dd>
         </div>
         <div>
           <dt>Players</dt>
@@ -74,25 +70,16 @@ export function GameCard({
         </div>
       </dl>
 
-      {canSeePrivateDetails ? (
-        <div className="attendees-list">
-          <p className="attendees-title">Attendees</p>
-          <p>
-            {game.attendees.length > 0 ? game.attendees.join(', ') : 'No attendees yet.'}
-          </p>
-        </div>
-      ) : null}
-
       <button
         type="button"
         className="join-button"
-        disabled={isFull || !canJoin}
+        disabled={isFull}
         onClick={(event) => {
           event.stopPropagation();
           onJoin(game.id);
         }}
       >
-        {isFull ? 'Game full' : canJoin ? 'Join game' : 'Login to join'}
+        {isFull ? 'Game full' : 'Join game'}
       </button>
     </article>
   );
