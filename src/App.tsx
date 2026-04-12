@@ -1,87 +1,148 @@
 import './App.css';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 
 import { GameCard } from './components/GameCard';
 import { GameForm } from './components/GameForm';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
-import { emptyDraft, featuredSports, locations } from './data';
+import { emptyDraft, featuredSports, genders, locations, skillLevels } from './data';
 import { formatGameTime } from './lib/datetime';
 import { createGame, fetchGames, joinGame } from './lib/games';
 import type { GameDraft, PickupGame, User } from './types';
+
+type SortOption = 'date' | 'spots-asc' | 'spots-desc';
+type TagValue<T extends string> = 'All' | T;
 
 function App() {
   const [view, setView] = useState<ViewName>('home');
   const [games, setGames] = useState<PickupGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+
+  // Login modal state
   const [showLogin, setShowLogin] = useState(false);
   const [loginName, setLoginName] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
-  const [selectedGame, setSelectedGame] = useState<PickupGame | null>(null);
   const [pendingJoinId, setPendingJoinId] = useState<string | null>(null);
-  const [showConflict, setShowConflict] = useState(false);
+
+  // Post-join modal
+  const [joinedGame, setJoinedGame] = useState<PickupGame | null>(null);
+
+  // Conflict modal
   const [conflictGame, setConflictGame] = useState<PickupGame | null>(null);
-  const [filters, setFilters] = useState({
-    sport: 'All' as 'All' | PickupGame['sport'],
-    location: 'All' as 'All' | string,
-    search: '',
-  });
+
+  // Find page filters
+  const [sportFilter, setSportFilter] = useState<TagValue<PickupGame['sport']>>('All');
+  const [skillFilter, setSkillFilter] = useState<TagValue<PickupGame['skillLevel']>>('All');
+  const [genderFilter, setGenderFilter] = useState<TagValue<PickupGame['gender']>>('All');
+  const [sortBy, setSortBy] = useState<SortOption>('date');
+
+  // Time conflict modal
+  const [timeConflictGame, setTimeConflictGame] = useState<PickupGame | null>(null);
+
   const [draft, setDraft] = useState<GameDraft>(emptyDraft);
 
   useEffect(() => {
-    const data = fetchGames();
-    setGames(data);
+    setGames(fetchGames());
     setLoading(false);
   }, []);
 
-  const availableGames = useMemo(
+  const now = new Date();
+
+  const futureGames = useMemo(
     () =>
       games
-        .filter((g) => g.players.length < g.capacity)
-        .sort(
-          (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-        ),
+        .filter((g) => new Date(g.startTime) > now)
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [games],
   );
 
+  const upcomingGames = useMemo(
+    () => futureGames.filter((g) => g.players.length < g.capacity).slice(0, 6),
+    [futureGames],
+  );
+
   const hasCreatedGame = useMemo(
-    () => games.some((g) => g.organizer === user?.email),
+    () => games.some((g) => g.organizer === user?.email && new Date(g.startTime) > now),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [games, user],
   );
 
-  const upcomingGames = useMemo(() => availableGames.slice(0, 4), [availableGames]);
-
-  const filteredGames = useMemo(() => {
-    return availableGames.filter((game) => {
-      const matchesSport = filters.sport === 'All' || game.sport === filters.sport;
-      const matchesLocation =
-        filters.location === 'All' || game.location === filters.location;
-      const matchesSearch =
-        filters.search === '' ||
-        game.location.toLowerCase().includes(filters.search.toLowerCase()) ||
-        game.sport.toLowerCase().includes(filters.search.toLowerCase());
-
-      return matchesSport && matchesLocation && matchesSearch;
+  const filteredAndSorted = useMemo(() => {
+    let result = futureGames.filter((g) => {
+      const matchesSport = sportFilter === 'All' || g.sport === sportFilter;
+      const matchesSkill = skillFilter === 'All' || g.skillLevel === skillFilter;
+      const matchesGender = genderFilter === 'All' || g.gender === genderFilter;
+      return matchesSport && matchesSkill && matchesGender;
     });
-  }, [filters, availableGames]);
 
-  function handleLogin() {
-    if (loginName && loginEmail) {
-      setUser({ name: loginName, email: loginEmail });
-      setShowLogin(false);
-      setLoginName('');
-      setLoginEmail('');
-      if (pendingJoinId) {
-        const updated = joinGame(
-          pendingJoinId,
-          { name: loginName, email: loginEmail },
-          games,
-        );
-        setGames(updated);
-        setPendingJoinId(null);
-      }
+    if (sortBy === 'spots-asc') {
+      result = [...result].sort(
+        (a, b) => a.capacity - a.players.length - (b.capacity - b.players.length),
+      );
+    } else if (sortBy === 'spots-desc') {
+      result = [...result].sort(
+        (a, b) => b.capacity - b.players.length - (a.capacity - a.players.length),
+      );
+    }
+    // 'date' keeps the default sort from futureGames
+
+    return result;
+  }, [futureGames, sportFilter, skillFilter, genderFilter, sortBy]);
+
+  const sportGroups = useMemo(
+    () =>
+      featuredSports
+        .map((sport) => ({
+          sport,
+          games: filteredAndSorted.filter((g) => g.sport === sport),
+        }))
+        .filter((group) => group.games.length > 0),
+    [filteredAndSorted],
+  );
+
+  function isJoinedByUser(game: PickupGame): boolean {
+    return !!user && game.players.some((p) => p.email === user.email);
+  }
+
+  function hasTimeConflict(target: PickupGame): PickupGame | null {
+    if (!user) return null;
+    const aStart = new Date(target.startTime).getTime();
+    const aEnd = new Date(target.endTime).getTime();
+    const conflict = games.find(
+      (g) =>
+        g.id !== target.id &&
+        g.players.some((p) => p.email === user.email) &&
+        aStart < new Date(g.endTime).getTime() &&
+        aEnd > new Date(g.startTime).getTime(),
+    );
+    return conflict ?? null;
+  }
+
+  function isPastGame(game: PickupGame): boolean {
+    return new Date(game.startTime) <= now;
+  }
+
+  function handleSignIn() {
+    setShowLogin(true);
+  }
+
+  function handleLogin(e: FormEvent) {
+    e.preventDefault();
+    if (!loginName.trim() || !loginEmail.trim()) return;
+    const newUser: User = { name: loginName.trim(), email: loginEmail.trim() };
+    setUser(newUser);
+    setShowLogin(false);
+    setLoginName('');
+    setLoginEmail('');
+    if (pendingJoinId) {
+      const updated = joinGame(pendingJoinId, newUser, games);
+      setGames(updated);
+      const joined = updated.find((g) => g.id === pendingJoinId) ?? null;
+      setJoinedGame(joined);
+      setPendingJoinId(null);
     }
   }
 
@@ -95,12 +156,16 @@ function App() {
       setShowLogin(true);
       return;
     }
-    const game = games.find((g) => g.id === id);
-    if (!game) return;
+    const target = games.find((g) => g.id === id);
+    if (!target) return;
+    const conflict = hasTimeConflict(target);
+    if (conflict) {
+      setTimeConflictGame(conflict);
+      return;
+    }
     const updated = joinGame(id, user, games);
     setGames(updated);
-    setSelectedGame(updated.find((g) => g.id === id) || null);
-    setView('game');
+    setJoinedGame(updated.find((g) => g.id === id) ?? null);
   }
 
   function handleCreateGame() {
@@ -108,36 +173,29 @@ function App() {
       setShowLogin(true);
       return;
     }
-    if (games.some((g) => g.organizer === user.email)) {
-      alert('You have already created a game.');
-      return;
-    }
     const draftWithOrganizer = { ...draft, organizer: user.email };
     const result = createGame(draftWithOrganizer, games);
     if (result.conflict) {
       setConflictGame(result.conflict);
-      setShowConflict(true);
       return;
     }
     if (result.game) {
-      setGames([...games, result.game]);
+      setGames((prev) => [...prev, result.game!]);
       setDraft(emptyDraft);
       setView('find');
     }
   }
 
+  const mapsUrl = (location: string) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Northwestern University, Evanston, IL')}`;
+
   if (loading) {
     return (
       <main className="app-shell">
         <div className="app-background" aria-hidden="true" />
-        <Toolbar
-          activeView={view}
-          onNavigate={setView}
-          user={user}
-          onLogout={handleLogout}
-        />
+        <Toolbar activeView={view} onNavigate={setView} user={user} onSignIn={handleSignIn} onLogout={handleLogout} />
         <section className="page-panel">
-          <p>Loading games...</p>
+          <p>Loading games…</p>
         </section>
       </main>
     );
@@ -149,24 +207,14 @@ function App() {
         <p className="eyebrow">Homepage</p>
         <h1>Find a pickup game without digging through group chats.</h1>
         <p className="hero-text">
-          Play Local helps adults discover casual recreational sports nearby, join a
-          roster that fits, and post a new game when the court or field needs one more
-          player.
+          Play Local helps adults discover casual recreational sports nearby, join a roster
+          that fits, and post a new game when the court or field needs one more player.
         </p>
-
         <div className="hero-actions">
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => setView('find')}
-          >
+          <button className="primary-button" type="button" onClick={() => setView('find')}>
             Find local games
           </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => setView('create')}
-          >
+          <button className="secondary-button" type="button" onClick={() => setView('create')}>
             Create a game
           </button>
         </div>
@@ -176,17 +224,24 @@ function App() {
         <div className="section-header compact">
           <div>
             <p className="eyebrow">Upcoming games</p>
-            <h2>Tonight and tomorrow</h2>
+            <h2>Available near you</h2>
           </div>
-          <p className="section-copy">
-            A couple of active games to show what is happening right now.
-          </p>
+          <p className="section-copy">Games with open spots happening soon.</p>
         </div>
-
         <div className="game-grid home-grid">
-          {upcomingGames.map((game) => (
-            <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-          ))}
+          {upcomingGames.length > 0 ? (
+            upcomingGames.map((game) => (
+              <GameCard
+                key={game.id}
+                game={game}
+                onJoin={handleJoinGame}
+                isPast={isPastGame(game)}
+                isJoined={isJoinedByUser(game)}
+              />
+            ))
+          ) : (
+            <p style={{ color: 'rgba(247,244,236,0.6)' }}>No upcoming games right now.</p>
+          )}
         </div>
       </div>
     </section>
@@ -197,56 +252,74 @@ function App() {
       <div className="section-header">
         <div>
           <p className="eyebrow">Find local games</p>
-          <h2>Browse available games</h2>
+          <h2>Browse by sport</h2>
         </div>
-        <p className="section-copy">
-          Search and filter games by sport, location, and more.
-        </p>
+        <div className="sort-controls">
+          <label className="sort-label" htmlFor="sort-select">
+            Sort by
+          </label>
+          <select
+            id="sort-select"
+            className="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+          >
+            <option value="date">Soonest first</option>
+            <option value="spots-desc">Most spots available</option>
+            <option value="spots-asc">Filling up fastest</option>
+          </select>
+        </div>
       </div>
 
       <div className="filter-stack">
-        <input
-          type="text"
-          placeholder="Search by location or sport"
-          value={filters.search}
-          onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-        />
-        <TagFilterGroup<'All' | PickupGame['sport']>
+        <TagFilterGroup<PickupGame['sport']>
           label="Sport"
-          value={filters.sport}
+          value={sportFilter}
           options={['All', ...featuredSports] as Array<'All' | PickupGame['sport']>}
-          onChange={(value) => setFilters((f) => ({ ...f, sport: value }))}
+          onChange={(v) => setSportFilter(v as TagValue<PickupGame['sport']>)}
         />
-        <label>
-          Location
-          <select
-            value={filters.location}
-            onChange={(event) =>
-              setFilters({ ...filters, location: event.target.value as 'All' | string })
-            }
-          >
-            <option value="All">All locations</option>
-            {Object.keys(locations).map((loc) => (
-              <option key={loc} value={loc}>
-                {loc}
-              </option>
-            ))}
-          </select>
-        </label>
+        <TagFilterGroup<PickupGame['skillLevel']>
+          label="Skill level"
+          value={skillFilter}
+          options={['All', ...skillLevels] as Array<'All' | PickupGame['skillLevel']>}
+          onChange={(v) => setSkillFilter(v as TagValue<PickupGame['skillLevel']>)}
+        />
+        <TagFilterGroup<PickupGame['gender']>
+          label="Gender"
+          value={genderFilter}
+          options={['All', ...genders] as Array<'All' | PickupGame['gender']>}
+          onChange={(v) => setGenderFilter(v as TagValue<PickupGame['gender']>)}
+        />
       </div>
 
-      <div className="game-grid">
-        {filteredGames.map((game) => (
-          <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-        ))}
-      </div>
-
-      {filteredGames.length === 0 ? (
+      {sportGroups.length > 0 ? (
+        sportGroups.map(({ sport, games: sportGames }) => (
+          <div key={sport} className="sport-group">
+            <div className="sport-group-header">
+              <h3 className="sport-group-title">{sport}</h3>
+              <span className="sport-group-count">
+                {sportGames.length} game{sportGames.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="game-grid">
+              {sportGames.map((game) => (
+                <GameCard
+                  key={game.id}
+                  game={game}
+                  onJoin={handleJoinGame}
+                  isPast={isPastGame(game)}
+                  isJoined={isJoinedByUser(game)}
+                />
+              ))}
+            </div>
+          </div>
+        ))
+      ) : (
         <div className="empty-state">
           <h3>No games match these filters.</h3>
-          <p>Try relaxing the filters or create a new game.</p>
+          <p>Try changing the filters or create a new game.</p>
         </div>
-      ) : null}
+      )}
     </section>
   );
 
@@ -260,26 +333,29 @@ function App() {
         <p className="section-copy">Fill out the form to create a new game.</p>
       </div>
 
-      {user ? (
-        hasCreatedGame ? (
-          <div>
-            <p>You have already created a game. You cannot create multiple games.</p>
-          </div>
-        ) : (
-          <GameForm
-            draft={draft}
-            onChange={setDraft}
-            onClose={() => setView('find')}
-            onSubmit={handleCreateGame}
-            sports={featuredSports}
-            games={games}
-          />
-        )
-      ) : (
-        <div>
-          <p>You must be logged in to create a game.</p>
-          <button onClick={() => setShowLogin(true)}>Login</button>
+      {!user ? (
+        <div className="notice-card">
+          <p>You need to be signed in to create a game.</p>
+          <button className="primary-button" type="button" onClick={() => setShowLogin(true)}>
+            Sign In
+          </button>
         </div>
+      ) : hasCreatedGame ? (
+        <div className="notice-card">
+          <p>You already have an active hosted game. You can only host one game at a time.</p>
+          <button className="secondary-button" type="button" onClick={() => setView('find')}>
+            View all games
+          </button>
+        </div>
+      ) : (
+        <GameForm
+          draft={draft}
+          onChange={setDraft}
+          onClose={() => setView('find')}
+          onSubmit={handleCreateGame}
+          sports={featuredSports}
+          games={games}
+        />
       )}
     </section>
   );
@@ -295,56 +371,27 @@ function App() {
           know they are joining a group that feels like a fit.
         </p>
         <p>
-          Our mission is to make recreational sports more accessible, welcoming, and
-          easier to join for adults who want to stay active, meet people, and play without
+          Our mission is to make recreational sports more accessible, welcoming, and easier
+          to join for adults who want to stay active, meet people, and play without
           unnecessary barriers.
         </p>
+        <div className="about-locations">
+          <p className="eyebrow" style={{ marginTop: '8px' }}>Available locations</p>
+          {Object.entries(locations).map(([name, info]) => (
+            <div key={name} className="about-location-row">
+              <strong>{name}</strong>
+              <span className="tag" style={{ marginLeft: '10px' }}>
+                {info.availability === 'anytime' ? 'Anytime' : 'Evenings & weekends'}
+              </span>
+              <span style={{ marginLeft: '10px', color: 'rgba(247,244,236,0.6)', fontSize: '0.88rem' }}>
+                {info.sports.join(', ')}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
-
-  const gameSection = selectedGame ? (
-    <section className="page-panel">
-      <div className="section-header">
-        <div>
-          <p className="eyebrow">Game Details</p>
-          <h2>
-            You&apos;ve joined {selectedGame.sport} at {selectedGame.location}
-          </h2>
-        </div>
-      </div>
-      <div className="game-details-card">
-        <p>
-          <strong>Time:</strong> {formatGameTime(selectedGame.startTime)} -{' '}
-          {formatGameTime(selectedGame.endTime)}
-        </p>
-        <p>
-          <strong>Location:</strong> {selectedGame.location}
-        </p>
-        <p>
-          <strong>Skill level:</strong> {selectedGame.skillLevel}
-        </p>
-        <p>
-          <strong>Age range:</strong> {selectedGame.ageRange}
-        </p>
-        <p>
-          <strong>Gender:</strong> {selectedGame.gender}
-        </p>
-        <p>
-          <strong>Players:</strong>
-        </p>
-        <ul>
-          {selectedGame.players.map((p) => (
-            <li key={p.email}>{p.name}</li>
-          ))}
-        </ul>
-        <p>
-          <strong>Host Email:</strong> {selectedGame.organizer}
-        </p>
-        <button onClick={() => setView('find')}>Back to Games</button>
-      </div>
-    </section>
-  ) : null;
 
   const currentSection =
     view === 'home'
@@ -353,9 +400,7 @@ function App() {
         ? findSection
         : view === 'create'
           ? createSection
-          : view === 'game'
-            ? gameSection
-            : aboutSection;
+          : aboutSection;
 
   return (
     <main className="app-shell">
@@ -364,60 +409,200 @@ function App() {
         activeView={view}
         onNavigate={setView}
         user={user}
+        onSignIn={handleSignIn}
         onLogout={handleLogout}
       />
       {currentSection}
+
+      {/* ── Login modal ── */}
       {showLogin && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Login</h3>
-            <input
-              type="text"
-              placeholder="Name"
-              value={loginName}
-              onChange={(e) => setLoginName(e.target.value)}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-            />
-            <button onClick={handleLogin}>Login</button>
-            <button onClick={() => setShowLogin(false)}>Cancel</button>
+        <div className="modal" onClick={() => setShowLogin(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="eyebrow">Welcome</p>
+            <h2>Sign in to continue</h2>
+            <p className="modal-body-text">
+              Enter your name and email to join games and create listings.
+            </p>
+            <form className="modal-form" onSubmit={handleLogin}>
+              <label>
+                Name
+                <input
+                  type="text"
+                  value={loginName}
+                  onChange={(e) => setLoginName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                  autoFocus
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </label>
+              <div className="modal-actions">
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={!loginName.trim() || !loginEmail.trim()}
+                >
+                  Continue
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => {
+                    setShowLogin(false);
+                    setPendingJoinId(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-      {showConflict && conflictGame && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Game Conflict</h3>
-            <p>There&apos;s already a similar game. Would you like to join it instead?</p>
-            <div className="conflict-game">
-              <p>
-                <strong>Sport:</strong> {conflictGame.sport}
+
+      {/* ── Post-join modal ── */}
+      {joinedGame && user && (
+        <div className="modal" onClick={() => setJoinedGame(null)}>
+          <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
+            <p className="eyebrow">You&apos;re in!</p>
+            <h2>
+              {joinedGame.sport} at {joinedGame.location}
+            </h2>
+            <p className="game-time">{formatGameTime(joinedGame.startTime)}</p>
+
+            <div className="modal-details">
+              <div className="modal-detail-row">
+                <span className="modal-detail-label">Host</span>
+                <a href={`mailto:${joinedGame.organizer}`} className="modal-link">
+                  {joinedGame.organizer}
+                </a>
+              </div>
+              <div className="modal-detail-row">
+                <span className="modal-detail-label">Location</span>
+                <a
+                  href={mapsUrl(joinedGame.location)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-link"
+                >
+                  {joinedGame.location} → Google Maps ↗
+                </a>
+              </div>
+              <div className="modal-detail-row">
+                <span className="modal-detail-label">Players</span>
+                <span>
+                  {joinedGame.players.length}/{joinedGame.capacity}
+                </span>
+              </div>
+            </div>
+
+            <div className="modal-participants">
+              <p className="tag-filter-label">Participants</p>
+              <ul className="participant-list">
+                {joinedGame.players.map((p) => (
+                  <li key={p.email} className="participant-item">
+                    <span className="participant-name">{p.name}</span>
+                    {user.email === joinedGame.organizer && (
+                      <span className="participant-email">{p.email}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {user.email !== joinedGame.organizer && (
+                <p className="modal-hint">
+                  Your email has been shared with the host.
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              style={{ marginTop: '8px' }}
+              onClick={() => setJoinedGame(null)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Time conflict modal ── */}
+      {timeConflictGame && (
+        <div className="modal" onClick={() => setTimeConflictGame(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="eyebrow">Schedule conflict</p>
+            <h2>You already have a game at this time</h2>
+            <p className="modal-body-text">
+              You&apos;re already signed up for a {timeConflictGame.sport} game that overlaps
+              with this one. You can only join one game per time slot.
+            </p>
+            <div className="conflict-game-card">
+              <p style={{ margin: 0, fontWeight: 700 }}>
+                {timeConflictGame.sport} at {timeConflictGame.location}
               </p>
-              <p>
-                <strong>Location:</strong> {conflictGame.location}
-              </p>
-              <p>
-                <strong>Time:</strong> {formatGameTime(conflictGame.startTime)} -{' '}
-                {formatGameTime(conflictGame.endTime)}
-              </p>
-              <p>
-                <strong>Players:</strong> {conflictGame.players.length}/
-                {conflictGame.capacity}
+              <p className="game-time" style={{ marginTop: '6px' }}>
+                {formatGameTime(timeConflictGame.startTime)} –{' '}
+                {formatGameTime(timeConflictGame.endTime)}
               </p>
             </div>
-            <button
-              onClick={() => {
-                handleJoinGame(conflictGame.id);
-                setShowConflict(false);
-              }}
-            >
-              Join This Game
-            </button>
-            <button onClick={() => setShowConflict(false)}>Cancel</button>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => setTimeConflictGame(null)}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Conflict modal ── */}
+      {conflictGame && (
+        <div className="modal" onClick={() => setConflictGame(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="eyebrow">Heads up</p>
+            <h2>A similar game already exists</h2>
+            <p className="modal-body-text">
+              There&apos;s already a {conflictGame.sport} game at {conflictGame.location}{' '}
+              around that time. Would you like to join it instead?
+            </p>
+            <div className="conflict-game-card">
+              <p className="game-time">{formatGameTime(conflictGame.startTime)}</p>
+              <p style={{ margin: '4px 0 0', color: 'rgba(247,244,236,0.7)', fontSize: '0.9rem' }}>
+                {conflictGame.players.length}/{conflictGame.capacity} players
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  handleJoinGame(conflictGame.id);
+                  setConflictGame(null);
+                }}
+              >
+                Join this game
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() => setConflictGame(null)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

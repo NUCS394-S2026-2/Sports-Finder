@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
 import { useMemo } from 'react';
 
-import { locations, skillLevels } from '../data';
+import { ageRanges, locations, skillLevels } from '../data';
 import type { GameDraft, PickupGame, SportName } from '../types';
 
 type GameFormProps = {
@@ -13,21 +13,12 @@ type GameFormProps = {
   onClose: () => void;
 };
 
-export function GameForm({
-  draft,
-  sports,
-  games,
-  onChange,
-  onSubmit,
-  onClose,
-}: GameFormProps) {
+export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: GameFormProps) {
   const timeSlots = useMemo(() => {
     const slots = [];
     for (let hour = 6; hour <= 22; hour++) {
       for (let min = 0; min < 60; min += 15) {
-        slots.push(
-          `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
-        );
+        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
       }
     }
     return slots;
@@ -40,12 +31,15 @@ export function GameForm({
     );
   }, [draft.sport]);
 
+  const selectedLocationInfo = draft.location ? locations[draft.location] : null;
+
   const availableStartTimes = useMemo(() => {
     if (!draft.location || !draft.date || !locations[draft.location]) return [];
     const locInfo = locations[draft.location];
     let allowedSlots = timeSlots;
+
     if (locInfo.availability !== 'anytime') {
-      const date = new Date(draft.date);
+      const date = new Date(draft.date + 'T00:00:00');
       const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
       const day = days[date.getDay()];
       const avail = locInfo.availability[day];
@@ -55,7 +49,18 @@ export function GameForm({
         );
       }
     }
-    // Filter out conflicts
+
+    // Filter out past times if today is selected
+    const today = new Date().toISOString().split('T')[0];
+    if (draft.date === today) {
+      const now = new Date();
+      allowedSlots = allowedSlots.filter((slot) => {
+        const slotTime = new Date(`${draft.date}T${slot}:00`);
+        return slotTime > now;
+      });
+    }
+
+    // Filter out conflicting times (within 30 min of existing game at same location)
     return allowedSlots.filter((slot) => {
       const slotTime = new Date(`${draft.date}T${slot}:00`).getTime();
       return !games.some(
@@ -81,6 +86,17 @@ export function GameForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit();
+  }
+
+  function formatAvailability() {
+    if (!selectedLocationInfo) return null;
+    if (selectedLocationInfo.availability === 'anytime') return 'Available anytime';
+    const entries = Object.entries(selectedLocationInfo.availability);
+    if (entries.length === 0) return null;
+    const [, first] = entries[0];
+    const [, last] = entries[entries.length - 1];
+    const days = entries.map(([d]) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+    return `${days}: ${first.start}–${last.end}`;
   }
 
   return (
@@ -138,12 +154,7 @@ export function GameForm({
           <select
             value={draft.location}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                location: event.target.value,
-                startTime: '',
-                endTime: '',
-              })
+              onChange({ ...draft, location: event.target.value, startTime: '', endTime: '' })
             }
             disabled={!draft.sport}
           >
@@ -156,18 +167,18 @@ export function GameForm({
           </select>
         </label>
 
+        {selectedLocationInfo && (
+          <p className="location-hint">
+            ⏰ {formatAvailability()}
+          </p>
+        )}
+
         <label>
           Start Time
           <select
-            value={
-              draft.startTime ? new Date(draft.startTime).toTimeString().slice(0, 5) : ''
-            }
+            value={draft.startTime ? new Date(draft.startTime).toTimeString().slice(0, 5) : ''}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                startTime: `${draft.date}T${event.target.value}:00`,
-                endTime: '',
-              })
+              onChange({ ...draft, startTime: `${draft.date}T${event.target.value}:00`, endTime: '' })
             }
             disabled={!draft.location || !draft.date}
           >
@@ -183,9 +194,7 @@ export function GameForm({
         <label>
           End Time
           <select
-            value={
-              draft.endTime ? new Date(draft.endTime).toTimeString().slice(0, 5) : ''
-            }
+            value={draft.endTime ? new Date(draft.endTime).toTimeString().slice(0, 5) : ''}
             onChange={(event) =>
               onChange({ ...draft, endTime: `${draft.date}T${event.target.value}:00` })
             }
@@ -207,12 +216,7 @@ export function GameForm({
             min={2}
             max={30}
             value={draft.capacity}
-            onChange={(event) =>
-              onChange({
-                ...draft,
-                capacity: Number(event.target.value),
-              })
-            }
+            onChange={(event) => onChange({ ...draft, capacity: Number(event.target.value) })}
             required
           />
         </label>
@@ -222,15 +226,12 @@ export function GameForm({
           <select
             value={draft.skillLevel}
             onChange={(event) =>
-              onChange({
-                ...draft,
-                skillLevel: event.target.value as GameDraft['skillLevel'],
-              })
+              onChange({ ...draft, skillLevel: event.target.value as GameDraft['skillLevel'] })
             }
           >
-            {skillLevels.map((skillLevel) => (
-              <option key={skillLevel} value={skillLevel}>
-                {skillLevel}
+            {skillLevels.map((s) => (
+              <option key={s} value={s}>
+                {s}
               </option>
             ))}
           </select>
@@ -238,13 +239,18 @@ export function GameForm({
 
         <label>
           Age Range
-          <input
-            type="text"
+          <select
             value={draft.ageRange}
             onChange={(event) => onChange({ ...draft, ageRange: event.target.value })}
-            placeholder="e.g. 18+ or 16-25"
             required
-          />
+          >
+            <option value="">Select age range</option>
+            {ageRanges.map((range) => (
+              <option key={range} value={range}>
+                {range}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>
@@ -285,8 +291,8 @@ export function GameForm({
         <div className="warning">
           <p>
             <strong>Important:</strong> We are unable to guarantee the availability of the
-            play area. Creators of a game are responsible for ensuring that the location
-            is usable at the time of the game.
+            play area. Creators of a game are responsible for ensuring that the location is
+            usable at the time of the game.
           </p>
         </div>
 
