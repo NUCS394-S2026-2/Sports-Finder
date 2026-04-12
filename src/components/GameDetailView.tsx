@@ -9,8 +9,10 @@ type GameDetailViewProps = {
   mapsUrl: (location: string) => string;
   isJoined: boolean;
   isPast: boolean;
+  isOrganizer: boolean;
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
+  onCancel: (id: string) => void;
   onBack: () => void;
 };
 
@@ -31,8 +33,10 @@ export function GameDetailView({
   mapsUrl,
   isJoined,
   isPast,
+  isOrganizer,
   onJoin,
   onLeave,
+  onCancel,
   onBack,
 }: GameDetailViewProps) {
   const level = competitiveLabel(game.skillLevel);
@@ -45,8 +49,12 @@ export function GameDetailView({
 
   const leaveOnDark =
     'w-full justify-center border-red-400/40 bg-red-500/10 text-red-200 hover:border-red-400/60 hover:bg-red-500/15';
+  const cancelOnDark =
+    'w-full justify-center border-amber-400/40 bg-amber-500/10 text-amber-100 hover:border-amber-400/60 hover:bg-amber-500/15';
   const leaveOnLight =
     'w-full justify-center border border-gray-300 bg-gray-100 font-semibold text-gray-900 hover:bg-gray-200';
+  const cancelOnLight =
+    'w-full justify-center border border-amber-300 bg-amber-50 font-semibold text-amber-950 hover:bg-amber-100';
 
   const title =
     game.note.trim().length > 0 ? game.note : `${game.sport} pickup · ${game.location}`;
@@ -131,7 +139,15 @@ export function GameDetailView({
           </p>
 
           <div className="hidden md:block xl:hidden">
-            {isJoined && !isPast ? (
+            {isOrganizer && !isPast ? (
+              <Button
+                variant="secondary"
+                className={`py-3.5 ${cancelOnDark}`}
+                onClick={() => onCancel(game.id)}
+              >
+                Cancel game
+              </Button>
+            ) : isJoined && !isPast ? (
               <Button
                 variant="secondary"
                 className={`py-3.5 ${leaveOnDark}`}
@@ -176,7 +192,15 @@ export function GameDetailView({
               ✓ Host confirmed court reservation
             </div>
 
-            {isJoined && !isPast ? (
+            {isOrganizer && !isPast ? (
+              <Button
+                variant="secondary"
+                className={`hidden w-full justify-center py-3.5 xl:flex ${cancelOnDark}`}
+                onClick={() => onCancel(game.id)}
+              >
+                Cancel game
+              </Button>
+            ) : isJoined && !isPast ? (
               <Button
                 variant="secondary"
                 className={`hidden w-full justify-center py-3.5 xl:flex ${leaveOnDark}`}
@@ -199,7 +223,15 @@ export function GameDetailView({
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 z-50 border-t border-white/12 bg-white p-4 shadow-[0_-8px_30px_rgba(9,19,31,0.08)] md:hidden">
-        {isJoined && !isPast ? (
+        {isOrganizer && !isPast ? (
+          <Button
+            variant="secondary"
+            className={`py-3.5 ${cancelOnLight}`}
+            onClick={() => onCancel(game.id)}
+          >
+            Cancel game
+          </Button>
+        ) : isJoined && !isPast ? (
           <Button
             variant="secondary"
             className={`py-3.5 ${leaveOnLight}`}

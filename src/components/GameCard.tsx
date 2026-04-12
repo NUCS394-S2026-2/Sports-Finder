@@ -8,9 +8,11 @@ type GameCardProps = {
   game: PickupGame;
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
+  onCancel?: (id: string) => void;
   onOpenDetail?: (id: string) => void;
   isPast?: boolean;
   isJoined?: boolean;
+  isOrganizer?: boolean;
 };
 
 function levelPillClass(level: ReturnType<typeof competitiveLabel>): string {
@@ -23,9 +25,11 @@ export function GameCard({
   game,
   onJoin,
   onLeave,
+  onCancel,
   onOpenDetail,
   isPast = false,
   isJoined = false,
+  isOrganizer = false,
 }: GameCardProps) {
   const spotsRemaining = game.capacity - game.players.length;
   const isFull = spotsRemaining <= 0;
@@ -110,7 +114,18 @@ export function GameCard({
         </div>
       </div>
 
-      {isJoined && !isPast ? (
+      {isJoined && !isPast && isOrganizer && onCancel ? (
+        <Button
+          variant="secondary"
+          className="mt-auto w-full justify-center border-amber-400/40 bg-amber-500/10 text-amber-100 hover:border-amber-400/60 hover:bg-amber-500/15"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCancel(game.id);
+          }}
+        >
+          Cancel game
+        </Button>
+      ) : isJoined && !isPast ? (
         <Button
           variant="secondary"
           className="mt-auto w-full justify-center border-red-400/40 bg-red-500/10 text-red-200 hover:border-red-400/60 hover:bg-red-500/15"

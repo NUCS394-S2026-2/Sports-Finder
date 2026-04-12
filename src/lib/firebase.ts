@@ -22,6 +22,11 @@ export function isFirebaseConfigured(): boolean {
   );
 }
 
+/** For UI / logs when debugging Firestore permission errors. */
+export function getFirebaseProjectIdForDiagnostics(): string {
+  return String(import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '').trim();
+}
+
 export function getFirebaseAuth(): Auth | null {
   if (!isFirebaseConfigured()) return null;
   return getAuth(app);

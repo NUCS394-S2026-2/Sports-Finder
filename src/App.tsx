@@ -1,11 +1,11 @@
 import {
   onAuthStateChanged,
-  signInAnonymously,
   signInWithPopup,
   signOut,
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom';
 
 import { GameCard } from './components/GameCard';
 import { GameDetailView } from './components/GameDetailView';
@@ -20,34 +20,43 @@ import { AppNavbar } from './components/ui/AppNavbar';
 import { BottomTabBar } from './components/ui/BottomTabBar';
 import { Button } from './components/ui/Button';
 import type { ViewName } from './components/ui/viewNames';
-import { emptyDraft, featuredSports, genders, locations, skillLevels } from './data';
-import { formatGameTime } from './lib/datetime';
+import { emptyDraft, featuredSports, genders, skillLevels } from './data';
+import { formatGameTime, formatHomeCardDateTime } from './lib/datetime';
+import { pathForView, paths, viewFromPathname } from './lib/routes';
 import {
   getFirebaseAuth,
+  getFirebaseProjectIdForDiagnostics,
   googleAuthProvider,
   isFirebaseConfigured,
 } from './lib/firebase';
 import {
   addPlayerToGame,
   createGame,
+  deleteGameFromFirestore,
   fetchGames,
+  getLocalGamesFallback,
+  isFirestorePermissionError,
+  isSessionOnlyGameId,
   joinGame,
   leaveGame,
   removePlayerFromGame,
   seedGamesIfEmpty,
 } from './lib/games';
-import { sportEmoji } from './lib/sports';
+import { homeGameCardTitle, sportEmoji, sportHomeCategoryLabel } from './lib/sports';
 import type { GameDraft, PickupGame, User } from './types';
 
 type SortOption = 'date' | 'spots-asc' | 'spots-desc';
 type TagValue<T extends string> = 'All' | T;
 
-const HERO_BG =
-  'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=2000&q=80';
-
 function App() {
-  const [view, setView] = useState<ViewName>('home');
-  const [detailGameId, setDetailGameId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const gameDetailMatch = useMatch({ path: '/games/:gameId', end: true });
+  const detailGameId = gameDetailMatch?.params.gameId
+    ? decodeURIComponent(gameDetailMatch.params.gameId)
+    : null;
+
+  const activeView = viewFromPathname(location.pathname);
   const [games, setGames] = useState<PickupGame[]>([]);
   const [bootstrapping, setBootstrapping] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -72,8 +81,14 @@ function App() {
   const [draft, setDraft] = useState<GameDraft>(emptyDraft);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  /** Shown when a game was created without a real Firestore document (rules / config). */
+  const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
+  /** Firestore returned permission-denied even though .env looks configured (wrong project, App Check, API key, …). */
+  const [firestorePermissionBanner, setFirestorePermissionBanner] = useState<string | null>(
+    null,
+  );
 
-  // One listener: UI user + Firestore seed/fetch on every auth change (anonymous → Google, etc.).
+  // One listener: UI user + Firestore seed/fetch on every auth change (e.g. after Google sign-in).
   // A single mount-time fetch misses Google sign-in because games were already loaded once.
   useEffect(() => {
     let cancelled = false;
@@ -92,16 +107,34 @@ function App() {
       try {
         await seedGamesIfEmpty();
       } catch (err) {
-        console.error(
-          'seedGamesIfEmpty failed (games may still load if Firestore allows read)',
-          err,
-        );
+        if (isFirestorePermissionError(err)) {
+          console.warn(
+            'seedGamesIfEmpty skipped or partial (Firestore permission). Games may still load.',
+            err,
+          );
+        } else {
+          console.error(
+            'seedGamesIfEmpty failed (games may still load if Firestore allows read)',
+            err,
+          );
+        }
       }
       try {
-        const data = await fetchGames();
-        if (!cancelled) setGames(data);
+        const { games: data, source } = await fetchGames();
+        if (!cancelled) {
+          setGames(data);
+          if (source === 'bundled-permission') {
+            const pid = getFirebaseProjectIdForDiagnostics() || 'unknown';
+            setFirestorePermissionBanner(
+              `Firestore blocked reads for project “${pid}”. Open rules (allow all) still produce this when the app points at the wrong project, App Check is enforcing Firestore, or the web API key is restricted in Google Cloud. Fix those, then hard-refresh.`,
+            );
+          } else {
+            setFirestorePermissionBanner(null);
+          }
+        }
       } catch (err) {
         console.error('fetchGames failed', err);
+        if (!cancelled) setGames(getLocalGamesFallback());
       }
     }
 
@@ -114,27 +147,11 @@ function App() {
     }
 
     const firebaseAuth = auth;
-    let triedAnonymousSignIn = false;
 
     async function syncGamesForAuthUser(fbUser: FirebaseUser | null) {
       if (cancelled) return;
       await firebaseAuth.authStateReady();
       if (cancelled) return;
-
-      if (!fbUser) {
-        if (!triedAnonymousSignIn) {
-          triedAnonymousSignIn = true;
-          try {
-            await signInAnonymously(firebaseAuth);
-            return;
-          } catch (err) {
-            console.error('Anonymous sign-in failed:', err);
-          }
-        }
-        await loadGamesFromFirestore();
-        return;
-      }
-
       await loadGamesFromFirestore();
     }
 
@@ -143,6 +160,13 @@ function App() {
       if (cancelled) return;
       unsubAuth = onAuthStateChanged(firebaseAuth, (fbUser) => {
         if (cancelled) return;
+        if (fbUser?.isAnonymous) {
+          setUser(null);
+          setBootstrapping(false);
+          void signOut(firebaseAuth);
+          void loadGamesFromFirestore();
+          return;
+        }
         if (fbUser) {
           const email = fbUser.email?.toLowerCase() ?? '';
           const name = fbUser.displayName?.trim() || email.split('@')[0] || 'Player';
@@ -170,17 +194,25 @@ function App() {
     void (async () => {
       try {
         await addPlayerToGame(gameId, user);
-        setGames((prev) => {
-          const updated = joinGame(gameId, user, prev);
-          const joined = updated.find((g) => g.id === gameId) ?? null;
-          if (joined) {
-            queueMicrotask(() => setJoinedGame(joined));
-          }
-          return updated;
-        });
       } catch (err) {
-        console.error('addPlayerToGame (pending join) failed', err);
+        if (isFirestorePermissionError(err)) {
+          console.warn(
+            'addPlayerToGame (pending join): Firestore denied — roster updated locally only.',
+            err,
+          );
+        } else {
+          console.error('addPlayerToGame (pending join) failed', err);
+          return;
+        }
       }
+      setGames((prev) => {
+        const updated = joinGame(gameId, user, prev);
+        const joined = updated.find((g) => g.id === gameId) ?? null;
+        if (joined) {
+          queueMicrotask(() => setJoinedGame(joined));
+        }
+        return updated;
+      });
     })();
   }, [user, pendingJoinId]);
 
@@ -200,15 +232,23 @@ function App() {
     [games],
   );
 
-  const upcomingGames = useMemo(
-    () => futureGames.filter((g) => g.players.length < g.capacity).slice(0, 6),
-    [futureGames],
-  );
+  /** One upcoming game per sport category (soonest; prefer a listing with open spots). */
+  const homeHappeningBySport = useMemo(() => {
+    return featuredSports.map((sport) => {
+      const forSport = futureGames.filter((g) => g.sport === sport);
+      const withSpots = forSport.filter((g) => g.players.length < g.capacity);
+      const game = (withSpots[0] ?? forSport[0]) ?? null;
+      return { sport, game };
+    });
+  }, [futureGames]);
 
   const hasCreatedGame = useMemo(
     () =>
       games.some(
-        (g) => g.organizer === user?.email && new Date(g.startTime) > new Date(),
+        (g) =>
+          !!user &&
+          g.organizer.toLowerCase() === user.email.toLowerCase() &&
+          new Date(g.startTime) > new Date(),
       ),
     [games, user],
   );
@@ -280,20 +320,29 @@ function App() {
   const gamesJoined = useMemo(
     () =>
       user
-        ? games.filter((g) => g.players.some((p) => p.email === user.email)).length
+        ? games.filter((g) =>
+            g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
+          ).length
         : 0,
     [games, user],
   );
 
   const gamesHosted = useMemo(
-    () => (user ? games.filter((g) => g.organizer === user.email).length : 0),
+    () =>
+      user
+        ? games.filter(
+            (g) => g.organizer.toLowerCase() === user.email.toLowerCase(),
+          ).length
+        : 0,
     [games, user],
   );
 
   const profileUpcoming = useMemo(() => {
     if (!user) return [];
     return futureGames
-      .filter((g) => g.players.some((p) => p.email === user.email))
+      .filter((g) =>
+        g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
+      )
       .slice(0, 8);
   }, [futureGames, user]);
 
@@ -302,27 +351,33 @@ function App() {
     return games
       .filter(
         (g) =>
-          new Date(g.startTime) <= now && g.players.some((p) => p.email === user.email),
+          new Date(g.startTime) <= now &&
+          g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
       )
       .slice(-8)
       .reverse();
   }, [games, user, now]);
 
   function navigateTo(next: ViewName) {
-    setView(next);
-    if (next !== 'game-detail') setDetailGameId(null);
-    if (next !== 'find' && next !== 'game-detail') setCreateConflictGame(null);
+    if (next === 'game-detail') return;
+    navigate(pathForView(next));
+    if (next !== 'find') setCreateConflictGame(null);
     setNotificationsOpen(false);
   }
 
   function openGameDetail(id: string) {
-    setDetailGameId(id);
-    setView('game-detail');
+    navigate(paths.game(id));
     setNotificationsOpen(false);
   }
 
   function isJoinedByUser(game: PickupGame): boolean {
-    return !!user && game.players.some((p) => p.email === user.email);
+    if (!user) return false;
+    const u = user.email.toLowerCase();
+    return game.players.some((p) => p.email.toLowerCase() === u);
+  }
+
+  function isUserOrganizer(game: PickupGame): boolean {
+    return !!user && game.organizer.toLowerCase() === user.email.toLowerCase();
   }
 
   function hasTimeConflict(target: PickupGame): PickupGame | null {
@@ -332,7 +387,7 @@ function App() {
     const conflict = games.find(
       (g) =>
         g.id !== target.id &&
-        g.players.some((p) => p.email === user.email) &&
+        g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()) &&
         aStart < new Date(g.endTime).getTime() &&
         aEnd > new Date(g.startTime).getTime(),
     );
@@ -409,9 +464,16 @@ function App() {
     try {
       await addPlayerToGame(id, user);
     } catch (err) {
-      console.error('addPlayerToGame failed', err);
-      setLoginError('Could not join game. Check Firestore rules and that you are signed in.');
-      return;
+      if (isFirestorePermissionError(err)) {
+        console.warn(
+          'addPlayerToGame: Firestore denied — roster updated locally only until rules allow writes.',
+          err,
+        );
+      } else {
+        console.error('addPlayerToGame failed', err);
+        setLoginError('Could not join game. Check Firestore rules and that you are signed in.');
+        return;
+      }
     }
     setGames((prev) =>
       prev.map((g) => (g.id === id ? { ...g, players: [...g.players, user] } : g)),
@@ -422,15 +484,40 @@ function App() {
 
   async function handleLeaveGame(id: string) {
     if (!user) return;
+    const target = games.find((g) => g.id === id);
+    if (target && target.organizer.toLowerCase() === user.email.toLowerCase()) return;
     try {
       await removePlayerFromGame(id, user);
     } catch (err) {
-      console.error('removePlayerFromGame failed', err);
-      setLoginError('Could not leave game. Check Firestore rules.');
-      return;
+      if (isFirestorePermissionError(err)) {
+        console.warn(
+          'removePlayerFromGame: Firestore denied — roster updated locally only until rules allow writes.',
+          err,
+        );
+      } else {
+        console.error('removePlayerFromGame failed', err);
+        setLoginError('Could not leave game. Check Firestore rules.');
+        return;
+      }
     }
     setGames((prev) => leaveGame(id, user, prev));
     setJoinedGame((current) => (current?.id === id ? null : current));
+  }
+
+  async function handleCancelGame(id: string) {
+    if (!user) return;
+    const target = games.find((g) => g.id === id);
+    if (!target || target.organizer.toLowerCase() !== user.email.toLowerCase()) return;
+    try {
+      await deleteGameFromFirestore(id);
+    } catch (err) {
+      console.error('deleteGameFromFirestore failed', err);
+      setLoginError('Could not cancel game. Check Firestore rules.');
+      return;
+    }
+    setGames((prev) => prev.filter((g) => g.id !== id));
+    setJoinedGame((current) => (current?.id === id ? null : current));
+    if (detailGameId === id) navigate(paths.games);
   }
 
   async function handleCreateGame() {
@@ -456,6 +543,11 @@ function App() {
     if (created) {
       setGames((prev) => [...prev, created]);
       setDraft(emptyDraft);
+      if (isSessionOnlyGameId(created.id)) {
+        setPersistenceWarning(
+          'This game was not saved to Firestore (write was denied or Firebase is misconfigured). It will disappear after refresh. In Firebase Console, publish rules that allow create on `games` and confirm your `.env` project matches that project.',
+        );
+      }
       navigateTo('find');
     }
   }
@@ -478,6 +570,11 @@ function App() {
     if (created) {
       setGames((prev) => [...prev, created]);
       setDraft(emptyDraft);
+      if (isSessionOnlyGameId(created.id)) {
+        setPersistenceWarning(
+          'This game was not saved to Firestore (write was denied or Firebase is misconfigured). It will disappear after refresh. In Firebase Console, publish rules that allow create on `games` and confirm your `.env` project matches that project.',
+        );
+      }
       navigateTo('find');
     }
   }
@@ -489,27 +586,6 @@ function App() {
 
   const mapsUrl = (location: string) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Northwestern University, Evanston, IL')}`;
-
-  const venueShowcase = [
-    {
-      sport: 'Tennis' as const,
-      emoji: '🎾',
-      name: 'Northwestern Tennis Courts',
-      address: locations['Northwestern Tennis Courts'].address,
-    },
-    {
-      sport: 'Soccer' as const,
-      emoji: '⚽',
-      name: 'Hutchison Field',
-      address: locations['Hutchson Field'].address,
-    },
-    {
-      sport: 'Frisbee' as const,
-      emoji: '🥏',
-      name: 'Deering Meadow',
-      address: locations['Deering Meadow'].address,
-    },
-  ];
 
   const notificationsDropdown = (
     <NotificationShell>
@@ -538,117 +614,107 @@ function App() {
     );
   }
 
+  const welcomeFirstName = user?.name?.trim().split(/\s+/)[0] ?? null;
+
   const homeSection = (
-    <div className="space-y-0">
-      <section className="relative overflow-hidden py-20 sm:py-24" aria-label="Hero">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_BG})` }}
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-ink/78" aria-hidden />
-        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-black text-white sm:text-5xl">
-            Your next game starts here.
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-cream/85 sm:text-lg">
-            Built for Northwestern students who want real games without the group chat
-            scavenger hunt. Browse open runs, join a roster, and host when you have the
-            court.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-            <Button
-              variant="primary"
-              className="w-full min-h-[48px] justify-center sm:w-auto sm:px-10"
-              type="button"
-              onClick={() => navigateTo('find')}
-            >
-              Browse Games
-            </Button>
-            <button
-              type="button"
-              onClick={() => (user ? navigateTo('find') : handleSignIn())}
-              className="w-full min-h-[48px] rounded-full border-2 border-brand-400 bg-transparent px-8 py-3 text-sm font-extrabold text-brand-400 transition hover:bg-brand-400/10 sm:w-auto"
-            >
-              {user ? 'Go to games' : 'Sign In'}
-            </button>
-          </div>
-        </div>
-      </section>
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <header className="max-w-2xl space-y-2">
+        <h1 className="text-2xl font-black tracking-tight text-cream sm:text-4xl">
+          {welcomeFirstName
+            ? `Welcome back, ${welcomeFirstName}.`
+            : user
+              ? 'Welcome back.'
+              : 'Welcome'}
+        </h1>
+        <p className="text-sm leading-relaxed text-cream-muted sm:text-base">
+          {user
+            ? 'Pickup runs on campus all week — grab a spot before courts fill up.'
+            : 'Sign in to join a game and see what is happening on campus.'}
+        </p>
+      </header>
 
-      <section className="border-t border-white/10 py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-black text-cream sm:text-3xl">Where we play</h2>
-          <p className="mt-2 max-w-2xl text-cream-muted">
-            Outdoor spaces around campus students actually use for pickup.
-          </p>
-          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-8">
-            {venueShowcase.map((v) => (
-              <article
-                key={v.sport}
-                className="flex flex-col rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.72)] p-6 shadow-[0_24px_60px_rgba(2,8,18,0.3)] backdrop-blur-xl"
-              >
-                <span className="text-4xl" aria-hidden>
-                  {v.emoji}
-                </span>
-                <h3 className="mt-4 text-lg font-bold text-cream">{v.sport}</h3>
-                <p className="mt-1 font-semibold text-cream/95">{v.name}</p>
-                <p className="mt-2 text-sm text-cream-muted">{v.address}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSportFilter(v.sport);
-                    navigateTo('find');
-                  }}
-                  className="mt-6 inline-flex text-left text-sm font-bold text-brand-400 hover:underline"
-                >
-                  View Games →
-                </button>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Button
+        variant="primary"
+        className="mt-8 min-h-[48px] justify-center px-8 sm:w-auto"
+        type="button"
+        onClick={() => navigateTo('find')}
+      >
+        Browse all games
+      </Button>
 
-      {upcomingGames.length > 0 && (
-        <section className="border-t border-white/10 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-2xl font-black text-cream">Opening soon</h2>
-                <p className="text-cream-muted">
-                  Games on campus with room for one more.
-                </p>
-              </div>
+      <section className="mt-14 border-t border-white/10 pt-10" aria-labelledby="home-happening-heading">
+        <h2 id="home-happening-heading" className="text-lg font-black text-cream sm:text-xl">
+          Happening soon
+        </h2>
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
+          {homeHappeningBySport.map(({ sport, game }) =>
+            game ? (
               <button
+                key={sport}
                 type="button"
-                onClick={() => navigateTo('find')}
-                className="text-sm font-bold text-brand-400 hover:underline"
+                onClick={() => openGameDetail(game.id)}
+                className="w-full rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.85)] p-5 text-left shadow-[0_12px_40px_rgba(2,8,18,0.35)] transition hover:border-brand-400/35 hover:shadow-[0_16px_48px_rgba(2,8,18,0.45)] sm:w-64 sm:shrink-0"
               >
-                See all games →
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-400">
+                  {sportHomeCategoryLabel(sport)}
+                </p>
+                <p className="mt-3 line-clamp-2 text-base font-bold leading-snug text-cream">
+                  {homeGameCardTitle(game)}
+                </p>
+                <p className="mt-3 text-sm text-cream-muted">
+                  {formatHomeCardDateTime(game.startTime)}
+                </p>
               </button>
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {upcomingGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onJoin={handleJoinGame}
-                  onLeave={handleLeaveGame}
-                  onOpenDetail={openGameDetail}
-                  isPast={isPastGame(game)}
-                  isJoined={isJoinedByUser(game)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+            ) : (
+              <button
+                key={sport}
+                type="button"
+                onClick={() => {
+                  setSportFilter(sport);
+                  navigateTo('find');
+                }}
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left shadow-[0_12px_40px_rgba(2,8,18,0.2)] transition hover:border-brand-400/25 sm:w-64 sm:shrink-0"
+              >
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-400">
+                  {sportHomeCategoryLabel(sport)}
+                </p>
+                <p className="mt-3 text-base font-bold text-cream-muted">No upcoming games</p>
+                <p className="mt-3 text-sm text-cream-muted/80">Browse {sport} on Games</p>
+              </button>
+            ),
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setSportFilter('All');
+              navigateTo('find');
+            }}
+            className="flex w-full items-center justify-center rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.85)] p-5 text-center shadow-[0_12px_40px_rgba(2,8,18,0.35)] transition hover:border-brand-400/35 hover:shadow-[0_16px_48px_rgba(2,8,18,0.45)] sm:w-64 sm:shrink-0 sm:min-h-[188px]"
+          >
+            <span className="text-base font-bold text-cream">{'More games ->'}</span>
+          </button>
+        </div>
+      </section>
     </div>
   );
 
   const findSection = (
     <div className="space-y-10 py-12">
+      {persistenceWarning && (
+        <div
+          className="flex flex-col gap-3 rounded-2xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between"
+          role="status"
+        >
+          <p className="min-w-0 flex-1 leading-relaxed">{persistenceWarning}</p>
+          <button
+            type="button"
+            onClick={() => setPersistenceWarning(null)}
+            className="shrink-0 rounded-xl border border-amber-400/50 px-3 py-1.5 text-xs font-bold text-amber-100 hover:bg-amber-500/20"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       {user && (
         <div>
           <h1 className="text-2xl font-bold text-cream">
@@ -736,9 +802,11 @@ function App() {
               game={game}
               onJoin={handleJoinGame}
               onLeave={handleLeaveGame}
+              onCancel={handleCancelGame}
               onOpenDetail={openGameDetail}
               isPast={isPastGame(game)}
               isJoined={isJoinedByUser(game)}
+              isOrganizer={isUserOrganizer(game)}
             />
           ))}
         </div>
@@ -958,8 +1026,10 @@ function App() {
         mapsUrl={mapsUrl}
         isJoined={isJoinedByUser(detailGame)}
         isPast={isPastGame(detailGame)}
+        isOrganizer={isUserOrganizer(detailGame)}
         onJoin={handleJoinGame}
         onLeave={handleLeaveGame}
+        onCancel={handleCancelGame}
         onBack={() => navigateTo('find')}
       />
     </div>
@@ -977,20 +1047,17 @@ function App() {
     </div>
   );
 
-  const currentMain =
-    view === 'home'
-      ? homeSection
-      : view === 'find'
-        ? findSection
-        : view === 'create'
-          ? createSection
-          : view === 'profile'
-            ? profileSection
-            : view === 'notifications'
-              ? notificationsPage
-              : view === 'game-detail'
-                ? gameDetailSection
-                : homeSection;
+  const routeMain = (
+    <Routes>
+      <Route path={paths.home} element={homeSection} />
+      <Route path={paths.games} element={findSection} />
+      <Route path={`${paths.games}/:gameId`} element={gameDetailSection} />
+      <Route path={paths.host} element={createSection} />
+      <Route path={paths.profile} element={profileSection} />
+      <Route path={paths.notifications} element={notificationsPage} />
+      <Route path="*" element={<Navigate to={paths.home} replace />} />
+    </Routes>
+  );
 
   return (
     <div className="min-h-screen bg-ink text-cream">
@@ -1008,7 +1075,7 @@ function App() {
       />
 
       <AppNavbar
-        activeView={view}
+        activeView={activeView}
         onNavigate={navigateTo}
         user={user}
         onSignIn={handleSignIn}
@@ -1020,10 +1087,37 @@ function App() {
       />
 
       <main className="mx-auto max-w-7xl px-4 pb-28 pt-20 sm:px-5 md:px-6 md:pb-12 lg:px-8">
-        {currentMain}
+        {!isFirebaseConfigured() && (
+          <div
+            className="mb-6 rounded-2xl border border-sky-accent/40 bg-sky-accent/10 px-4 py-3 text-sm leading-relaxed text-cream"
+            role="status"
+          >
+            Firebase is not configured in this build (missing{' '}
+            <code className="rounded bg-white/10 px-1">VITE_FIREBASE_*</code> in{' '}
+            <code className="rounded bg-white/10 px-1">.env</code>). The list shows bundled
+            sample games only; nothing is read from or written to your database.
+          </div>
+        )}
+        {isFirebaseConfigured() && firestorePermissionBanner && (
+          <div
+            className="mb-6 rounded-2xl border border-red-400/45 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-100"
+            role="alert"
+          >
+            <p className="font-bold text-red-50">Cannot read your Firestore database</p>
+            <p className="mt-2">{firestorePermissionBanner}</p>
+            <button
+              type="button"
+              className="mt-3 text-xs font-bold text-red-200 underline underline-offset-2 hover:text-cream"
+              onClick={() => setFirestorePermissionBanner(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+        {routeMain}
       </main>
 
-      <BottomTabBar activeView={view} onNavigate={navigateTo} />
+      <BottomTabBar activeView={activeView} onNavigate={navigateTo} />
 
       {showLogin && (
         <div
@@ -1119,46 +1213,81 @@ function App() {
           <div
             className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.96)] p-6 shadow-2xl sm:p-8"
             role="dialog"
+            aria-labelledby="joined-game-heading"
+            aria-describedby="joined-game-summary"
           >
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-accent">
-              You&apos;re in
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-cream">
-              {joinedGame.sport} at {joinedGame.location}
+            <h2
+              id="joined-game-heading"
+              className="text-2xl font-black tracking-tight text-cream sm:text-3xl"
+            >
+              You&apos;re in!
             </h2>
-            <p className="mt-2 text-sm font-bold text-brand-400">
+            <p
+              id="joined-game-summary"
+              className="mt-2 text-lg font-bold text-cream sm:text-xl"
+            >
+              {joinedGame.sport} at {joinedGame.location}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-brand-400">
               {formatGameTime(joinedGame.startTime)}
             </p>
-            <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="text-cream-muted">Host</span>
-                <a
-                  href={`mailto:${joinedGame.organizer}`}
-                  className="font-semibold text-sky-accent"
-                >
-                  {joinedGame.organizer}
-                </a>
+
+            <dl className="mt-6 space-y-3 border-t border-white/10 pt-6 text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <dt className="shrink-0 font-semibold text-cream-muted">Host</dt>
+                <dd className="min-w-0 text-right">
+                  <a
+                    href={`mailto:${joinedGame.organizer}`}
+                    className="break-all font-semibold text-sky-accent hover:underline"
+                  >
+                    {joinedGame.organizer}
+                  </a>
+                </dd>
               </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-cream-muted">Players</span>
-                <span className="font-semibold text-cream">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <dt className="shrink-0 font-semibold text-cream-muted">Location</dt>
+                <dd className="min-w-0 text-right">
+                  <a
+                    href={mapsUrl(joinedGame.location)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline font-semibold text-sky-accent hover:underline"
+                  >
+                    {joinedGame.location} → Google Maps ↗
+                  </a>
+                </dd>
+              </div>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <dt className="shrink-0 font-semibold text-cream-muted">Players</dt>
+                <dd className="font-semibold text-cream">
                   {joinedGame.players.length}/{joinedGame.capacity}
-                </span>
+                </dd>
               </div>
+            </dl>
+
+            <div className="mt-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-cream-muted">
+                Participants
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {joinedGame.players.map((p) => {
+                  const shortName = p.name.trim().split(/\s+/)[0] || p.name;
+                  return (
+                    <li
+                      key={p.email}
+                      className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-cream"
+                    >
+                      {shortName}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <ul className="mt-4 space-y-2">
-              {joinedGame.players.map((p) => (
-                <li
-                  key={p.email}
-                  className="rounded-xl border border-white/10 px-3 py-2 text-sm"
-                >
-                  <span className="font-semibold text-cream">{p.name}</span>
-                  {user.email === joinedGame.organizer && (
-                    <span className="ml-2 text-xs text-cream-muted">{p.email}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
+
+            <p className="mt-6 text-sm leading-relaxed text-cream-muted">
+              Your email has been shared with the host.
+            </p>
+
             <Button
               variant="primary"
               className="mt-6 w-full justify-center"

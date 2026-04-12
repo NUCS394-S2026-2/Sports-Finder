@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { Auth } from 'firebase/auth';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 
 import App from './App';
 import { initialGames } from './data';
@@ -8,6 +10,7 @@ import { getFirebaseAuth } from './lib/firebase';
 import {
   addPlayerToGame,
   createGame,
+  deleteGameFromFirestore,
   fetchGames,
   removePlayerFromGame,
   saveGame,
@@ -15,14 +18,15 @@ import {
 } from './lib/games';
 import type { PickupGame } from './types';
 
-const mockAuth = {
+const mockAuthState = {
   authStateReady: vi.fn(() => Promise.resolve()),
   currentUser: null as { getIdToken: (forceRefresh?: boolean) => Promise<string> } | null,
 };
 
 vi.mock('./lib/firebase', () => ({
   isFirebaseConfigured: vi.fn(() => true),
-  getFirebaseAuth: vi.fn(() => mockAuth),
+  getFirebaseAuth: vi.fn(() => mockAuthState as unknown as Auth),
+  getFirebaseProjectIdForDiagnostics: vi.fn(() => 'test-project'),
   googleAuthProvider: {},
 }));
 
@@ -38,14 +42,10 @@ vi.mock('firebase/auth', () => {
         state.listener = null;
       };
     }),
-    signInAnonymously: vi.fn(async () => {
-      const u = { email: '', displayName: 'Guest' };
-      mockAuth.currentUser = { getIdToken: async () => 'mock-token' };
-      state.listener?.(u);
-    }),
+    signInAnonymously: vi.fn(),
     signInWithPopup: vi.fn(async () => {
       const u = { email: 'taylor@example.com', displayName: 'Taylor' };
-      mockAuth.currentUser = { getIdToken: async () => 'mock-token' };
+      mockAuthState.currentUser = { getIdToken: async () => 'mock-token' };
       state.listener?.(u);
       return { user: u };
     }),
@@ -59,6 +59,7 @@ vi.mock('./lib/games', () => ({
   saveGame: vi.fn(),
   addPlayerToGame: vi.fn(),
   createGame: vi.fn(),
+  deleteGameFromFirestore: vi.fn(),
   joinGame: vi.fn((gameId: string, user: { email: string }, prev: PickupGame[]) =>
     prev.map((g) => (g.id === gameId ? { ...g, players: [...g.players, user] } : g)),
   ),
@@ -95,29 +96,41 @@ const newGame: PickupGame = {
 };
 
 beforeEach(() => {
-  mockAuth.currentUser = null;
+  mockAuthState.currentUser = null;
   vi.clearAllMocks();
   vi.mocked(seedGamesIfEmpty).mockResolvedValue(undefined);
   vi.mocked(addPlayerToGame).mockResolvedValue(undefined);
   vi.mocked(removePlayerFromGame).mockResolvedValue(undefined);
-  mockedFetchGames.mockResolvedValue(initialGames as PickupGame[]);
+  vi.mocked(deleteGameFromFirestore).mockResolvedValue(undefined);
+  mockedFetchGames.mockResolvedValue({
+    games: initialGames as PickupGame[],
+    source: 'firestore' as const,
+  });
   vi.mocked(saveGame).mockResolvedValue(newGame);
   vi.mocked(createGame).mockResolvedValue({ game: newGame });
 });
 
-describe('App', () => {
-  test('renders the hero and primary calls to action', async () => {
-    render(<App />);
+function renderApp(initialPath = '/') {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <App />
+    </MemoryRouter>,
+  );
+}
 
-    expect(await screen.findByText(/Your next game starts here/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Browse Games' })).toBeInTheDocument();
+describe('App', () => {
+  test('renders welcome and browse games', async () => {
+    renderApp();
+
+    expect(await screen.findByRole('heading', { name: /welcome/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /browse all games/i })).toBeInTheDocument();
   });
 
   test('navigates to games list and shows search and sport filters', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
-    await screen.findByText(/Your next game starts here/i);
+    await screen.findByRole('heading', { name: /welcome/i });
     const sectionsNav = screen.getByRole('navigation', { name: 'Sections' });
     await user.click(within(sectionsNav).getByRole('button', { name: 'Games' }));
 
@@ -130,15 +143,15 @@ describe('App', () => {
   test('profile tab prompts sign-in when logged out', async () => {
     vi.mocked(getFirebaseAuth).mockReturnValue(null);
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
-    await screen.findByText(/Your next game starts here/i);
+    await screen.findByRole('heading', { name: /welcome/i });
     const primaryNav = screen.getByRole('navigation', { name: 'Primary' });
     await user.click(within(primaryNav).getByRole('button', { name: 'Profile' }));
 
     expect(
       screen.getByText(/Sign in to see your stats and history/i),
     ).toBeInTheDocument();
-    vi.mocked(getFirebaseAuth).mockReturnValue(mockAuth);
+    vi.mocked(getFirebaseAuth).mockReturnValue(mockAuthState as unknown as Auth);
   });
 });
