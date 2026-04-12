@@ -22,7 +22,6 @@ type GameFormProps = {
   onClose: () => void;
   conflictGame: PickupGame | null;
   onViewConflictGame: (id: string) => void;
-  onPostAnyway: () => void;
 };
 
 export function GameForm({
@@ -34,7 +33,6 @@ export function GameForm({
   onClose,
   conflictGame,
   onViewConflictGame,
-  onPostAnyway,
 }: GameFormProps) {
   const [minPlayers, setMinPlayers] = useState(4);
   const timeSlots = useMemo(() => {
@@ -131,7 +129,8 @@ export function GameForm({
     Boolean(draft.startTime) &&
     Boolean(draft.endTime) &&
     Boolean(draft.ageRange) &&
-    draft.capacity >= minPlayers;
+    draft.capacity >= minPlayers &&
+    !conflictGame;
 
   const inputClass =
     'w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-cream placeholder:text-cream/40 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-brand-400';
@@ -432,13 +431,14 @@ export function GameForm({
         {conflictGame && (
           <div className="rounded-xl border border-amber-400/45 bg-amber-400/10 p-4 text-amber-100">
             <p className="text-sm font-bold">
-              ⚠️ A game is already scheduled at this time — want to join it instead?
+              ⚠️ A game is already scheduled at this time. Pick another slot or open the
+              existing game.
             </p>
             <p className="mt-1 text-sm text-amber-100/90">
               {conflictGame.sport} at {conflictGame.location} ·{' '}
               {formatGameTime(conflictGame.startTime)}
             </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mt-4">
               <Button
                 type="button"
                 className="w-full justify-center sm:w-auto"
@@ -446,13 +446,6 @@ export function GameForm({
               >
                 View &amp; Join Game
               </Button>
-              <button
-                type="button"
-                className="text-sm font-semibold text-cream-muted underline-offset-4 hover:underline"
-                onClick={onPostAnyway}
-              >
-                Post Anyway
-              </button>
             </div>
           </div>
         )}

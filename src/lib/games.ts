@@ -244,10 +244,9 @@ export function joinGame(gameId: string, user: User, games: PickupGame[]): Picku
 export async function createGame(
   draft: GameDraft & { organizer: string },
   games: PickupGame[],
-  options?: { ignoreConflict?: boolean },
 ): Promise<{ conflict?: PickupGame; game?: PickupGame }> {
   const conflict = findConflict(draft, games);
-  if (conflict && !options?.ignoreConflict) {
+  if (conflict) {
     return { conflict };
   }
   const game = await saveGame(draft);

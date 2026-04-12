@@ -558,33 +558,6 @@ function App() {
     }
   }
 
-  async function handlePostAnyway() {
-    if (!user) return;
-    const draftWithOrganizer = { ...draft, organizer: user.email };
-    let result: Awaited<ReturnType<typeof createGame>>;
-    try {
-      result = await createGame(draftWithOrganizer, games, {
-        ignoreConflict: true,
-      });
-    } catch (err) {
-      console.error('createGame (post anyway) failed', err);
-      setLoginError('Could not create game. Check Firestore rules and sign-in.');
-      return;
-    }
-    setCreateConflictGame(null);
-    const created = result.game;
-    if (created) {
-      setGames((prev) => [...prev, created]);
-      setDraft(emptyDraft);
-      if (isSessionOnlyGameId(created.id)) {
-        setPersistenceWarning(
-          'This game was not saved to Firestore (write was denied or Firebase is misconfigured). It will disappear after refresh. In Firebase Console, publish rules that allow create on `games` and confirm your `.env` project matches that project.',
-        );
-      }
-      navigateTo('find');
-    }
-  }
-
   function handleViewConflictGame(id: string) {
     setCreateConflictGame(null);
     openGameDetail(id);
@@ -873,7 +846,6 @@ function App() {
           games={games}
           conflictGame={createConflictGame}
           onViewConflictGame={handleViewConflictGame}
-          onPostAnyway={handlePostAnyway}
         />
       )}
     </div>
