@@ -8,7 +8,13 @@ import { TagFilterGroup } from './components/TagFilterGroup';
 import { Toolbar, type ViewName } from './components/Toolbar';
 import { emptyDraft, featuredSports, genders, locations, skillLevels } from './data';
 import { formatGameTime } from './lib/datetime';
-import { createGame, fetchGames, joinGame } from './lib/games';
+import {
+  addPlayerToGame,
+  fetchGames,
+  findConflict,
+  saveGame,
+  seedGamesIfEmpty,
+} from './lib/games';
 import type { GameDraft, PickupGame, User } from './types';
 
 type SortOption = 'date' | 'spots-asc' | 'spots-desc';
@@ -48,8 +54,13 @@ function App() {
   const [draft, setDraft] = useState<GameDraft>(emptyDraft);
 
   useEffect(() => {
-    setGames(fetchGames());
-    setLoading(false);
+    async function init() {
+      await seedGamesIfEmpty();
+      const data = await fetchGames();
+      setGames(data);
+      setLoading(false);
+    }
+    init();
   }, []);
 
   const now = new Date();
@@ -133,7 +144,7 @@ function App() {
     setShowLogin(true);
   }
 
-  function handleLogin(e: FormEvent) {
+  async function handleLogin(e: FormEvent) {
     e.preventDefault();
     const name = loginName.trim();
     const email = loginEmail.trim().toLowerCase();
@@ -156,10 +167,15 @@ function App() {
     setLoginEmail('');
     setLoginError(null);
     if (pendingJoinId) {
-      const updated = joinGame(pendingJoinId, newUser, games);
-      setGames(updated);
-      const joined = updated.find((g) => g.id === pendingJoinId) ?? null;
-      setJoinedGame(joined);
+      const target = games.find((g) => g.id === pendingJoinId);
+      if (target) {
+        await addPlayerToGame(pendingJoinId, newUser);
+        const updated = { ...target, players: [...target.players, newUser] };
+        setGames((prev) =>
+          prev.map((g) => (g.id === pendingJoinId ? updated : g)),
+        );
+        setJoinedGame(updated);
+      }
       setPendingJoinId(null);
     }
   }
@@ -168,7 +184,7 @@ function App() {
     setUser(null);
   }
 
-  function handleJoinGame(id: string) {
+  async function handleJoinGame(id: string) {
     if (!user) {
       setPendingJoinId(id);
       setShowLogin(true);
@@ -181,27 +197,37 @@ function App() {
       setTimeConflictGame(conflict);
       return;
     }
-    const updated = joinGame(id, user, games);
-    setGames(updated);
-    setJoinedGame(updated.find((g) => g.id === id) ?? null);
+    await addPlayerToGame(id, user);
+    // Optimistically update local state
+    setGames((prev) =>
+      prev.map((g) =>
+        g.id === id ? { ...g, players: [...g.players, user] } : g,
+      ),
+    );
+    setJoinedGame((prev) =>
+      prev === null
+        ? { ...target, players: [...target.players, user] }
+        : prev,
+    );
+    const updated = { ...target, players: [...target.players, user] };
+    setJoinedGame(updated);
   }
 
-  function handleCreateGame() {
+  async function handleCreateGame() {
     if (!user) {
       setShowLogin(true);
       return;
     }
     const draftWithOrganizer = { ...draft, organizer: user.email };
-    const result = createGame(draftWithOrganizer, games);
-    if (result.conflict) {
-      setConflictGame(result.conflict);
+    const conflict = findConflict(draftWithOrganizer, games);
+    if (conflict) {
+      setConflictGame(conflict);
       return;
     }
-    if (result.game) {
-      setGames((prev) => [...prev, result.game!]);
-      setDraft(emptyDraft);
-      setView('find');
-    }
+    const newGame = await saveGame(draftWithOrganizer);
+    setGames((prev) => [...prev, newGame]);
+    setDraft(emptyDraft);
+    setView('find');
   }
 
   const mapsUrl = (location: string) =>

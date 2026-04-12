@@ -6,3 +6,5 @@ dist-ssr
 node_modules/*
 coverage
 .firebase/
+.env
+.env.local
