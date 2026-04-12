@@ -24,7 +24,11 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [loginName, setLoginName] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [pendingJoinId, setPendingJoinId] = useState<string | null>(null);
+
+  // Registered users: email → name
+  const [registeredUsers, setRegisteredUsers] = useState<Record<string, string>>({});
 
   // Post-join modal
   const [joinedGame, setJoinedGame] = useState<PickupGame | null>(null);
@@ -131,12 +135,26 @@ function App() {
 
   function handleLogin(e: FormEvent) {
     e.preventDefault();
-    if (!loginName.trim() || !loginEmail.trim()) return;
-    const newUser: User = { name: loginName.trim(), email: loginEmail.trim() };
+    const name = loginName.trim();
+    const email = loginEmail.trim().toLowerCase();
+    if (!name || !email) return;
+
+    // Check if this email is already registered under a different name
+    const existingName = registeredUsers[email];
+    if (existingName && existingName !== name) {
+      setLoginError(
+        `This email is already registered as "${existingName}". Please use that name to sign in.`,
+      );
+      return;
+    }
+
+    const newUser: User = { name, email };
+    setRegisteredUsers((prev) => ({ ...prev, [email]: name }));
     setUser(newUser);
     setShowLogin(false);
     setLoginName('');
     setLoginEmail('');
+    setLoginError(null);
     if (pendingJoinId) {
       const updated = joinGame(pendingJoinId, newUser, games);
       setGames(updated);
@@ -429,7 +447,7 @@ function App() {
                 <input
                   type="text"
                   value={loginName}
-                  onChange={(e) => setLoginName(e.target.value)}
+                  onChange={(e) => { setLoginName(e.target.value); setLoginError(null); }}
                   placeholder="Your name"
                   required
                   autoFocus
@@ -440,11 +458,16 @@ function App() {
                 <input
                   type="email"
                   value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
+                  onChange={(e) => { setLoginEmail(e.target.value); setLoginError(null); }}
                   placeholder="you@example.com"
                   required
                 />
               </label>
+              {loginError && (
+                <div className="modal-error">
+                  {loginError}
+                </div>
+              )}
               <div className="modal-actions">
                 <button
                   type="submit"
@@ -459,6 +482,7 @@ function App() {
                   onClick={() => {
                     setShowLogin(false);
                     setPendingJoinId(null);
+                    setLoginError(null);
                   }}
                 >
                   Cancel
