@@ -17,8 +17,9 @@ type GameDetailViewProps = {
 };
 
 function organizerName(game: PickupGame): string {
-  const host = game.players.find((p) => p.email === game.organizer);
-  return host?.name ?? game.organizer.split('@')[0];
+  const norm = game.organizer.trim().toLowerCase();
+  const host = game.players.find((p) => p.email.toLowerCase() === norm);
+  return host?.name ?? game.organizer.split('@')[0] ?? 'Host';
 }
 
 function initials(name: string): string {
@@ -26,6 +27,16 @@ function initials(name: string): string {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function playersSortedForDisplay(game: PickupGame): PickupGame['players'] {
+  const organizerNorm = game.organizer.trim().toLowerCase();
+  return [...game.players].sort((a, b) => {
+    const aHost = a.email.toLowerCase() === organizerNorm;
+    const bHost = b.email.toLowerCase() === organizerNorm;
+    if (aHost !== bHost) return aHost ? -1 : 1;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
 }
 
 export function GameDetailView({
@@ -51,16 +62,12 @@ export function GameDetailView({
     'w-full justify-center border-red-400/40 bg-red-500/10 text-red-200 hover:border-red-400/60 hover:bg-red-500/15';
   const cancelOnDark =
     'w-full justify-center border-amber-400/40 bg-amber-500/10 text-amber-100 hover:border-amber-400/60 hover:bg-amber-500/15';
-  const leaveOnLight =
-    'w-full justify-center border border-gray-300 bg-gray-100 font-semibold text-gray-900 hover:bg-gray-200';
-  const cancelOnLight =
-    'w-full justify-center border border-amber-300 bg-amber-50 font-semibold text-amber-950 hover:bg-amber-100';
 
   const title =
     game.note.trim().length > 0 ? game.note : `${game.sport} pickup · ${game.location}`;
 
   return (
-    <div className="pb-36 md:pb-12">
+    <div className="pb-8 md:pb-12">
       <button
         type="button"
         onClick={onBack}
@@ -91,11 +98,20 @@ export function GameDetailView({
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-400 text-sm font-extrabold text-ink">
               {initials(organizerName(game))}
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-cream-muted">
                 Hosted by
               </p>
               <p className="text-lg font-bold text-cream">{organizerName(game)}</p>
+              <p className="mt-2 text-sm text-cream-muted">
+                <span className="font-semibold text-cream-muted">Contact</span>{' '}
+                <a
+                  href={`mailto:${game.organizer}`}
+                  className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                >
+                  {game.organizer}
+                </a>
+              </p>
             </div>
           </div>
 
@@ -133,12 +149,71 @@ export function GameDetailView({
             </p>
           </div>
 
+          <section
+            className="rounded-2xl border border-white/10 bg-white/5 p-5"
+            aria-labelledby="game-detail-roster-heading"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2
+                id="game-detail-roster-heading"
+                className="text-lg font-bold tracking-tight text-cream"
+              >
+                Who&apos;s coming
+              </h2>
+              <p className="text-sm font-semibold text-cream-muted">
+                {game.players.length} / {game.capacity} players
+              </p>
+            </div>
+            {game.players.length === 0 ? (
+              <p className="mt-3 text-sm text-cream-muted">
+                No one has joined yet — be the first.
+              </p>
+            ) : (
+              <ul className="mt-4 space-y-2">
+                {playersSortedForDisplay(game).map((p) => {
+                  const isHost =
+                    p.email.toLowerCase() === game.organizer.trim().toLowerCase();
+                  return (
+                    <li key={p.email}>
+                      <div className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                        <span
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xs font-extrabold text-cream"
+                          aria-hidden
+                        >
+                          {initials(p.name)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-cream">{p.name}</span>
+                            {isHost ? (
+                              <span className="rounded-full bg-gradient-to-r from-brand-500/30 to-brand-400/25 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-300 ring-1 ring-brand-400/35">
+                                Host
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-sm text-cream-muted">
+                            <a
+                              href={`mailto:${p.email}`}
+                              className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                            >
+                              {p.email}
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
           <p className="text-sm italic text-cream-muted">
             This game will be cancelled if minimum players aren&apos;t reached 30 minutes
             before start.
           </p>
 
-          <div className="hidden md:block xl:hidden">
+          <div className="xl:hidden">
             {isOrganizer && !isPast ? (
               <Button
                 variant="secondary"
@@ -188,67 +263,36 @@ export function GameDetailView({
               </p>
             </div>
 
-            <div className="rounded-xl border border-emerald-400/35 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">
-              ✓ Host confirmed court reservation
+            <div className="hidden xl:block">
+              {isOrganizer && !isPast ? (
+                <Button
+                  variant="secondary"
+                  className={`w-full justify-center py-3.5 ${cancelOnDark}`}
+                  onClick={() => onCancel(game.id)}
+                >
+                  Cancel game
+                </Button>
+              ) : isJoined && !isPast ? (
+                <Button
+                  variant="secondary"
+                  className={`w-full justify-center py-3.5 ${leaveOnDark}`}
+                  onClick={() => onLeave(game.id)}
+                >
+                  Leave game
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="w-full justify-center py-3.5"
+                  disabled={joinDisabled}
+                  onClick={() => onJoin(game.id)}
+                >
+                  {joinLabel}
+                </Button>
+              )}
             </div>
-
-            {isOrganizer && !isPast ? (
-              <Button
-                variant="secondary"
-                className={`hidden w-full justify-center py-3.5 xl:flex ${cancelOnDark}`}
-                onClick={() => onCancel(game.id)}
-              >
-                Cancel game
-              </Button>
-            ) : isJoined && !isPast ? (
-              <Button
-                variant="secondary"
-                className={`hidden w-full justify-center py-3.5 xl:flex ${leaveOnDark}`}
-                onClick={() => onLeave(game.id)}
-              >
-                Leave game
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                className="hidden w-full justify-center py-3.5 xl:flex"
-                disabled={joinDisabled}
-                onClick={() => onJoin(game.id)}
-              >
-                {joinLabel}
-              </Button>
-            )}
           </div>
         </aside>
-      </div>
-
-      <div className="fixed bottom-20 left-0 right-0 z-50 border-t border-white/12 bg-white p-4 shadow-[0_-8px_30px_rgba(9,19,31,0.08)] md:hidden">
-        {isOrganizer && !isPast ? (
-          <Button
-            variant="secondary"
-            className={`py-3.5 ${cancelOnLight}`}
-            onClick={() => onCancel(game.id)}
-          >
-            Cancel game
-          </Button>
-        ) : isJoined && !isPast ? (
-          <Button
-            variant="secondary"
-            className={`py-3.5 ${leaveOnLight}`}
-            onClick={() => onLeave(game.id)}
-          >
-            Leave game
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            className="w-full justify-center py-3.5"
-            disabled={joinDisabled}
-            onClick={() => onJoin(game.id)}
-          >
-            {joinLabel}
-          </Button>
-        )}
       </div>
     </div>
   );

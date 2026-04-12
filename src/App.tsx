@@ -479,7 +479,13 @@ function App() {
       prev.map((g) => (g.id === id ? { ...g, players: [...g.players, user] } : g)),
     );
     const updated = { ...target, players: [...target.players, user] };
+    setGames((prev) => prev.map((g) => (g.id === id ? updated : g)));
     setJoinedGame(updated);
+    try {
+      await addPlayerToGame(id, user);
+    } catch (err) {
+      console.error('Failed to save join to Firestore:', err);
+    }
   }
 
   async function handleLeaveGame(id: string) {
