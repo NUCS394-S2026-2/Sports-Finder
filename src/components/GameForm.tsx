@@ -1,8 +1,17 @@
 import type { FormEvent } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
-import { ageRanges, locations, skillLevels } from '../data';
+import { ageRanges, locations } from '../data';
+import { formatGameTime } from '../lib/datetime';
+import { competitiveLabel, skillFromCompetitive, sportEmoji } from '../lib/sports';
 import type { GameDraft, PickupGame, SportName } from '../types';
+import { Button } from './ui/Button';
+
+const defaultCourt: Record<SportName, string> = {
+  Soccer: 'Hutchson Field',
+  Frisbee: 'Deering Meadow',
+  Tennis: 'Northwestern Tennis Courts',
+};
 
 type GameFormProps = {
   draft: GameDraft;
@@ -11,14 +20,30 @@ type GameFormProps = {
   onChange: (nextDraft: GameDraft) => void;
   onSubmit: () => void;
   onClose: () => void;
+  conflictGame: PickupGame | null;
+  onViewConflictGame: (id: string) => void;
+  onPostAnyway: () => void;
 };
 
-export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: GameFormProps) {
+export function GameForm({
+  draft,
+  sports,
+  games,
+  onChange,
+  onSubmit,
+  onClose,
+  conflictGame,
+  onViewConflictGame,
+  onPostAnyway,
+}: GameFormProps) {
+  const [minPlayers, setMinPlayers] = useState(4);
   const timeSlots = useMemo(() => {
     const slots = [];
     for (let hour = 6; hour <= 22; hour++) {
       for (let min = 0; min < 60; min += 15) {
-        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+        slots.push(
+          `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+        );
       }
     }
     return slots;
@@ -50,7 +75,6 @@ export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: 
       }
     }
 
-    // Filter out past times if today is selected
     const today = new Date().toISOString().split('T')[0];
     if (draft.date === today) {
       const now = new Date();
@@ -60,7 +84,6 @@ export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: 
       });
     }
 
-    // Filter out conflicting times (within 30 min of existing game at same location)
     return allowedSlots.filter((slot) => {
       const slotTime = new Date(`${draft.date}T${slot}:00`).getTime();
       return !games.some(
@@ -99,62 +122,95 @@ export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: 
     return `${days}: ${first.start}–${last.end}`;
   }
 
+  const competitive = competitiveLabel(draft.skillLevel);
+
+  const canSubmit =
+    Boolean(draft.sport) &&
+    Boolean(draft.location) &&
+    Boolean(draft.date) &&
+    Boolean(draft.startTime) &&
+    Boolean(draft.endTime) &&
+    Boolean(draft.ageRange) &&
+    draft.capacity >= minPlayers;
+
+  const inputClass =
+    'w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-cream placeholder:text-cream/40 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-brand-400';
+
   return (
-    <section className="form-card" aria-label="Create a pickup game">
-      <div className="form-header">
-        <div>
-          <p className="eyebrow">Create listing</p>
-          <h2>Post a pickup game</h2>
-        </div>
-        <button type="button" className="ghost-button" onClick={onClose}>
-          Hide form
+    <section
+      className="mx-auto w-full max-w-2xl rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.72)] p-6 shadow-[0_24px_60px_rgba(2,8,18,0.3)] backdrop-blur-xl md:p-8"
+      aria-label="Host a pickup game"
+    >
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <h1 className="text-3xl font-black tracking-tight text-cream">
+          Host a Pickup Game
+        </h1>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-sm font-semibold text-cream-muted underline-offset-4 hover:underline"
+        >
+          Back to games
         </button>
       </div>
 
-      <form className="game-form" onSubmit={handleSubmit}>
-        <label>
-          Sport
+      <form className="space-y-8" onSubmit={handleSubmit}>
+        <div>
+          <p className="mb-3 text-sm font-semibold text-cream">Sport</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {sports.map((sport) => {
+              const selected = draft.sport === sport;
+              const venue = defaultCourt[sport];
+              const addr = locations[venue]?.address ?? '';
+              return (
+                <button
+                  key={sport}
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...draft,
+                      sport,
+                      location: venue,
+                      date: draft.date || new Date().toISOString().split('T')[0],
+                      startTime: '',
+                      endTime: '',
+                    })
+                  }
+                  className={`flex min-h-[44px] flex-col rounded-2xl border-2 p-4 text-left transition ${
+                    selected
+                      ? 'border-brand-400 bg-brand-400/10 shadow-[0_0_0_1px_rgba(248,211,106,0.25)]'
+                      : 'border-white/12 bg-white/5 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-3xl" aria-hidden>
+                    {sportEmoji(sport)}
+                  </span>
+                  <span className="mt-2 font-bold text-cream">{sport}</span>
+                  {selected && (
+                    <span className="mt-2 text-xs leading-snug text-cream-muted">
+                      {venue}
+                      <br />
+                      {addr}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <label className="grid gap-2 text-sm font-semibold text-cream">
+          Court / venue
           <select
-            value={draft.sport}
+            className={inputClass}
+            value={draft.location}
             onChange={(event) =>
               onChange({
                 ...draft,
-                sport: event.target.value as SportName,
-                location: '',
-                date: '',
+                location: event.target.value,
                 startTime: '',
                 endTime: '',
               })
-            }
-          >
-            <option value="">Select a sport</option>
-            {sports.map((sport) => (
-              <option key={sport} value={sport}>
-                {sport}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Date
-          <input
-            type="date"
-            value={draft.date}
-            onChange={(event) =>
-              onChange({ ...draft, date: event.target.value, startTime: '', endTime: '' })
-            }
-            disabled={!draft.sport}
-            min={new Date().toISOString().split('T')[0]}
-          />
-        </label>
-
-        <label>
-          Location
-          <select
-            value={draft.location}
-            onChange={(event) =>
-              onChange({ ...draft, location: event.target.value, startTime: '', endTime: '' })
             }
             disabled={!draft.sport}
           >
@@ -168,137 +224,255 @@ export function GameForm({ draft, sports, games, onChange, onSubmit, onClose }: 
         </label>
 
         {selectedLocationInfo && (
-          <p className="location-hint">
-            ⏰ {formatAvailability()}
-          </p>
+          <p className="-mt-4 text-sm text-sky-accent">⏰ {formatAvailability()}</p>
         )}
 
-        <label>
-          Start Time
-          <select
-            value={draft.startTime ? new Date(draft.startTime).toTimeString().slice(0, 5) : ''}
-            onChange={(event) =>
-              onChange({ ...draft, startTime: `${draft.date}T${event.target.value}:00`, endTime: '' })
-            }
-            disabled={!draft.location || !draft.date}
-          >
-            <option value="">Select start time</option>
-            {availableStartTimes.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <label className="grid gap-2 text-sm font-semibold text-cream md:col-span-1">
+            Date
+            <input
+              type="date"
+              className={inputClass}
+              value={draft.date}
+              onChange={(event) =>
+                onChange({
+                  ...draft,
+                  date: event.target.value,
+                  startTime: '',
+                  endTime: '',
+                })
+              }
+              disabled={!draft.sport}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-cream">
+            Start time
+            <select
+              className={inputClass}
+              value={
+                draft.startTime
+                  ? new Date(draft.startTime).toTimeString().slice(0, 5)
+                  : ''
+              }
+              onChange={(event) =>
+                onChange({
+                  ...draft,
+                  startTime: `${draft.date}T${event.target.value}:00`,
+                  endTime: '',
+                })
+              }
+              disabled={!draft.location || !draft.date}
+            >
+              <option value="">Select start time</option>
+              {availableStartTimes.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-cream">
+            End time
+            <select
+              className={inputClass}
+              value={
+                draft.endTime ? new Date(draft.endTime).toTimeString().slice(0, 5) : ''
+              }
+              onChange={(event) =>
+                onChange({ ...draft, endTime: `${draft.date}T${event.target.value}:00` })
+              }
+              disabled={!draft.startTime}
+            >
+              <option value="">Select end time</option>
+              {availableEndTimes.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-        <label>
-          End Time
-          <select
-            value={draft.endTime ? new Date(draft.endTime).toTimeString().slice(0, 5) : ''}
-            onChange={(event) =>
-              onChange({ ...draft, endTime: `${draft.date}T${event.target.value}:00` })
-            }
-            disabled={!draft.startTime}
-          >
-            <option value="">Select end time</option>
-            {availableEndTimes.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-sm font-semibold text-cream">Min players</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+                onClick={() => setMinPlayers((m) => Math.max(2, m - 1))}
+              >
+                −
+              </button>
+              <span className="min-w-[2rem] text-center text-lg font-bold text-cream">
+                {minPlayers}
+              </span>
+              <button
+                type="button"
+                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+                onClick={() => setMinPlayers((m) => Math.min(draft.capacity - 1, m + 1))}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-sm font-semibold text-cream">Max players</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+                onClick={() =>
+                  onChange({
+                    ...draft,
+                    capacity: Math.max(minPlayers + 1, draft.capacity - 1),
+                  })
+                }
+              >
+                −
+              </button>
+              <span className="min-w-[2rem] text-center text-lg font-bold text-cream">
+                {draft.capacity}
+              </span>
+              <button
+                type="button"
+                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+                onClick={() =>
+                  onChange({ ...draft, capacity: Math.min(30, draft.capacity + 1) })
+                }
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <label>
-          Capacity
-          <input
-            type="number"
-            min={2}
-            max={30}
-            value={draft.capacity}
-            onChange={(event) => onChange({ ...draft, capacity: Number(event.target.value) })}
-            required
-          />
-        </label>
+        <div>
+          <p className="mb-2 text-sm font-semibold text-cream">Competitive level</p>
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/12 bg-white/5 p-1">
+            {(['Casual', 'Intermediate', 'Competitive'] as const).map((label) => {
+              const active = competitive === label;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() =>
+                    onChange({ ...draft, skillLevel: skillFromCompetitive(label) })
+                  }
+                  className={`min-h-11 rounded-xl px-2 text-xs font-bold sm:text-sm ${
+                    active
+                      ? 'bg-gradient-to-br from-brand-500 to-brand-400 text-ink shadow-sm'
+                      : 'text-cream-muted hover:bg-white/5'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        <label>
-          Skill Level
-          <select
-            value={draft.skillLevel}
-            onChange={(event) =>
-              onChange({ ...draft, skillLevel: event.target.value as GameDraft['skillLevel'] })
-            }
-          >
-            {skillLevels.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Age Range
-          <select
-            value={draft.ageRange}
-            onChange={(event) => onChange({ ...draft, ageRange: event.target.value })}
-            required
-          >
-            <option value="">Select age range</option>
-            {ageRanges.map((range) => (
-              <option key={range} value={range}>
-                {range}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Gender
-          <select
-            value={draft.gender}
-            onChange={(event) =>
-              onChange({ ...draft, gender: event.target.value as GameDraft['gender'] })
-            }
-          >
-            <option value="Any">Any</option>
-            <option value="Men">Men</option>
-            <option value="Women">Women</option>
-            <option value="Mixed">Mixed</option>
-          </select>
-        </label>
-
-        <label>
-          Description
+        <label className="grid gap-2 text-sm font-semibold text-cream">
+          Notes
           <textarea
+            className={`${inputClass} min-h-[120px] resize-y`}
             value={draft.note}
             onChange={(event) => onChange({ ...draft, note: event.target.value })}
-            placeholder="Details about the game..."
+            placeholder="Share format, what to bring, and how to find the group…"
             rows={4}
           />
         </label>
 
-        <label>
-          Requirements
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label className="grid gap-2 text-sm font-semibold text-cream">
+            Age range
+            <select
+              className={inputClass}
+              value={draft.ageRange}
+              onChange={(event) => onChange({ ...draft, ageRange: event.target.value })}
+              required
+            >
+              <option value="">Select age range</option>
+              {ageRanges.map((range) => (
+                <option key={range} value={range}>
+                  {range}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-cream">
+            Gender
+            <select
+              className={inputClass}
+              value={draft.gender}
+              onChange={(event) =>
+                onChange({ ...draft, gender: event.target.value as GameDraft['gender'] })
+              }
+            >
+              <option value="Any">Any</option>
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+              <option value="Mixed">Mixed</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="grid gap-2 text-sm font-semibold text-cream">
+          Requirements (optional)
           <textarea
+            className={`${inputClass} min-h-[88px] resize-y`}
             value={draft.requirements}
             onChange={(event) => onChange({ ...draft, requirements: event.target.value })}
-            placeholder="Any requirements..."
+            placeholder="Cleats, discs, rackets, water…"
             rows={2}
           />
         </label>
 
-        <div className="warning">
-          <p>
-            <strong>Important:</strong> We are unable to guarantee the availability of the
-            play area. Creators of a game are responsible for ensuring that the location is
-            usable at the time of the game.
-          </p>
+        {conflictGame && (
+          <div className="rounded-xl border border-amber-400/45 bg-amber-400/10 p-4 text-amber-100">
+            <p className="text-sm font-bold">
+              ⚠️ A game is already scheduled at this time — want to join it instead?
+            </p>
+            <p className="mt-1 text-sm text-amber-100/90">
+              {conflictGame.sport} at {conflictGame.location} ·{' '}
+              {formatGameTime(conflictGame.startTime)}
+            </p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                className="w-full justify-center sm:w-auto"
+                onClick={() => onViewConflictGame(conflictGame.id)}
+              >
+                View &amp; Join Game
+              </Button>
+              <button
+                type="button"
+                className="text-sm font-semibold text-cream-muted underline-offset-4 hover:underline"
+                onClick={onPostAnyway}
+              >
+                Post Anyway
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border-l-4 border-brand-400 bg-brand-400/10 p-4 text-sm text-cream">
+          📌 You are responsible for reserving this court before posting this game.
         </div>
 
-        <button className="primary-button" type="submit">
-          Create Game
-        </button>
+        <Button
+          type="submit"
+          className="w-full justify-center py-3.5 text-base"
+          disabled={!canSubmit}
+        >
+          Post Game
+        </Button>
+
+        <p className="text-center text-xs text-cream-muted">
+          Skill presets map to listings: Casual (Beginner), Intermediate, Competitive
+          (Advanced).
+        </p>
       </form>
     </section>
   );

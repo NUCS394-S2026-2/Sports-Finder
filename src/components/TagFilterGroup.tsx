@@ -12,15 +12,21 @@ export function TagFilterGroup<T extends string>({
   onChange,
 }: TagFilterGroupProps<T>) {
   return (
-    <section className="tag-filter-group" aria-label={label}>
-      <p className="tag-filter-label">{label}</p>
-      <div className="tag-filter-row">
+    <section className="space-y-2" aria-label={label}>
+      <p className="text-xs font-semibold uppercase tracking-wider text-cream-muted">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
             key={option}
             type="button"
-            className={option === value ? 'chip chip-active' : 'chip'}
             onClick={() => onChange(option)}
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+              option === value
+                ? 'border-transparent bg-gradient-to-br from-brand-500 to-brand-400 text-ink'
+                : 'border-white/15 bg-white/5 text-cream hover:border-white/25 hover:bg-white/10'
+            }`}
           >
             {option}
           </button>

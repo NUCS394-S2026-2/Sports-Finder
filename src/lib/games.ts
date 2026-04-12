@@ -9,15 +9,20 @@ export function fetchGames(): PickupGame[] {
 export function createGame(
   draft: GameDraft,
   games: PickupGame[],
+  options?: { ignoreConflict?: boolean },
 ): { game?: PickupGame; conflict?: PickupGame } {
   // Check for conflict: same sport, location, and start times within 30 minutes
-  const conflict = games.find(
-    (g) =>
-      g.sport === draft.sport &&
-      g.location === draft.location &&
-      Math.abs(new Date(g.startTime).getTime() - new Date(draft.startTime).getTime()) <
-        30 * 60 * 1000,
-  );
+  const conflict = options?.ignoreConflict
+    ? undefined
+    : games.find(
+        (g) =>
+          g.sport === draft.sport &&
+          g.location === draft.location &&
+          Math.abs(
+            new Date(g.startTime).getTime() - new Date(draft.startTime).getTime(),
+          ) <
+            30 * 60 * 1000,
+      );
 
   if (conflict) {
     return { conflict };
@@ -52,5 +57,15 @@ export function joinGame(gameId: string, user: User, games: PickupGame[]): Picku
       return { ...g, players: [...g.players, user] };
     }
     return g;
+  });
+}
+
+export function leaveGame(gameId: string, user: User, games: PickupGame[]): PickupGame[] {
+  return games.map((g) => {
+    if (g.id !== gameId) return g;
+    return {
+      ...g,
+      players: g.players.filter((p) => p.email !== user.email),
+    };
   });
 }

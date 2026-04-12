@@ -4,12 +4,14 @@ export const featuredSports: SportName[] = ['Soccer', 'Frisbee', 'Tennis'];
 
 export type LocationInfo = {
   sports: SportName[];
+  address: string;
   availability: 'anytime' | { [day: string]: { start: string; end: string } };
 };
 
 export const locations: { [key: string]: LocationInfo } = {
   'Hutchson Field': {
     sports: ['Soccer', 'Frisbee'],
+    address: '2331 Campus Dr, Evanston, IL 60208',
     availability: {
       mon: { start: '18:00', end: '22:00' },
       tue: { start: '18:00', end: '22:00' },
@@ -22,10 +24,12 @@ export const locations: { [key: string]: LocationInfo } = {
   },
   'Deering Meadow': {
     sports: ['Frisbee'],
+    address: '1917 Sheridan Rd, Evanston, IL 60208',
     availability: 'anytime',
   },
   'Northwestern Tennis Courts': {
     sports: ['Tennis'],
+    address: '1847 Sheridan Rd, Evanston, IL 60208',
     availability: 'anytime',
   },
 };
@@ -118,9 +122,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '18+',
     gender: 'Any',
     requirements: 'Racket and balls provided.',
-    players: [
-      { name: 'Emma', email: 'emma@example.com' },
-    ],
+    players: [{ name: 'Emma', email: 'emma@example.com' }],
   },
   {
     id: '6',
@@ -208,9 +210,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '16+',
     gender: 'Mixed',
     requirements: 'No cleats required.',
-    players: [
-      { name: 'Lisa', email: 'lisa@example.com' },
-    ],
+    players: [{ name: 'Lisa', email: 'lisa@example.com' }],
   },
   {
     id: '11',
@@ -225,9 +225,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '25+',
     gender: 'Any',
     requirements: 'Racket required.',
-    players: [
-      { name: 'Mark', email: 'mark@example.com' },
-    ],
+    players: [{ name: 'Mark', email: 'mark@example.com' }],
   },
   {
     id: '12',
@@ -392,9 +390,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '18-35',
     gender: 'Mixed',
     requirements: 'Bring water.',
-    players: [
-      { name: 'Hana', email: 'hana@example.com' },
-    ],
+    players: [{ name: 'Hana', email: 'hana@example.com' }],
   },
   {
     id: '21',
@@ -488,9 +484,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '16-25',
     gender: 'Mixed',
     requirements: 'Bring water and sunscreen.',
-    players: [
-      { name: 'Val', email: 'val@example.com' },
-    ],
+    players: [{ name: 'Val', email: 'val@example.com' }],
   },
   {
     id: '26',
@@ -563,9 +557,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '20+',
     gender: 'Women',
     requirements: 'Bring your own racket.',
-    players: [
-      { name: 'Eve', email: 'eve@example.com' },
-    ],
+    players: [{ name: 'Eve', email: 'eve@example.com' }],
   },
   {
     id: '30',
@@ -599,9 +591,7 @@ export const initialGames: PickupGame[] = [
     ageRange: '18+',
     gender: 'Mixed',
     requirements: 'All gear provided.',
-    players: [
-      { name: 'Iris', email: 'iris@example.com' },
-    ],
+    players: [{ name: 'Iris', email: 'iris@example.com' }],
   },
   {
     id: '32',
@@ -626,7 +616,7 @@ export const initialGames: PickupGame[] = [
 export const emptyDraft: GameDraft = {
   sport: '',
   location: '',
-  date: '2026-04-07',
+  date: '',
   startTime: '',
   endTime: '',
   capacity: 10,
