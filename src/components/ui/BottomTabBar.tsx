@@ -20,7 +20,7 @@ export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(9,19,31,0.08)] backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[rgba(9,15,24,0.92)] px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(2,8,18,0.45)] backdrop-blur-xl md:hidden"
       aria-label="Primary"
     >
       <div className="mx-auto flex max-w-lg items-end justify-between gap-1">
@@ -32,7 +32,7 @@ export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('create')}
-                  className="-mt-6 flex h-14 min-w-[3.5rem] items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-400 px-5 text-sm font-extrabold text-ink shadow-lg ring-4 ring-white transition hover:-translate-y-0.5 active:translate-y-0"
+                  className="-mt-6 flex h-14 min-w-[3.5rem] items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-400 px-5 text-sm font-extrabold text-ink shadow-lg ring-4 ring-ink transition hover:-translate-y-0.5 active:translate-y-0"
                   aria-current={active ? 'page' : undefined}
                 >
                   <span className="text-lg leading-none" aria-hidden>
@@ -52,7 +52,7 @@ export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
               type="button"
               onClick={() => onNavigate(tab.view)}
               className={`flex min-h-11 min-w-[44px] flex-1 flex-col items-center justify-center rounded-xl px-2 py-1 text-xs font-semibold transition ${
-                active ? 'text-brand-500' : 'text-gray-500 hover:text-gray-700'
+                active ? 'text-brand-400' : 'text-cream-muted hover:text-cream'
               }`}
               aria-current={active ? 'page' : undefined}
             >

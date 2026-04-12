@@ -1,4 +1,10 @@
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithPopup,
+  signOut,
+  type User as FirebaseUser,
+} from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 
 import { GameCard } from './components/GameCard';
@@ -21,7 +27,15 @@ import {
   googleAuthProvider,
   isFirebaseConfigured,
 } from './lib/firebase';
-import { createGame, fetchGames, joinGame, leaveGame } from './lib/games';
+import {
+  addPlayerToGame,
+  createGame,
+  fetchGames,
+  joinGame,
+  leaveGame,
+  removePlayerFromGame,
+  seedGamesIfEmpty,
+} from './lib/games';
 import { sportEmoji } from './lib/sports';
 import type { GameDraft, PickupGame, User } from './types';
 
@@ -59,27 +73,92 @@ function App() {
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
+  // One listener: UI user + Firestore seed/fetch on every auth change (anonymous → Google, etc.).
+  // A single mount-time fetch misses Google sign-in because games were already loaded once.
   useEffect(() => {
-    setGames(fetchGames());
-  }, []);
-
-  useEffect(() => {
+    let cancelled = false;
+    let unsubAuth: (() => void) | null = null;
     const auth = getFirebaseAuth();
+
+    async function loadGamesFromFirestore() {
+      const a = getFirebaseAuth();
+      if (a?.currentUser) {
+        try {
+          await a.currentUser.getIdToken();
+        } catch {
+          // Firestore may still attach; avoids occasional post-sign-in permission races
+        }
+      }
+      try {
+        await seedGamesIfEmpty();
+      } catch (err) {
+        console.error(
+          'seedGamesIfEmpty failed (games may still load if Firestore allows read)',
+          err,
+        );
+      }
+      try {
+        const data = await fetchGames();
+        if (!cancelled) setGames(data);
+      } catch (err) {
+        console.error('fetchGames failed', err);
+      }
+    }
+
     if (!auth) {
       setBootstrapping(false);
-      return;
+      void loadGamesFromFirestore();
+      return () => {
+        cancelled = true;
+      };
     }
-    const unsub = onAuthStateChanged(auth, (fbUser) => {
-      if (fbUser) {
-        const email = fbUser.email?.toLowerCase() ?? '';
-        const name = fbUser.displayName?.trim() || email.split('@')[0] || 'Player';
-        setUser({ name, email });
-      } else {
-        setUser(null);
+
+    const firebaseAuth = auth;
+    let triedAnonymousSignIn = false;
+
+    async function syncGamesForAuthUser(fbUser: FirebaseUser | null) {
+      if (cancelled) return;
+      await firebaseAuth.authStateReady();
+      if (cancelled) return;
+
+      if (!fbUser) {
+        if (!triedAnonymousSignIn) {
+          triedAnonymousSignIn = true;
+          try {
+            await signInAnonymously(firebaseAuth);
+            return;
+          } catch (err) {
+            console.error('Anonymous sign-in failed:', err);
+          }
+        }
+        await loadGamesFromFirestore();
+        return;
       }
-      setBootstrapping(false);
-    });
-    return unsub;
+
+      await loadGamesFromFirestore();
+    }
+
+    void (async () => {
+      await firebaseAuth.authStateReady();
+      if (cancelled) return;
+      unsubAuth = onAuthStateChanged(firebaseAuth, (fbUser) => {
+        if (cancelled) return;
+        if (fbUser) {
+          const email = fbUser.email?.toLowerCase() ?? '';
+          const name = fbUser.displayName?.trim() || email.split('@')[0] || 'Player';
+          setUser({ name, email });
+        } else {
+          setUser(null);
+        }
+        setBootstrapping(false);
+        void syncGamesForAuthUser(fbUser);
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubAuth?.();
+    };
   }, []);
 
   useEffect(() => {
@@ -88,14 +167,21 @@ function App() {
     setPendingJoinId(null);
     setShowLogin(false);
     setLoginError(null);
-    setGames((prev) => {
-      const updated = joinGame(gameId, user, prev);
-      const joined = updated.find((g) => g.id === gameId) ?? null;
-      if (joined) {
-        queueMicrotask(() => setJoinedGame(joined));
+    void (async () => {
+      try {
+        await addPlayerToGame(gameId, user);
+        setGames((prev) => {
+          const updated = joinGame(gameId, user, prev);
+          const joined = updated.find((g) => g.id === gameId) ?? null;
+          if (joined) {
+            queueMicrotask(() => setJoinedGame(joined));
+          }
+          return updated;
+        });
+      } catch (err) {
+        console.error('addPlayerToGame (pending join) failed', err);
       }
-      return updated;
-    });
+    })();
   }, [user, pendingJoinId]);
 
   useEffect(() => {
@@ -273,6 +359,9 @@ function App() {
     setLoginBusy(true);
     try {
       await signInWithPopup(auth, googleAuthProvider);
+      if (auth.currentUser) {
+        await auth.currentUser.getIdToken(true);
+      }
       setShowLogin(false);
     } catch (err: unknown) {
       const code =
@@ -304,7 +393,7 @@ function App() {
     }
   }
 
-  function handleJoinGame(id: string) {
+  async function handleJoinGame(id: string) {
     if (!user) {
       setPendingJoinId(id);
       setShowLogin(true);
@@ -317,43 +406,77 @@ function App() {
       setTimeConflictGame(conflict);
       return;
     }
-    const updated = joinGame(id, user, games);
-    setGames(updated);
-    setJoinedGame(updated.find((g) => g.id === id) ?? null);
+    try {
+      await addPlayerToGame(id, user);
+    } catch (err) {
+      console.error('addPlayerToGame failed', err);
+      setLoginError('Could not join game. Check Firestore rules and that you are signed in.');
+      return;
+    }
+    setGames((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, players: [...g.players, user] } : g)),
+    );
+    const updated = { ...target, players: [...target.players, user] };
+    setJoinedGame(updated);
   }
 
-  function handleLeaveGame(id: string) {
+  async function handleLeaveGame(id: string) {
     if (!user) return;
+    try {
+      await removePlayerFromGame(id, user);
+    } catch (err) {
+      console.error('removePlayerFromGame failed', err);
+      setLoginError('Could not leave game. Check Firestore rules.');
+      return;
+    }
     setGames((prev) => leaveGame(id, user, prev));
     setJoinedGame((current) => (current?.id === id ? null : current));
   }
 
-  function handleCreateGame() {
+  async function handleCreateGame() {
     if (!user) {
       setShowLogin(true);
       return;
     }
     const draftWithOrganizer = { ...draft, organizer: user.email };
-    const result = createGame(draftWithOrganizer, games);
+    let result: Awaited<ReturnType<typeof createGame>>;
+    try {
+      result = await createGame(draftWithOrganizer, games);
+    } catch (err) {
+      console.error('createGame failed', err);
+      setLoginError('Could not create game. Check Firestore rules and sign-in.');
+      return;
+    }
     if (result.conflict) {
       setCreateConflictGame(result.conflict);
       return;
     }
     setCreateConflictGame(null);
-    if (result.game) {
-      setGames((prev) => [...prev, result.game!]);
+    const created = result.game;
+    if (created) {
+      setGames((prev) => [...prev, created]);
       setDraft(emptyDraft);
       navigateTo('find');
     }
   }
 
-  function handlePostAnyway() {
+  async function handlePostAnyway() {
     if (!user) return;
     const draftWithOrganizer = { ...draft, organizer: user.email };
-    const result = createGame(draftWithOrganizer, games, { ignoreConflict: true });
+    let result: Awaited<ReturnType<typeof createGame>>;
+    try {
+      result = await createGame(draftWithOrganizer, games, {
+        ignoreConflict: true,
+      });
+    } catch (err) {
+      console.error('createGame (post anyway) failed', err);
+      setLoginError('Could not create game. Check Firestore rules and sign-in.');
+      return;
+    }
     setCreateConflictGame(null);
-    if (result.game) {
-      setGames((prev) => [...prev, result.game!]);
+    const created = result.game;
+    if (created) {
+      setGames((prev) => [...prev, created]);
       setDraft(emptyDraft);
       navigateTo('find');
     }

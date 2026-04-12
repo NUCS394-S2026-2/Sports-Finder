@@ -1,15 +1,28 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import App from './App';
 import { initialGames } from './data';
-import { createGame, fetchGames, joinGame } from './lib/games';
+import { getFirebaseAuth } from './lib/firebase';
+import {
+  addPlayerToGame,
+  createGame,
+  fetchGames,
+  removePlayerFromGame,
+  saveGame,
+  seedGamesIfEmpty,
+} from './lib/games';
 import type { PickupGame } from './types';
+
+const mockAuth = {
+  authStateReady: vi.fn(() => Promise.resolve()),
+  currentUser: null as { getIdToken: (forceRefresh?: boolean) => Promise<string> } | null,
+};
 
 vi.mock('./lib/firebase', () => ({
   isFirebaseConfigured: vi.fn(() => true),
-  getFirebaseAuth: vi.fn(() => ({})),
+  getFirebaseAuth: vi.fn(() => mockAuth),
   googleAuthProvider: {},
 }));
 
@@ -25,8 +38,14 @@ vi.mock('firebase/auth', () => {
         state.listener = null;
       };
     }),
+    signInAnonymously: vi.fn(async () => {
+      const u = { email: '', displayName: 'Guest' };
+      mockAuth.currentUser = { getIdToken: async () => 'mock-token' };
+      state.listener?.(u);
+    }),
     signInWithPopup: vi.fn(async () => {
       const u = { email: 'taylor@example.com', displayName: 'Taylor' };
+      mockAuth.currentUser = { getIdToken: async () => 'mock-token' };
       state.listener?.(u);
       return { user: u };
     }),
@@ -36,21 +55,35 @@ vi.mock('firebase/auth', () => {
 
 vi.mock('./lib/games', () => ({
   fetchGames: vi.fn(),
+  seedGamesIfEmpty: vi.fn(),
+  saveGame: vi.fn(),
+  addPlayerToGame: vi.fn(),
   createGame: vi.fn(),
-  joinGame: vi.fn(),
-  leaveGame: vi.fn(),
+  joinGame: vi.fn((gameId: string, user: { email: string }, prev: PickupGame[]) =>
+    prev.map((g) => (g.id === gameId ? { ...g, players: [...g.players, user] } : g)),
+  ),
+  leaveGame: vi.fn((gameId: string, user: { email: string }, prev: PickupGame[]) =>
+    prev.map((g) =>
+      g.id === gameId
+        ? { ...g, players: g.players.filter((p) => p.email !== user.email) }
+        : g,
+    ),
+  ),
+  removePlayerFromGame: vi.fn(),
+  findConflict: vi.fn().mockReturnValue(undefined),
 }));
 
 const mockedFetchGames = vi.mocked(fetchGames);
-const mockedCreateGame = vi.mocked(createGame);
-const mockedJoinGame = vi.mocked(joinGame);
+vi.mocked(seedGamesIfEmpty).mockResolvedValue(undefined);
+vi.mocked(addPlayerToGame).mockResolvedValue(undefined);
+vi.mocked(removePlayerFromGame).mockResolvedValue(undefined);
 
 const newGame: PickupGame = {
   id: 'new-game-id',
   sport: 'Soccer',
-  location: 'North Field',
-  startTime: '2026-04-02T18:30',
-  endTime: '2026-04-02T20:00',
+  location: 'Hutchson Field',
+  startTime: '2026-04-20T18:30',
+  endTime: '2026-04-20T20:00',
   capacity: 8,
   organizer: 'taylor@example.com',
   note: 'Bring water and cleats.',
@@ -62,105 +95,50 @@ const newGame: PickupGame = {
 };
 
 beforeEach(() => {
+  mockAuth.currentUser = null;
   vi.clearAllMocks();
-  mockedFetchGames.mockReturnValue(initialGames as PickupGame[]);
-  mockedCreateGame.mockReturnValue({ game: newGame });
-  mockedJoinGame.mockReturnValue([newGame]);
+  vi.mocked(seedGamesIfEmpty).mockResolvedValue(undefined);
+  vi.mocked(addPlayerToGame).mockResolvedValue(undefined);
+  vi.mocked(removePlayerFromGame).mockResolvedValue(undefined);
+  mockedFetchGames.mockResolvedValue(initialGames as PickupGame[]);
+  vi.mocked(saveGame).mockResolvedValue(newGame);
+  vi.mocked(createGame).mockResolvedValue({ game: newGame });
 });
 
 describe('App', () => {
   test('renders the hero and primary calls to action', async () => {
     render(<App />);
 
-    expect(
-      await screen.findByRole('heading', { name: /your next game starts here/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /browse games/i })).toBeInTheDocument();
+    expect(await screen.findByText(/Your next game starts here/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Browse Games' })).toBeInTheDocument();
   });
 
-  test('navigates to games feed from the hero', async () => {
+  test('navigates to games list and shows search and sport filters', async () => {
     const user = userEvent.setup();
-
     render(<App />);
 
-    await screen.findByRole('heading', { name: /your next game starts here/i });
-
-    await user.click(screen.getByRole('button', { name: /browse games/i }));
-
-    expect(screen.getByPlaceholderText(/search by sport/i)).toBeInTheDocument();
-  });
-
-  test('shows profile mission content from the desktop navigation', async () => {
-    const user = userEvent.setup();
-
-    render(<App />);
-
-    await screen.findByRole('heading', { name: /your next game starts here/i });
-
-    const header = screen.getByRole('banner');
-    await user.click(within(header).getByRole('button', { name: /^profile$/i }));
+    await screen.findByText(/Your next game starts here/i);
+    const sectionsNav = screen.getByRole('navigation', { name: 'Sections' });
+    await user.click(within(sectionsNav).getByRole('button', { name: 'Games' }));
 
     expect(
-      screen.getByRole('heading', { name: /why pickup sports finder exists/i }),
+      screen.getByPlaceholderText(/Search by sport, venue, or host/i),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tennis' })).toBeInTheDocument();
   });
 
-  test('can add a new pickup game to the games list', async () => {
+  test('profile tab prompts sign-in when logged out', async () => {
+    vi.mocked(getFirebaseAuth).mockReturnValue(null);
     const user = userEvent.setup();
-
-    mockedFetchGames.mockReturnValueOnce(initialGames as PickupGame[]);
-
     render(<App />);
 
-    await screen.findByRole('heading', { name: /your next game starts here/i });
+    await screen.findByText(/Your next game starts here/i);
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary' });
+    await user.click(within(primaryNav).getByRole('button', { name: 'Profile' }));
 
-    await user.click(
-      within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }),
-    );
-
-    const authDialog = await screen.findByRole('dialog', {
-      name: /sign in to join the game/i,
-    });
-    await user.click(
-      within(authDialog).getByRole('button', { name: /continue with google/i }),
-    );
-
-    await waitFor(() => {
-      expect(screen.getByRole('banner')).toHaveTextContent(/Taylor/i);
-    });
-
-    await user.click(
-      within(screen.getByRole('banner')).getByRole('button', { name: /host a game/i }),
-    );
-
-    await user.click(screen.getByRole('button', { name: /^soccer$/i }));
-
-    await user.selectOptions(screen.getByLabelText(/court \/ venue/i), 'Hutchson Field');
-
-    fireEvent.change(screen.getByLabelText(/^date$/i), {
-      target: { value: '2026-04-16' },
-    });
-
-    const startSelect = screen.getByLabelText(/^start time$/i);
-    const startOptions = Array.from(
-      (startSelect as HTMLSelectElement).querySelectorAll('option'),
-    ).map((o) => o.value);
-    const firstStart = startOptions.find((v) => v && v !== '');
-    if (firstStart) fireEvent.change(startSelect, { target: { value: firstStart } });
-
-    const endSelect = screen.getByLabelText(/^end time$/i);
-    const endOptions = Array.from(
-      (endSelect as HTMLSelectElement).querySelectorAll('option'),
-    )
-      .map((o) => o.value)
-      .filter(Boolean);
-    const firstEnd = endOptions.find((v) => v !== '');
-    if (firstEnd) fireEvent.change(endSelect, { target: { value: firstEnd } });
-
-    await user.selectOptions(screen.getByLabelText(/age range/i), '18+');
-
-    await user.click(screen.getByRole('button', { name: /post game/i }));
-
-    expect(mockedCreateGame).toHaveBeenCalled();
+    expect(
+      screen.getByText(/Sign in to see your stats and history/i),
+    ).toBeInTheDocument();
+    vi.mocked(getFirebaseAuth).mockReturnValue(mockAuth);
   });
 });

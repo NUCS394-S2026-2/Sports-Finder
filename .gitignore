@@ -7,3 +7,5 @@ node_modules/*
 coverage
 .firebase/
 .npm-cache/
+.env
+.env.local
