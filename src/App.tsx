@@ -169,12 +169,16 @@ function App() {
     if (pendingJoinId) {
       const target = games.find((g) => g.id === pendingJoinId);
       if (target) {
-        await addPlayerToGame(pendingJoinId, newUser);
         const updated = { ...target, players: [...target.players, newUser] };
         setGames((prev) =>
           prev.map((g) => (g.id === pendingJoinId ? updated : g)),
         );
         setJoinedGame(updated);
+        try {
+          await addPlayerToGame(pendingJoinId, newUser);
+        } catch (err) {
+          console.error('Failed to save join to Firestore:', err);
+        }
       }
       setPendingJoinId(null);
     }
@@ -197,20 +201,14 @@ function App() {
       setTimeConflictGame(conflict);
       return;
     }
-    await addPlayerToGame(id, user);
-    // Optimistically update local state
-    setGames((prev) =>
-      prev.map((g) =>
-        g.id === id ? { ...g, players: [...g.players, user] } : g,
-      ),
-    );
-    setJoinedGame((prev) =>
-      prev === null
-        ? { ...target, players: [...target.players, user] }
-        : prev,
-    );
     const updated = { ...target, players: [...target.players, user] };
+    setGames((prev) => prev.map((g) => (g.id === id ? updated : g)));
     setJoinedGame(updated);
+    try {
+      await addPlayerToGame(id, user);
+    } catch (err) {
+      console.error('Failed to save join to Firestore:', err);
+    }
   }
 
   async function handleCreateGame() {
