@@ -23,3 +23,22 @@ export function formatGameTime(value: string): string {
     minute: '2-digit',
   }).format(parsed);
 }
+
+/** e.g. Apr 14, 2026 · 14:36 (24h time, matches compact card rows). */
+export function formatHomeCardDateTime(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  const datePart = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(parsed);
+  const timePart = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed);
+  return `${datePart} · ${timePart}`;
+}

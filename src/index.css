@@ -1,14 +1,15 @@
-:root {
-  font-family:
-    'Trebuchet MS', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #f7f3ec;
-  background: #09131f;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Trebuchet MS', 'Segoe UI', 'Helvetica Neue', Arial, ui-sans-serif, system-ui,
+    sans-serif;
+  --color-brand-500: #f5a65b;
+  --color-brand-400: #f8d36a;
+  --color-ink: #09131f;
+  --color-cream: #f7f4ec;
+  --color-cream-muted: rgba(247, 244, 236, 0.78);
+  --color-sky-accent: #93c9ff;
 }
 
 * {
@@ -23,7 +24,15 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #09131f;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--color-cream);
+  background: var(--color-ink);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -44,4 +53,9 @@ button {
 img {
   display: block;
   max-width: 100%;
+}
+
+select option {
+  color: #111;
+  background: #fff;
 }

@@ -1,4 +1,6 @@
 import { initializeApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -13,3 +15,21 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+
+export function isFirebaseConfigured(): boolean {
+  return Boolean(
+    import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  );
+}
+
+/** For UI / logs when debugging Firestore permission errors. */
+export function getFirebaseProjectIdForDiagnostics(): string {
+  return String(import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '').trim();
+}
+
+export function getFirebaseAuth(): Auth | null {
+  if (!isFirebaseConfigured()) return null;
+  return getAuth(app);
+}
+
+export const googleAuthProvider = new GoogleAuthProvider();
