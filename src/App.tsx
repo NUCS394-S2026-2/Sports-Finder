@@ -5,6 +5,7 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom';
 
 import { GameCard } from './components/GameCard';
@@ -1096,6 +1097,12 @@ function App() {
       </main>
 
       <BottomTabBar activeView={activeView} onNavigate={navigateTo} />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3200,
+        }}
+      />
 
       {showLogin && (
         <div

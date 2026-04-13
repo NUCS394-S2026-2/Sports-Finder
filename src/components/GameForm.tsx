@@ -1,9 +1,10 @@
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { toast } from 'react-hot-toast';
 
 import { ageRanges, locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
-import { competitiveLabel, skillFromCompetitive, sportEmoji } from '../lib/sports';
+import { sportEmoji } from '../lib/sports';
 import type { GameDraft, PickupGame, SportName } from '../types';
 import { Button } from './ui/Button';
 
@@ -34,7 +35,6 @@ export function GameForm({
   conflictGame,
   onViewConflictGame,
 }: GameFormProps) {
-  const [minPlayers, setMinPlayers] = useState(4);
   const timeSlots = useMemo(() => {
     const slots = [];
     for (let hour = 6; hour <= 22; hour++) {
@@ -104,8 +104,25 @@ export function GameForm({
     return slots;
   }, [draft.startTime]);
 
+  function firstValidationError(): string | null {
+    if (!draft.sport) return 'Select a sport.';
+    if (!draft.location) return 'Select a court or venue.';
+    if (!draft.date) return 'Choose a date.';
+    if (!draft.startTime) return 'Choose a start time.';
+    if (!draft.endTime) return 'Choose an end time.';
+    if (!draft.ageRange) return 'Select an age range.';
+    if (draft.capacity < 2 || draft.capacity > 30) return 'Capacity must be between 2 and 30.';
+    if (conflictGame) return 'A game already exists at that time. Pick another slot.';
+    return null;
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const error = firstValidationError();
+    if (error) {
+      toast.error(error);
+      return;
+    }
     onSubmit();
   }
 
@@ -119,18 +136,6 @@ export function GameForm({
     const days = entries.map(([d]) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
     return `${days}: ${first.start}–${last.end}`;
   }
-
-  const competitive = competitiveLabel(draft.skillLevel);
-
-  const canSubmit =
-    Boolean(draft.sport) &&
-    Boolean(draft.location) &&
-    Boolean(draft.date) &&
-    Boolean(draft.startTime) &&
-    Boolean(draft.endTime) &&
-    Boolean(draft.ageRange) &&
-    draft.capacity >= minPlayers &&
-    !conflictGame;
 
   const inputClass =
     'w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-cream placeholder:text-cream/40 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-brand-400';
@@ -243,6 +248,7 @@ export function GameForm({
               }
               disabled={!draft.sport}
               min={new Date().toISOString().split('T')[0]}
+              required
             />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-cream">
@@ -262,6 +268,7 @@ export function GameForm({
                 })
               }
               disabled={!draft.location || !draft.date}
+              required
             >
               <option value="">Select start time</option>
               {availableStartTimes.map((time) => (
@@ -282,6 +289,7 @@ export function GameForm({
                 onChange({ ...draft, endTime: `${draft.date}T${event.target.value}:00` })
               }
               disabled={!draft.startTime}
+              required
             >
               <option value="">Select end time</option>
               {availableEndTimes.map((time) => (
@@ -293,72 +301,39 @@ export function GameForm({
           </label>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <p className="mb-2 text-sm font-semibold text-cream">Min players</p>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
-                onClick={() => setMinPlayers((m) => Math.max(2, m - 1))}
-              >
-                −
-              </button>
-              <span className="min-w-[2rem] text-center text-lg font-bold text-cream">
-                {minPlayers}
-              </span>
-              <button
-                type="button"
-                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
-                onClick={() => setMinPlayers((m) => Math.min(draft.capacity - 1, m + 1))}
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-semibold text-cream">Max players</p>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
-                onClick={() =>
-                  onChange({
-                    ...draft,
-                    capacity: Math.max(minPlayers + 1, draft.capacity - 1),
-                  })
-                }
-              >
-                −
-              </button>
-              <span className="min-w-[2rem] text-center text-lg font-bold text-cream">
-                {draft.capacity}
-              </span>
-              <button
-                type="button"
-                className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
-                onClick={() =>
-                  onChange({ ...draft, capacity: Math.min(30, draft.capacity + 1) })
-                }
-              >
-                +
-              </button>
-            </div>
+        <div>
+          <p className="mb-2 text-sm font-semibold text-cream">Capacity (required players)</p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+              onClick={() => onChange({ ...draft, capacity: Math.max(2, draft.capacity - 1) })}
+            >
+              −
+            </button>
+            <span className="min-w-[2rem] text-center text-lg font-bold text-cream">
+              {draft.capacity}
+            </span>
+            <button
+              type="button"
+              className="flex h-11 min-w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-bold text-cream"
+              onClick={() => onChange({ ...draft, capacity: Math.min(30, draft.capacity + 1) })}
+            >
+              +
+            </button>
           </div>
         </div>
 
         <div>
-          <p className="mb-2 text-sm font-semibold text-cream">Competitive level</p>
+          <p className="mb-2 text-sm font-semibold text-cream">Skill level</p>
           <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/12 bg-white/5 p-1">
-            {(['Casual', 'Intermediate', 'Competitive'] as const).map((label) => {
-              const active = competitive === label;
+            {(['Beginner', 'Intermediate', 'Advanced'] as const).map((label) => {
+              const active = draft.skillLevel === label;
               return (
                 <button
                   key={label}
                   type="button"
-                  onClick={() =>
-                    onChange({ ...draft, skillLevel: skillFromCompetitive(label) })
-                  }
+                  onClick={() => onChange({ ...draft, skillLevel: label })}
                   className={`min-h-11 rounded-xl px-2 text-xs font-bold sm:text-sm ${
                     active
                       ? 'bg-gradient-to-br from-brand-500 to-brand-400 text-ink shadow-sm'
@@ -373,7 +348,7 @@ export function GameForm({
         </div>
 
         <label className="grid gap-2 text-sm font-semibold text-cream">
-          Notes
+          Description
           <textarea
             className={`${inputClass} min-h-[120px] resize-y`}
             value={draft.note}
@@ -418,7 +393,7 @@ export function GameForm({
         </div>
 
         <label className="grid gap-2 text-sm font-semibold text-cream">
-          Requirements (optional)
+          Requirements
           <textarea
             className={`${inputClass} min-h-[88px] resize-y`}
             value={draft.requirements}
@@ -457,14 +432,12 @@ export function GameForm({
         <Button
           type="submit"
           className="w-full justify-center py-3.5 text-base"
-          disabled={!canSubmit}
         >
           Post Game
         </Button>
 
         <p className="text-center text-xs text-cream-muted">
-          Skill presets map to listings: Casual (Beginner), Intermediate, Competitive
-          (Advanced).
+          Choose the level that best matches expected pace and experience.
         </p>
       </form>
     </section>
