@@ -140,18 +140,38 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Tennis' })).toBeInTheDocument();
   });
 
-  test('profile tab prompts sign-in when logged out', async () => {
+  test('my games tab prompts sign-in when logged out', async () => {
     vi.mocked(getFirebaseAuth).mockReturnValue(null);
     const user = userEvent.setup();
     renderApp();
 
     await screen.findByRole('heading', { name: /welcome/i });
     const primaryNav = screen.getByRole('navigation', { name: 'Primary' });
-    await user.click(within(primaryNav).getByRole('button', { name: 'Profile' }));
+    await user.click(within(primaryNav).getByRole('button', { name: 'My Games' }));
 
     expect(
-      screen.getByText(/Sign in to see your stats and history/i),
+      screen.getByText(/Sign in to see the games you have joined/i),
     ).toBeInTheDocument();
     vi.mocked(getFirebaseAuth).mockReturnValue(mockAuthState as unknown as Auth);
+  });
+
+  test('my games page shows richer tiles for joined games', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await screen.findByRole('heading', { name: /welcome/i });
+
+    await user.click(screen.getByRole('button', { name: /Sign In/i }));
+    await user.click(screen.getByRole('button', { name: /Continue with Google/i }));
+
+    const sectionsNav = screen.getByRole('navigation', { name: 'Sections' });
+    await user.click(within(sectionsNav).getByRole('button', { name: 'My Games' }));
+
+    expect(screen.getByRole('heading', { name: /My Games/i })).toBeInTheDocument();
+    expect(screen.getByText(/^Signed up$/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /Open in Google Maps/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /View details/i })).toBeInTheDocument();
   });
 });

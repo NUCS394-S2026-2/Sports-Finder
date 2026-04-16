@@ -8,8 +8,8 @@ type BottomTabBarProps = {
 const mainTabs: Array<{ view: ViewName; label: string }> = [
   { view: 'home', label: 'Home' },
   { view: 'find', label: 'Games' },
+  { view: 'profile', label: 'My Games' },
   { view: 'create', label: 'Host' },
-  { view: 'profile', label: 'Profile' },
 ];
 
 export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
@@ -59,7 +59,7 @@ export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
               <span aria-hidden className="text-base">
                 {tab.view === 'home' && '⌂'}
                 {tab.view === 'find' && '◎'}
-                {tab.view === 'profile' && '☺'}
+                {tab.view === 'profile' && '★'}
               </span>
               <span>{tab.label}</span>
             </button>
