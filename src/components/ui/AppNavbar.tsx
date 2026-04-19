@@ -21,6 +21,7 @@ type AppNavbarProps = {
 const centerNav: Array<{ view: ViewName; label: string }> = [
   { view: 'home', label: 'Home' },
   { view: 'find', label: 'Games' },
+  { view: 'profile', label: 'My Games' },
   { view: 'create', label: 'Host a Game' },
 ];
 
@@ -165,7 +166,7 @@ export function AppNavbar({
                       onNavigate('profile');
                     }}
                   >
-                    Profile
+                    My Games
                   </button>
                   <button
                     type="button"
@@ -188,7 +189,7 @@ export function AppNavbar({
                 className="hidden rounded-full px-3 py-2 text-sm font-semibold text-cream-muted transition hover:text-cream md:inline-flex"
                 onClick={() => onNavigate('profile')}
               >
-                Profile
+                My Games
               </button>
               <Button
                 variant="primary"
@@ -204,7 +205,6 @@ export function AppNavbar({
           <button
             type="button"
             className="flex h-11 min-w-[44px] items-center justify-center rounded-xl border border-white/15 text-cream transition hover:bg-white/10 md:hidden"
-            aria-expanded={menuOpen}
             aria-controls={menuId}
             onClick={() => setMenuOpen((o) => !o)}
           >
@@ -245,7 +245,7 @@ export function AppNavbar({
                     handleCenterNav('profile');
                   }}
                 >
-                  Profile
+                  My Games
                 </button>
                 <button
                   type="button"

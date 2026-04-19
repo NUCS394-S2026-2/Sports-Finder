@@ -6,15 +6,23 @@ import {
 } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Navigate, Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom';
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useMatch,
+  useNavigate,
+} from 'react-router-dom';
 
 import { GameCard } from './components/GameCard';
 import { GameDetailView } from './components/GameDetailView';
 import { GameForm } from './components/GameForm';
+import { SignedUpGameCard } from './components/SignedUpGameCard';
 import {
-  type AppNotification,
   NotificationList,
   NotificationShell,
+  type AppNotification,
 } from './components/NotificationList';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { AppNavbar } from './components/ui/AppNavbar';
@@ -85,9 +93,9 @@ function App() {
   /** Shown when a game was created without a real Firestore document (rules / config). */
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
   /** Firestore returned permission-denied even though .env looks configured (wrong project, App Check, API key, …). */
-  const [firestorePermissionBanner, setFirestorePermissionBanner] = useState<string | null>(
-    null,
-  );
+  const [firestorePermissionBanner, setFirestorePermissionBanner] = useState<
+    string | null
+  >(null);
 
   // One listener: UI user + Firestore seed/fetch on every auth change (e.g. after Google sign-in).
   // A single mount-time fetch misses Google sign-in because games were already loaded once.
@@ -238,21 +246,10 @@ function App() {
     return featuredSports.map((sport) => {
       const forSport = futureGames.filter((g) => g.sport === sport);
       const withSpots = forSport.filter((g) => g.players.length < g.capacity);
-      const game = (withSpots[0] ?? forSport[0]) ?? null;
+      const game = withSpots[0] ?? forSport[0] ?? null;
       return { sport, game };
     });
   }, [futureGames]);
-
-  const hasCreatedGame = useMemo(
-    () =>
-      games.some(
-        (g) =>
-          !!user &&
-          g.organizer.toLowerCase() === user.email.toLowerCase() &&
-          new Date(g.startTime) > new Date(),
-      ),
-    [games, user],
-  );
 
   const filteredAndSorted = useMemo(() => {
     let result = futureGames.filter((g) => {
@@ -318,46 +315,45 @@ function App() {
     ];
   }, []);
 
-  const gamesJoined = useMemo(
-    () =>
-      user
-        ? games.filter((g) =>
-            g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
-          ).length
-        : 0,
-    [games, user],
-  );
-
   const gamesHosted = useMemo(
     () =>
       user
-        ? games.filter(
-            (g) => g.organizer.toLowerCase() === user.email.toLowerCase(),
-          ).length
+        ? games.filter((g) => g.organizer.toLowerCase() === user.email.toLowerCase())
+            .length
         : 0,
     [games, user],
   );
 
-  const profileUpcoming = useMemo(() => {
+  const signedUpGames = useMemo(() => {
     if (!user) return [];
-    return futureGames
-      .filter((g) =>
-        g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
+    const normalized = user.email.toLowerCase();
+    return [...games]
+      .filter((game) =>
+        game.players.some((player) => player.email.toLowerCase() === normalized),
       )
-      .slice(0, 8);
-  }, [futureGames, user]);
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [games, user]);
 
-  const profilePast = useMemo(() => {
-    if (!user) return [];
-    return games
-      .filter(
+  const signedUpUpcoming = useMemo(
+    () => signedUpGames.filter((game) => new Date(game.startTime) > now),
+    [signedUpGames, now],
+  );
+
+  const signedUpPast = useMemo(
+    () => signedUpGames.filter((game) => new Date(game.startTime) <= now),
+    [signedUpGames, now],
+  );
+
+  const hasCreatedGame = useMemo(
+    () =>
+      games.some(
         (g) =>
-          new Date(g.startTime) <= now &&
-          g.players.some((p) => p.email.toLowerCase() === user.email.toLowerCase()),
-      )
-      .slice(-8)
-      .reverse();
-  }, [games, user, now]);
+          !!user &&
+          g.organizer.toLowerCase() === user.email.toLowerCase() &&
+          new Date(g.startTime) > new Date(),
+      ),
+    [games, user],
+  );
 
   function navigateTo(next: ViewName) {
     if (next === 'game-detail') return;
@@ -472,7 +468,9 @@ function App() {
         );
       } else {
         console.error('addPlayerToGame failed', err);
-        setLoginError('Could not join game. Check Firestore rules and that you are signed in.');
+        setLoginError(
+          'Could not join game. Check Firestore rules and that you are signed in.',
+        );
         return;
       }
     }
@@ -622,8 +620,14 @@ function App() {
         Browse all games
       </Button>
 
-      <section className="mt-14 border-t border-white/10 pt-10" aria-labelledby="home-happening-heading">
-        <h2 id="home-happening-heading" className="text-lg font-black text-cream sm:text-xl">
+      <section
+        className="mt-14 border-t border-white/10 pt-10"
+        aria-labelledby="home-happening-heading"
+      >
+        <h2
+          id="home-happening-heading"
+          className="text-lg font-black text-cream sm:text-xl"
+        >
           Happening soon
         </h2>
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
@@ -658,8 +662,12 @@ function App() {
                 <p className="text-xs font-bold uppercase tracking-wide text-brand-400">
                   {sportHomeCategoryLabel(sport)}
                 </p>
-                <p className="mt-3 text-base font-bold text-cream-muted">No upcoming games</p>
-                <p className="mt-3 text-sm text-cream-muted/80">Browse {sport} on Games</p>
+                <p className="mt-3 text-base font-bold text-cream-muted">
+                  No upcoming games
+                </p>
+                <p className="mt-3 text-sm text-cream-muted/80">
+                  Browse {sport} on Games
+                </p>
               </button>
             ),
           )}
@@ -854,6 +862,16 @@ function App() {
 
   const profileSection = (
     <div className="py-12">
+      <div className="mb-8 max-w-3xl space-y-2">
+        <h1 className="text-3xl font-black tracking-tight text-cream sm:text-4xl">
+          My Games
+        </h1>
+        <p className="text-sm leading-relaxed text-cream-muted sm:text-base">
+          Every game you have joined, with roster details and quick access to the game
+          page.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 gap-10 xl:grid-cols-3">
         <aside className="space-y-6 rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.72)] p-6 backdrop-blur-xl xl:sticky xl:top-24 xl:self-start">
           {user ? (
@@ -903,10 +921,20 @@ function App() {
 
         <div className="space-y-12 xl:col-span-2">
           {user && (
-            <div className="grid grid-cols-2 gap-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="grid grid-cols-2 gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 md:grid-cols-4">
               <div>
-                <p className="text-3xl font-black text-cream">{gamesJoined}</p>
-                <p className="text-sm font-semibold text-cream-muted">Games joined</p>
+                <p className="text-3xl font-black text-cream">{signedUpGames.length}</p>
+                <p className="text-sm font-semibold text-cream-muted">Signed up</p>
+              </div>
+              <div>
+                <p className="text-3xl font-black text-cream">
+                  {signedUpUpcoming.length}
+                </p>
+                <p className="text-sm font-semibold text-cream-muted">Upcoming</p>
+              </div>
+              <div>
+                <p className="text-3xl font-black text-cream">{signedUpPast.length}</p>
+                <p className="text-sm font-semibold text-cream-muted">Past</p>
               </div>
               <div>
                 <p className="text-3xl font-black text-cream">{gamesHosted}</p>
@@ -916,57 +944,26 @@ function App() {
           )}
 
           <section>
-            <h3 className="text-lg font-bold text-cream">Upcoming for you</h3>
-            <div className="mt-4 space-y-3">
-              {user && profileUpcoming.length > 0 ? (
-                profileUpcoming.map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => openGameDetail(g.id)}
-                    className="flex w-full flex-col gap-1 rounded-xl border border-white/10 bg-[rgba(9,15,24,0.55)] px-4 py-3 text-left transition hover:border-brand-400/40"
-                  >
-                    <span className="font-semibold text-cream">
-                      {g.sport} · {g.location}
-                    </span>
-                    <span className="text-sm text-brand-400">
-                      {formatGameTime(g.startTime)}
-                    </span>
-                  </button>
+            <h3 className="text-lg font-bold text-cream">All of your games</h3>
+            <div className="mt-4 grid gap-6 lg:grid-cols-2">
+              {user && signedUpGames.length > 0 ? (
+                signedUpGames.map((game) => (
+                  <SignedUpGameCard
+                    key={game.id}
+                    game={game}
+                    mapsUrl={mapsUrl}
+                    isPast={isPastGame(game)}
+                    isOrganizer={isUserOrganizer(game)}
+                    onOpenDetail={openGameDetail}
+                    onLeave={handleLeaveGame}
+                  />
                 ))
               ) : (
-                <p className="text-sm text-cream-muted">
+                <div className="rounded-2xl border border-white/10 bg-[rgba(9,15,24,0.55)] p-6 text-sm text-cream-muted">
                   {user
-                    ? 'No upcoming games yet — browse open runs.'
-                    : 'Sign in to track your games.'}
-                </p>
-              )}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-lg font-bold text-cream">Past games</h3>
-            <div className="mt-4 space-y-3">
-              {user && profilePast.length > 0 ? (
-                profilePast.map((g) => (
-                  <div
-                    key={g.id}
-                    className="flex flex-col gap-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 opacity-80"
-                  >
-                    <span className="font-semibold text-cream">
-                      {g.sport} · {g.location}
-                    </span>
-                    <span className="text-sm text-cream-muted">
-                      {formatGameTime(g.startTime)}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-cream-muted">
-                  {user
-                    ? 'Your past pickups will show up here.'
-                    : 'Sign in to see history.'}
-                </p>
+                    ? 'You are not signed up for any games yet. Browse open games to join one.'
+                    : 'Sign in to see the games you have joined.'}
+                </div>
               )}
             </div>
           </section>
@@ -1073,8 +1070,8 @@ function App() {
           >
             Firebase is not configured in this build (missing{' '}
             <code className="rounded bg-white/10 px-1">VITE_FIREBASE_*</code> in{' '}
-            <code className="rounded bg-white/10 px-1">.env</code>). The list shows bundled
-            sample games only; nothing is read from or written to your database.
+            <code className="rounded bg-white/10 px-1">.env</code>). The list shows
+            bundled sample games only; nothing is read from or written to your database.
           </div>
         )}
         {isFirebaseConfigured() && firestorePermissionBanner && (
