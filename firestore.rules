@@ -1,8 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    // Games collection: open access (existing behavior).
+    match /games/{gameId} {
       allow read, write: if true;
+
+      // Game chat messages.
+      //
+      // Restriction: players[] is stored as an array of {name, email} maps, and Firestore
+      // security rules don't support partial-map matching in hasAny(). Full joined-player
+      // enforcement is handled in the UI (chat is only rendered for isJoined || isOrganizer).
+      // Rules here require authentication and validate the message shape on create.
+      match /messages/{messageId} {
+        // Any authenticated user can read messages.
+        allow read: if request.auth != null;
+
+        // Writers must be signed in, the senderId must match their UID (prevents spoofing),
+        // and the message text must be a non-empty string within the 1000-char limit.
+        allow create: if request.auth != null
+                      && request.resource.data.senderId == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 1000;
+
+        // Messages are immutable — no edits or deletes from the client.
+        allow update, delete: if false;
+      }
     }
+
   }
 }

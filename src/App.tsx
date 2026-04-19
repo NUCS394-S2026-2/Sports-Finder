@@ -69,6 +69,7 @@ function App() {
   const [games, setGames] = useState<PickupGame[]>([]);
   const [bootstrapping, setBootstrapping] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUid, setFirebaseUid] = useState<string | null>(null);
 
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -180,8 +181,10 @@ function App() {
           const email = fbUser.email?.toLowerCase() ?? '';
           const name = fbUser.displayName?.trim() || email.split('@')[0] || 'Player';
           setUser({ name, email });
+          setFirebaseUid(fbUser.uid);
         } else {
           setUser(null);
+          setFirebaseUid(null);
         }
         setBootstrapping(false);
         void syncGamesForAuthUser(fbUser);
@@ -1003,6 +1006,7 @@ function App() {
         isJoined={isJoinedByUser(detailGame)}
         isPast={isPastGame(detailGame)}
         isOrganizer={isUserOrganizer(detailGame)}
+        currentUser={user && firebaseUid ? { uid: firebaseUid, name: user.name, email: user.email } : null}
         onJoin={handleJoinGame}
         onLeave={handleLeaveGame}
         onCancel={handleCancelGame}

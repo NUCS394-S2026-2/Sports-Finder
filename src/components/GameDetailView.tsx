@@ -3,6 +3,13 @@ import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
 import type { PickupGame } from '../types';
 import { Button } from './ui/Button';
+import { GameChat } from './GameChat';
+
+type ChatUser = {
+  uid: string;
+  name: string;
+  email: string;
+};
 
 type GameDetailViewProps = {
   game: PickupGame;
@@ -10,6 +17,7 @@ type GameDetailViewProps = {
   isJoined: boolean;
   isPast: boolean;
   isOrganizer: boolean;
+  currentUser?: ChatUser | null;
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
   onCancel: (id: string) => void;
@@ -45,6 +53,7 @@ export function GameDetailView({
   isJoined,
   isPast,
   isOrganizer,
+  currentUser,
   onJoin,
   onLeave,
   onCancel,
@@ -212,6 +221,10 @@ export function GameDetailView({
             This game will be cancelled if minimum players aren&apos;t reached 30 minutes
             before start.
           </p>
+
+          {(isJoined || isOrganizer) && (
+            <GameChat gameId={game.id} currentUser={currentUser ?? null} />
+          )}
 
           <div className="xl:hidden">
             {isOrganizer && !isPast ? (
