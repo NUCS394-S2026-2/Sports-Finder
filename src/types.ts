@@ -40,3 +40,21 @@ export type GameDraft = {
   gender: PickupGame['gender'];
   requirements: string;
 };
+
+export type ProfileData = {
+  userId: string;
+  displayName: string;
+  bio: string;
+  photoURL?: string;
+  gamesJoined: string[];
+  gamesCreated: string[];
+  favoriteSports?: SportName[];
+  defaultLocation?: string;
+  locationRadius?: number; // in miles
+  notificationPreferences?: {
+    gameUpdates: boolean;
+    gameCancelled: boolean;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+};

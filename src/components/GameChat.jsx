@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   addDoc,
   arrayUnion,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../lib/firebase';
+import { paths } from '../lib/routes';
 import { isSessionOnlyGameId } from '../lib/games';
 
 function toInitials(nameOrEmail) {
@@ -33,6 +35,7 @@ function formatTime(timestamp) {
 }
 
 export default function GameChat({ gameId, currentUser }) {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -186,16 +189,18 @@ export default function GameChat({ gameId, currentUser }) {
                   <div
                     className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''}`}
                   >
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[10px] font-extrabold ${
+                    <button
+                      type="button"
+                      onClick={() => navigate(paths.userProfile(message.senderId))}
+                      title={`View ${message.senderName}'s profile`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[10px] font-extrabold transition hover:ring-2 ${
                         isMine
-                          ? 'border-brand-300/40 bg-brand-400/20 text-brand-300'
-                          : 'border-white/15 bg-white/10 text-cream'
+                          ? 'border-brand-300/40 bg-brand-400/20 text-brand-300 hover:ring-brand-300'
+                          : 'border-white/15 bg-white/10 text-cream hover:ring-white/30'
                       }`}
-                      aria-hidden
                     >
                       {message.senderInitials || '?'}
-                    </span>
+                    </button>
                     <div
                       className={`max-w-[16rem] rounded-2xl px-3 py-2 ${
                         isMine
