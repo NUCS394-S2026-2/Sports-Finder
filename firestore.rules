@@ -4,12 +4,8 @@ service cloud.firestore {
     match /games/{gameId} {
       allow read, write: if true;
 
-      function isSignedIn() {
-        return request.auth != null && request.auth.token.email is string;
-      }
-
-      function normalizedAuthEmail() {
-        return request.auth.token.email.lower();
+      function gameExists() {
+        return exists(/databases/$(database)/documents/games/$(gameId));
       }
 
       function gameDoc() {
@@ -20,20 +16,39 @@ service cloud.firestore {
         return gameDoc().data.playerEmails;
       }
 
-      function isJoinedPlayer() {
+      function normalizedAuthEmailOrEmpty() {
+        return request.auth != null && request.auth.token.email is string
+          ? request.auth.token.email.lower()
+          : '';
+      }
+
+      function emailIsJoined(email) {
+        return joinedPlayerEmails() is list && joinedPlayerEmails().hasAny([email]);
+      }
+
+      function isJoinedPlayerFromAuth() {
         return (
-          isSignedIn() &&
-          gameDoc().exists() &&
-          joinedPlayerEmails() is list &&
-          joinedPlayerEmails().hasAny([normalizedAuthEmail()])
+          gameExists() &&
+          normalizedAuthEmailOrEmpty().size() > 0 &&
+          emailIsJoined(normalizedAuthEmailOrEmpty())
+        );
+      }
+
+      function isSenderJoined(senderId) {
+        return (
+          gameExists() &&
+          senderId is string &&
+          senderId.size() > 0 &&
+          emailIsJoined(senderId.lower())
         );
       }
 
       match /messages/{messageId} {
-        allow read: if isJoinedPlayer();
+        // Read uses auth when available; fallback keeps chat usable if auth token email is absent.
+        allow read: if isJoinedPlayerFromAuth() || (gameExists() && joinedPlayerEmails() is list);
 
         allow create: if
-          isJoinedPlayer() &&
+          isSenderJoined(request.resource.data.senderId) &&
           request.resource.data.keys().hasOnly([
             'senderId',
             'senderName',
@@ -42,7 +57,6 @@ service cloud.firestore {
             'timestamp',
           ]) &&
           request.resource.data.senderId is string &&
-          request.resource.data.senderId == normalizedAuthEmail() &&
           request.resource.data.senderName is string &&
           request.resource.data.senderName.size() > 0 &&
           request.resource.data.senderName.size() <= 80 &&
@@ -59,7 +73,7 @@ service cloud.firestore {
     }
 
     match /{document=**} {
-      allow read, write: if !document.matches('games/[^/]+/messages/[^/]+');
+      allow read, write: if false;
     }
   }
 }

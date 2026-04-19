@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDoc,
+  arrayUnion,
   collection,
+  doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { db } from '../lib/firebase';
@@ -52,6 +55,18 @@ export default function GameChat({ gameId, currentUser }) {
     [currentUser],
   );
 
+  async function ensureJoinedMembership() {
+    if (!gameId || !senderId || isSessionOnlyGameId(gameId)) return;
+    try {
+      await updateDoc(doc(db, 'games', gameId), {
+        playerEmails: arrayUnion(senderId),
+      });
+    } catch (err) {
+      // If this fails, message write may still succeed when rules are already satisfied.
+      console.warn('GameChat: failed to repair playerEmails membership.', err);
+    }
+  }
+
   useEffect(() => {
     if (!gameId || !senderId) {
       setMessages([]);
@@ -65,32 +80,44 @@ export default function GameChat({ gameId, currentUser }) {
     }
 
     setError(null);
-    const messagesRef = collection(db, 'games', gameId, 'messages');
-    const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+    let unsubscribe = () => {};
+    let cancelled = false;
 
-    const unsubscribe = onSnapshot(
-      messagesQuery,
-      (snapshot) => {
-        setMessages(
-          snapshot.docs.map((docSnap) => {
-            const data = docSnap.data();
-            return {
-              id: docSnap.id,
-              senderId: String(data.senderId ?? ''),
-              senderName: String(data.senderName ?? 'Player'),
-              senderInitials: String(data.senderInitials ?? '?'),
-              text: String(data.text ?? ''),
-              timestamp: data.timestamp ?? null,
-            };
-          }),
-        );
-      },
-      () => {
-        setError('Could not load chat right now.');
-      },
-    );
+    void (async () => {
+      await ensureJoinedMembership();
+      if (cancelled) return;
 
-    return () => unsubscribe();
+      const messagesRef = collection(db, 'games', gameId, 'messages');
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+
+      unsubscribe = onSnapshot(
+        messagesQuery,
+        (snapshot) => {
+          setMessages(
+            snapshot.docs.map((docSnap) => {
+              const data = docSnap.data();
+              return {
+                id: docSnap.id,
+                senderId: String(data.senderId ?? ''),
+                senderName: String(data.senderName ?? 'Player'),
+                senderInitials: String(data.senderInitials ?? '?'),
+                text: String(data.text ?? ''),
+                timestamp: data.timestamp ?? null,
+              };
+            }),
+          );
+        },
+        (err) => {
+          console.error('GameChat: onSnapshot failed.', err);
+          setError('Could not load chat right now.');
+        },
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [gameId, senderId]);
 
   useEffect(() => {
@@ -111,6 +138,7 @@ export default function GameChat({ gameId, currentUser }) {
     setError(null);
 
     try {
+      await ensureJoinedMembership();
       await addDoc(collection(db, 'games', gameId, 'messages'), {
         senderId,
         senderName,
@@ -119,7 +147,8 @@ export default function GameChat({ gameId, currentUser }) {
         timestamp: serverTimestamp(),
       });
       setDraft('');
-    } catch {
+    } catch (err) {
+      console.error('GameChat: failed to send message.', err);
       setError('Message failed to send.');
     } finally {
       setSending(false);
