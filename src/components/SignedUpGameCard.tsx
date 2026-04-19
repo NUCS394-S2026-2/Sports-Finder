@@ -86,12 +86,14 @@ export function SignedUpGameCard({
             Host
           </p>
           <p className="mt-1 text-sm font-semibold text-cream">{hostName}</p>
-          <a
-            href={`mailto:${game.organizer}`}
-            className="mt-1 block break-all text-sm text-sky-accent underline-offset-2 hover:underline"
-          >
-            {game.organizer}
-          </a>
+          {isOrganizer ? (
+            <a
+              href={`mailto:${game.organizer}`}
+              className="mt-1 block break-all text-sm text-sky-accent underline-offset-2 hover:underline"
+            >
+              {game.organizer}
+            </a>
+          ) : null}
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
           <p className="text-xs font-bold uppercase tracking-wide text-cream-muted">

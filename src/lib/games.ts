@@ -196,7 +196,43 @@ export async function seedGamesIfEmpty(): Promise<void> {
       await Promise.all(legacyDocs.map((d) => deleteDoc(doc(db, 'games', d.id))));
     } catch (err) {
       if (isFirestorePermissionError(err)) {
-        console.warn('seedGamesIfEmpty: cannot remove legacy documents (permission).', err);
+        console.warn(
+          'seedGamesIfEmpty: cannot remove legacy documents (permission).',
+          err,
+        );
+        return;
+      }
+      throw err;
+    }
+  }
+
+  const playerEmailRepairs = snapshot.docs
+    .map((d) => {
+      const data = d.data() as Record<string, unknown>;
+      const players = playersFromRaw(data.players);
+      const expected = players.map((p) => p.email);
+      const raw = Array.isArray(data.playerEmails)
+        ? data.playerEmails.map((e) => normalizeEmail(String(e ?? ''))).filter(Boolean)
+        : [];
+      const current = [...new Set(raw)].sort();
+      const target = [...new Set(expected)].sort();
+      const needsRepair =
+        target.length !== current.length ||
+        target.some((email, idx) => email !== current[idx]);
+      return needsRepair ? { id: d.id, playerEmails: target } : null;
+    })
+    .filter((v): v is { id: string; playerEmails: string[] } => v !== null);
+
+  if (playerEmailRepairs.length > 0) {
+    try {
+      await Promise.all(
+        playerEmailRepairs.map((r) =>
+          updateDoc(doc(db, 'games', r.id), { playerEmails: r.playerEmails }),
+        ),
+      );
+    } catch (err) {
+      if (isFirestorePermissionError(err)) {
+        console.warn('seedGamesIfEmpty: cannot backfill playerEmails (permission).', err);
         return;
       }
       throw err;
@@ -277,6 +313,7 @@ export async function saveGame(
     gender: draft.gender,
     requirements: draft.requirements,
     players: [{ name: hostLocalPart, email: organizer }],
+    playerEmails: [organizer],
   };
   try {
     const ref = await addDoc(gamesCol, newGame);
@@ -317,7 +354,11 @@ export async function addPlayerToGame(gameId: string, user: User): Promise<void>
     const data = snap.data() as Record<string, unknown>;
     const players = playersFromRaw(data.players);
     if (players.some((p) => p.email === me.email)) return;
-    await updateDoc(gameRef, { players: [...players, me] });
+    const nextPlayers = [...players, me];
+    await updateDoc(gameRef, {
+      players: nextPlayers,
+      playerEmails: nextPlayers.map((p) => p.email),
+    });
   } catch (err) {
     if (isFirestorePermissionError(err)) {
       console.warn(
@@ -358,7 +399,10 @@ export async function removePlayerFromGame(gameId: string, user: User): Promise<
     const players = playersFromRaw(data.players);
     const next = players.filter((p) => p.email !== targetEmail);
     if (next.length === players.length) return;
-    await updateDoc(gameRef, { players: next });
+    await updateDoc(gameRef, {
+      players: next,
+      playerEmails: next.map((p) => p.email),
+    });
   } catch (err) {
     if (isFirestorePermissionError(err)) {
       console.warn(
