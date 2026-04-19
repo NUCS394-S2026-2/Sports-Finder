@@ -327,12 +327,17 @@ function App() {
   const signedUpGames = useMemo(() => {
     if (!user) return [];
     const normalized = user.email.toLowerCase();
-    return [...games]
-      .filter((game) =>
-        game.players.some((player) => player.email.toLowerCase() === normalized),
-      )
+    const joined = games.filter((game) =>
+      game.players.some((player) => player.email.toLowerCase() === normalized),
+    );
+    const upcoming = joined
+      .filter((g) => new Date(g.startTime) > now)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-  }, [games, user]);
+    const past = joined
+      .filter((g) => new Date(g.startTime) <= now)
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    return [...upcoming, ...past];
+  }, [games, user, now]);
 
   const signedUpUpcoming = useMemo(
     () => signedUpGames.filter((game) => new Date(game.startTime) > now),
