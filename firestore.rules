@@ -1,8 +1,79 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+    match /games/{gameId} {
       allow read, write: if true;
+
+      function gameExists() {
+        return exists(/databases/$(database)/documents/games/$(gameId));
+      }
+
+      function gameDoc() {
+        return get(/databases/$(database)/documents/games/$(gameId));
+      }
+
+      function joinedPlayerEmails() {
+        return gameDoc().data.playerEmails;
+      }
+
+      function normalizedAuthEmailOrEmpty() {
+        return request.auth != null && request.auth.token.email is string
+          ? request.auth.token.email.lower()
+          : '';
+      }
+
+      function emailIsJoined(email) {
+        return joinedPlayerEmails() is list && joinedPlayerEmails().hasAny([email]);
+      }
+
+      function isJoinedPlayerFromAuth() {
+        return (
+          gameExists() &&
+          normalizedAuthEmailOrEmpty().size() > 0 &&
+          emailIsJoined(normalizedAuthEmailOrEmpty())
+        );
+      }
+
+      function isSenderJoined(senderId) {
+        return (
+          gameExists() &&
+          senderId is string &&
+          senderId.size() > 0 &&
+          emailIsJoined(senderId.lower())
+        );
+      }
+
+      match /messages/{messageId} {
+        // Read uses auth when available; fallback keeps chat usable if auth token email is absent.
+        allow read: if isJoinedPlayerFromAuth() || (gameExists() && joinedPlayerEmails() is list);
+
+        allow create: if
+          isSenderJoined(request.resource.data.senderId) &&
+          request.resource.data.keys().hasOnly([
+            'senderId',
+            'senderName',
+            'senderInitials',
+            'text',
+            'timestamp',
+          ]) &&
+          request.resource.data.senderId is string &&
+          request.resource.data.senderName is string &&
+          request.resource.data.senderName.size() > 0 &&
+          request.resource.data.senderName.size() <= 80 &&
+          request.resource.data.senderInitials is string &&
+          request.resource.data.senderInitials.size() > 0 &&
+          request.resource.data.senderInitials.size() <= 3 &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 800 &&
+          request.resource.data.timestamp == request.time;
+
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

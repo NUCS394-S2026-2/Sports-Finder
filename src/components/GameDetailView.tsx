@@ -1,11 +1,13 @@
 import { locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
-import type { PickupGame } from '../types';
+import type { PickupGame, User } from '../types';
+import GameChat from './GameChat';
 import { Button } from './ui/Button';
 
 type GameDetailViewProps = {
   game: PickupGame;
+  currentUser: User | null;
   mapsUrl: (location: string) => string;
   isJoined: boolean;
   isPast: boolean;
@@ -41,6 +43,7 @@ function playersSortedForDisplay(game: PickupGame): PickupGame['players'] {
 
 export function GameDetailView({
   game,
+  currentUser,
   mapsUrl,
   isJoined,
   isPast,
@@ -103,15 +106,17 @@ export function GameDetailView({
                 Hosted by
               </p>
               <p className="text-lg font-bold text-cream">{organizerName(game)}</p>
-              <p className="mt-2 text-sm text-cream-muted">
-                <span className="font-semibold text-cream-muted">Contact</span>{' '}
-                <a
-                  href={`mailto:${game.organizer}`}
-                  className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
-                >
-                  {game.organizer}
-                </a>
-              </p>
+              {isOrganizer ? (
+                <p className="mt-2 text-sm text-cream-muted">
+                  <span className="font-semibold text-cream-muted">Contact</span>{' '}
+                  <a
+                    href={`mailto:${game.organizer}`}
+                    className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                  >
+                    {game.organizer}
+                  </a>
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -191,14 +196,16 @@ export function GameDetailView({
                               </span>
                             ) : null}
                           </div>
-                          <p className="mt-1 text-sm text-cream-muted">
-                            <a
-                              href={`mailto:${p.email}`}
-                              className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
-                            >
-                              {p.email}
-                            </a>
-                          </p>
+                          {isOrganizer ? (
+                            <p className="mt-1 text-sm text-cream-muted">
+                              <a
+                                href={`mailto:${p.email}`}
+                                className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                              >
+                                {p.email}
+                              </a>
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     </li>
@@ -262,6 +269,10 @@ export function GameDetailView({
                 {game.players.length} / {game.capacity} players
               </p>
             </div>
+
+            {isJoined && currentUser ? (
+              <GameChat gameId={game.id} currentUser={currentUser} />
+            ) : null}
 
             <div className="hidden xl:block">
               {isOrganizer && !isPast ? (
