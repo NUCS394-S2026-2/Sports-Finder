@@ -4,8 +4,8 @@ import { locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
 import type { PickupGame } from '../types';
-import { Button } from './ui/Button';
 import { GameChat } from './GameChat';
+import { Button } from './ui/Button';
 
 type ChatUser = {
   uid: string;
@@ -127,15 +127,17 @@ export function GameDetailView({
                 Hosted by
               </p>
               <p className="text-lg font-bold text-cream">{organizerName(game)}</p>
-              <p className="mt-2 text-sm text-cream-muted">
-                <span className="font-semibold text-cream-muted">Contact</span>{' '}
-                <a
-                  href={`mailto:${game.organizer}`}
-                  className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
-                >
-                  {game.organizer}
-                </a>
-              </p>
+              {isOrganizer ? (
+                <p className="mt-2 text-sm text-cream-muted">
+                  <span className="font-semibold text-cream-muted">Contact</span>{' '}
+                  <a
+                    href={`mailto:${game.organizer}`}
+                    className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                  >
+                    {game.organizer}
+                  </a>
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -215,14 +217,16 @@ export function GameDetailView({
                               </span>
                             ) : null}
                           </div>
-                          <p className="mt-1 text-sm text-cream-muted">
-                            <a
-                              href={`mailto:${p.email}`}
-                              className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
-                            >
-                              {p.email}
-                            </a>
-                          </p>
+                          {isOrganizer ? (
+                            <p className="mt-1 text-sm text-cream-muted">
+                              <a
+                                href={`mailto:${p.email}`}
+                                className="break-all font-semibold text-sky-accent underline-offset-2 hover:underline"
+                              >
+                                {p.email}
+                              </a>
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     </li>

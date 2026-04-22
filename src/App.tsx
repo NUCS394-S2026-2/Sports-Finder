@@ -1241,12 +1241,18 @@ function App() {
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <dt className="shrink-0 font-semibold text-cream-muted">Host</dt>
                 <dd className="min-w-0 text-right">
-                  <a
-                    href={`mailto:${joinedGame.organizer}`}
-                    className="break-all font-semibold text-sky-accent hover:underline"
-                  >
-                    {joinedGame.organizer}
-                  </a>
+                  {isUserOrganizer(joinedGame) ? (
+                    <a
+                      href={`mailto:${joinedGame.organizer}`}
+                      className="break-all font-semibold text-sky-accent hover:underline"
+                    >
+                      {joinedGame.organizer}
+                    </a>
+                  ) : (
+                    <span className="font-semibold text-cream">
+                      {joinedGame.organizer.split('@')[0] || 'Host'}
+                    </span>
+                  )}
                 </dd>
               </div>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
