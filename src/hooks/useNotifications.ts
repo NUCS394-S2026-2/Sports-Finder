@@ -151,7 +151,7 @@ export function useNotifications(
       // Only fetch the single latest message — minimizes Firestore reads
       const q = query(
         collection(db, 'games', gameId, 'messages'),
-        orderBy('timestamp', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(1),
       );
 
@@ -161,11 +161,12 @@ export function useNotifications(
           if (snapshot.empty) return;
           const msgDoc = snapshot.docs[0];
           const data = msgDoc.data();
-          const msgTs: number = data.timestamp?.toMillis?.() ?? 0;
-          const senderId = String(data.senderId ?? '').toLowerCase();
+          // Schema: createdAt (Timestamp), senderEmail (string), senderName, text
+          const msgTs: number = data.createdAt?.toMillis?.() ?? 0;
+          const senderEmail = String(data.senderEmail ?? '').toLowerCase();
 
           // Ignore own messages
-          if (senderId === email.toLowerCase()) return;
+          if (senderEmail === email.toLowerCase()) return;
 
           // Ignore if already processed
           if (msgTs <= loadSeenTime(email, gameId)) return;
