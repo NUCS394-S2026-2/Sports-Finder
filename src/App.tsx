@@ -21,9 +21,9 @@ import { GameForm } from './components/GameForm';
 import { SignedUpGameCard } from './components/SignedUpGameCard';
 import {
   NotificationList,
-  NotificationShell,
   type AppNotification,
 } from './components/NotificationList';
+import { useNotifications } from './hooks/useNotifications';
 import { TagFilterGroup } from './components/TagFilterGroup';
 import { AppNavbar } from './components/ui/AppNavbar';
 import { BottomTabBar } from './components/ui/BottomTabBar';
@@ -65,10 +65,14 @@ function App() {
     ? decodeURIComponent(gameDetailMatch.params.gameId)
     : null;
 
+  const scrollToChat =
+    (location.state as { scrollToChat?: boolean } | null)?.scrollToChat === true;
+
   const activeView = viewFromPathname(location.pathname);
   const [games, setGames] = useState<PickupGame[]>([]);
   const [bootstrapping, setBootstrapping] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUid, setFirebaseUid] = useState<string | null>(null);
 
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -180,8 +184,10 @@ function App() {
           const email = fbUser.email?.toLowerCase() ?? '';
           const name = fbUser.displayName?.trim() || email.split('@')[0] || 'Player';
           setUser({ name, email });
+          setFirebaseUid(fbUser.uid);
         } else {
           setUser(null);
+          setFirebaseUid(null);
         }
         setBootstrapping(false);
         void syncGamesForAuthUser(fbUser);
@@ -289,31 +295,6 @@ function App() {
     [games, detailGameId],
   );
 
-  const notificationItems = useMemo((): AppNotification[] => {
-    return [
-      {
-        id: 'n1',
-        kind: 'info',
-        title: 'Maya Chen joined your evening Soccer run',
-        time: '3m ago',
-        unread: true,
-      },
-      {
-        id: 'n2',
-        kind: 'cancel',
-        title: 'Your game has been cancelled',
-        body: 'Tuesday tennis ladders at Northwestern Tennis Courts — courts closed for maintenance.',
-        time: '1h ago',
-      },
-      {
-        id: 'n3',
-        kind: 'info',
-        title: 'Reminder: Frisbee at Deering Meadow starts at 5:30pm',
-        time: 'Yesterday',
-        unread: true,
-      },
-    ];
-  }, []);
 
   const gamesHosted = useMemo(
     () =>
@@ -333,6 +314,12 @@ function App() {
       )
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [games, user]);
+
+  const { notifications, unreadCount, markRead, markAllRead } = useNotifications(
+    user,
+    signedUpGames,
+    detailGameId,
+  );
 
   const signedUpUpcoming = useMemo(
     () => signedUpGames.filter((game) => new Date(game.startTime) > now),
@@ -365,6 +352,16 @@ function App() {
   function openGameDetail(id: string) {
     navigate(paths.game(id));
     setNotificationsOpen(false);
+  }
+
+  function handleNotificationClick(notif: AppNotification) {
+    markRead(notif.id);
+    setNotificationsOpen(false);
+    if (notif.gameId) {
+      navigate(paths.game(notif.gameId), {
+        state: { scrollToChat: notif.kind === 'message' },
+      });
+    }
   }
 
   function isJoinedByUser(game: PickupGame): boolean {
@@ -566,18 +563,28 @@ function App() {
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Northwestern University, Evanston, IL')}`;
 
   const notificationsDropdown = (
-    <NotificationShell>
-      <div className="border-b border-gray-100 px-4 py-3">
-        <p className="text-sm font-bold text-ink">Notifications</p>
+    <div>
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <p className="text-sm font-bold text-cream">Notifications</p>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={markAllRead}
+            className="text-xs font-semibold text-brand-400 hover:underline"
+          >
+            Mark all read
+          </button>
+        )}
       </div>
       <NotificationList
-        items={notificationItems}
+        items={notifications}
         onBrowseGames={() => {
           setNotificationsOpen(false);
           navigateTo('find');
         }}
+        onNotificationClick={handleNotificationClick}
       />
-    </NotificationShell>
+    </div>
   );
 
   if (bootstrapping) {
@@ -985,11 +992,23 @@ function App() {
 
   const notificationsPage = (
     <div className="py-10">
-      <h1 className="text-2xl font-black text-cream">Notifications</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-black text-cream">Notifications</h1>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={markAllRead}
+            className="rounded-full border border-white/15 px-4 py-1.5 text-sm font-semibold text-brand-400 transition hover:bg-white/10 hover:underline"
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.72)]">
         <NotificationList
-          items={notificationItems}
+          items={notifications}
           onBrowseGames={() => navigateTo('find')}
+          onNotificationClick={handleNotificationClick}
         />
       </div>
     </div>
@@ -999,15 +1018,16 @@ function App() {
     <div className="py-10">
       <GameDetailView
         game={detailGame}
-        currentUser={user}
         mapsUrl={mapsUrl}
         isJoined={isJoinedByUser(detailGame)}
         isPast={isPastGame(detailGame)}
         isOrganizer={isUserOrganizer(detailGame)}
+        currentUser={user && firebaseUid ? { uid: firebaseUid, name: user.name, email: user.email } : null}
         onJoin={handleJoinGame}
         onLeave={handleLeaveGame}
         onCancel={handleCancelGame}
         onBack={() => navigateTo('find')}
+        scrollToChat={scrollToChat}
       />
     </div>
   ) : (
@@ -1057,10 +1077,12 @@ function App() {
         user={user}
         onSignIn={handleSignIn}
         onLogout={handleLogout}
+        showNotifications={!!user}
         notificationsOpen={notificationsOpen}
         onNotificationsOpenChange={setNotificationsOpen}
         notificationsDropdown={notificationsDropdown}
         onOpenNotificationsPage={() => navigateTo('notifications')}
+        unreadCount={unreadCount}
       />
 
       <main className="mx-auto max-w-7xl px-4 pb-28 pt-20 sm:px-5 md:px-6 md:pb-12 lg:px-8">

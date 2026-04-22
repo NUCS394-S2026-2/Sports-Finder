@@ -10,12 +10,14 @@ type AppNavbarProps = {
   user: User | null;
   onSignIn: () => void;
   onLogout: () => void;
-  /** When true, shows bell + mobile Notifications entry (feature off by default). */
+  /** When true, shows bell icon on both desktop and mobile. */
   showNotifications?: boolean;
   onOpenNotificationsPage?: () => void;
   notificationsOpen?: boolean;
   onNotificationsOpenChange?: (open: boolean) => void;
   notificationsDropdown?: React.ReactNode;
+  /** Number of unread notifications — drives the badge. */
+  unreadCount?: number;
 };
 
 const centerNav: Array<{ view: ViewName; label: string }> = [
@@ -43,6 +45,7 @@ export function AppNavbar({
   notificationsOpen = false,
   onNotificationsOpenChange,
   notificationsDropdown,
+  unreadCount = 0,
 }: AppNavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -110,27 +113,60 @@ export function AppNavbar({
 
         <div className="ml-auto flex items-center gap-2 md:ml-0 md:flex-1 md:justify-end">
           {showNotifications && (
-            <div className="relative hidden md:block" ref={notifRef}>
+            <>
+              {/* Desktop bell — opens dropdown */}
+              <div className="relative hidden md:block" ref={notifRef}>
+                <button
+                  type="button"
+                  className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-lg text-cream transition hover:bg-white/10"
+                  aria-expanded={notificationsOpen}
+                  aria-haspopup="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNotificationsOpenChange?.(!notificationsOpen);
+                    setUserOpen(false);
+                  }}
+                >
+                  <span aria-hidden>🔔</span>
+                  <span className="sr-only">
+                    Notifications{unreadCount > 0 ? ` (${unreadCount} unread)` : ''}
+                  </span>
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-ink"
+                      aria-hidden
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-80 overflow-hidden rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.96)] shadow-2xl shadow-black/40 backdrop-blur-xl">
+                    {notificationsDropdown}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile bell — navigates to /notifications page */}
               <button
                 type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-lg text-cream transition hover:bg-white/10"
-                aria-expanded={notificationsOpen}
-                aria-haspopup="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onNotificationsOpenChange?.(!notificationsOpen);
-                  setUserOpen(false);
-                }}
+                className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 text-lg text-cream transition hover:bg-white/10 md:hidden"
+                onClick={() => onOpenNotificationsPage?.()}
               >
                 <span aria-hidden>🔔</span>
-                <span className="sr-only">Notifications</span>
+                <span className="sr-only">
+                  Notifications{unreadCount > 0 ? ` (${unreadCount} unread)` : ''}
+                </span>
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-ink"
+                    aria-hidden
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
-              {notificationsOpen && (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-80 overflow-hidden rounded-2xl border border-white/12 bg-[rgba(9,15,24,0.96)] shadow-2xl shadow-black/40 backdrop-blur-xl">
-                  {notificationsDropdown}
-                </div>
-              )}
-            </div>
+            </>
           )}
 
           {user ? (

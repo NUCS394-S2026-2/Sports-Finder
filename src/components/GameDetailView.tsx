@@ -1,21 +1,31 @@
+import { useEffect, useRef } from 'react';
+
 import { locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
-import type { PickupGame, User } from '../types';
-import GameChat from './GameChat';
+import type { PickupGame } from '../types';
+import { GameChat } from './GameChat';
 import { Button } from './ui/Button';
+
+type ChatUser = {
+  uid: string;
+  name: string;
+  email: string;
+};
 
 type GameDetailViewProps = {
   game: PickupGame;
-  currentUser: User | null;
   mapsUrl: (location: string) => string;
   isJoined: boolean;
   isPast: boolean;
   isOrganizer: boolean;
+  currentUser?: ChatUser | null;
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
   onCancel: (id: string) => void;
   onBack: () => void;
+  /** When true, smoothly scrolls to the chat section after render. */
+  scrollToChat?: boolean;
 };
 
 function organizerName(game: PickupGame): string {
@@ -43,16 +53,27 @@ function playersSortedForDisplay(game: PickupGame): PickupGame['players'] {
 
 export function GameDetailView({
   game,
-  currentUser,
   mapsUrl,
   isJoined,
   isPast,
   isOrganizer,
+  currentUser,
   onJoin,
   onLeave,
   onCancel,
   onBack,
+  scrollToChat = false,
 }: GameDetailViewProps) {
+  const chatSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scrollToChat) return;
+    const timer = setTimeout(() => {
+      chatSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [scrollToChat]);
+
   const level = competitiveLabel(game.skillLevel);
   const address =
     locations[game.location]?.address ?? 'Northwestern campus, Evanston, IL';
@@ -220,6 +241,12 @@ export function GameDetailView({
             before start.
           </p>
 
+          <div ref={chatSectionRef}>
+            {(isJoined || isOrganizer) && (
+              <GameChat gameId={game.id} currentUser={currentUser ?? null} />
+            )}
+          </div>
+
           <div className="xl:hidden">
             {isOrganizer && !isPast ? (
               <Button
@@ -269,10 +296,6 @@ export function GameDetailView({
                 {game.players.length} / {game.capacity} players
               </p>
             </div>
-
-            {isJoined && currentUser ? (
-              <GameChat gameId={game.id} currentUser={currentUser} />
-            ) : null}
 
             <div className="hidden xl:block">
               {isOrganizer && !isPast ? (
