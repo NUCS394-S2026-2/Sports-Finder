@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import { locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
@@ -22,6 +24,8 @@ type GameDetailViewProps = {
   onLeave: (id: string) => void;
   onCancel: (id: string) => void;
   onBack: () => void;
+  /** When true, smoothly scrolls to the chat section after render. */
+  scrollToChat?: boolean;
 };
 
 function organizerName(game: PickupGame): string {
@@ -58,7 +62,18 @@ export function GameDetailView({
   onLeave,
   onCancel,
   onBack,
+  scrollToChat = false,
 }: GameDetailViewProps) {
+  const chatSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scrollToChat) return;
+    const timer = setTimeout(() => {
+      chatSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [scrollToChat]);
+
   const level = competitiveLabel(game.skillLevel);
   const address =
     locations[game.location]?.address ?? 'Northwestern campus, Evanston, IL';
@@ -222,9 +237,11 @@ export function GameDetailView({
             before start.
           </p>
 
-          {(isJoined || isOrganizer) && (
-            <GameChat gameId={game.id} currentUser={currentUser ?? null} />
-          )}
+          <div ref={chatSectionRef}>
+            {(isJoined || isOrganizer) && (
+              <GameChat gameId={game.id} currentUser={currentUser ?? null} />
+            )}
+          </div>
 
           <div className="xl:hidden">
             {isOrganizer && !isPast ? (
