@@ -72,8 +72,19 @@ service cloud.firestore {
       }
     }
 
+    match /users/{userId} {
+      // Anyone logged in can read any user profile (public profiles)
+      allow read: if request.auth != null;
+
+      // Users can only write/update their own profile
+      allow write, delete: if
+        request.auth != null &&
+        request.auth.token.email == userId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
+

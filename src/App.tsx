@@ -19,6 +19,8 @@ import { GameCard } from './components/GameCard';
 import { GameDetailView } from './components/GameDetailView';
 import { GameForm } from './components/GameForm';
 import { SignedUpGameCard } from './components/SignedUpGameCard';
+import { ProfilePage } from './pages/ProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
 import {
   NotificationList,
   NotificationShell,
@@ -1031,6 +1033,20 @@ function App() {
       <Route path={`${paths.games}/:gameId`} element={gameDetailSection} />
       <Route path={paths.host} element={createSection} />
       <Route path={paths.profile} element={profileSection} />
+      <Route
+        path="/profile/:userId"
+        element={<ProfilePage currentUser={user} games={games} />}
+      />
+      <Route
+        path={paths.settings}
+        element={
+          user ? (
+            <SettingsPage currentUser={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to={paths.home} replace />
+          )
+        }
+      />
       <Route path={paths.notifications} element={notificationsPage} />
       <Route path="*" element={<Navigate to={paths.home} replace />} />
     </Routes>

@@ -6,6 +6,8 @@ export const paths = {
   game: (id: string) => `/games/${encodeURIComponent(id)}`,
   host: '/host',
   profile: '/profile',
+  userProfile: (userId: string) => `/profile/${encodeURIComponent(userId)}`,
+  settings: '/settings',
   notifications: '/notifications',
 } as const;
 
