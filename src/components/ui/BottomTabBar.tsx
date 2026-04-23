@@ -8,10 +8,10 @@ type BottomTabBarProps = {
 const mainTabs: Array<{ view: ViewName; label: string }> = [
   { view: 'home', label: 'Home' },
   { view: 'find', label: 'Games' },
+  { view: 'notifications', label: 'Alerts' },
   { view: 'profile', label: 'My Games' },
   { view: 'create', label: 'Host' },
 ];
-
 export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
   function isActive(view: ViewName): boolean {
     if (view === 'find') return activeView === 'find' || activeView === 'game-detail';
@@ -56,11 +56,12 @@ export function BottomTabBar({ activeView, onNavigate }: BottomTabBarProps) {
               }`}
               aria-current={active ? 'page' : undefined}
             >
-              <span aria-hidden className="text-base">
-                {tab.view === 'home' && '⌂'}
-                {tab.view === 'find' && '◎'}
-                {tab.view === 'profile' && '★'}
-              </span>
+             <span aria-hidden className="text-base">
+              {tab.view === 'home' && '⌂'}
+              {tab.view === 'find' && '◎'}
+              {tab.view === 'notifications' && '🔔'}
+              {tab.view === 'profile' && '★'}
+            </span>
               <span>{tab.label}</span>
             </button>
           );

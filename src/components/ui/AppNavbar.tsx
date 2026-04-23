@@ -39,7 +39,7 @@ export function AppNavbar({
   user,
   onSignIn,
   onLogout,
-  showNotifications = false,
+  showNotifications = true,
   onOpenNotificationsPage,
   notificationsOpen = false,
   onNotificationsOpenChange,
