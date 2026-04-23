@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import type { User } from '../../types';
+import { paths } from '../../lib/routes';
 import { Button } from './Button';
 import type { ViewName } from './viewNames';
 
@@ -163,10 +164,33 @@ export function AppNavbar({
                     className="flex w-full px-4 py-3 text-left text-sm font-semibold text-cream hover:bg-white/10"
                     onClick={() => {
                       setUserOpen(false);
+                      window.location.href = paths.userProfile(user.email);
+                    }}
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full px-4 py-3 text-left text-sm font-semibold text-cream hover:bg-white/10"
+                    onClick={() => {
+                      setUserOpen(false);
                       onNavigate('profile');
                     }}
                   >
                     My Games
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full px-4 py-3 text-left text-sm font-semibold text-cream hover:bg-white/10"
+                    onClick={() => {
+                      setUserOpen(false);
+                      // Navigate to settings
+                      window.location.href = '/settings';
+                    }}
+                  >
+                    Settings
                   </button>
                   <button
                     type="button"

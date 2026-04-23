@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { locations } from '../data';
 import { formatGameTime } from '../lib/datetime';
 import { competitiveLabel, sportEmoji } from '../lib/sports';
+import { paths } from '../lib/routes';
 import type { PickupGame, User } from '../types';
 import GameChat from './GameChat';
 import { Button } from './ui/Button';
@@ -53,6 +55,7 @@ export function GameDetailView({
   onCancel,
   onBack,
 }: GameDetailViewProps) {
+  const navigate = useNavigate();
   const level = competitiveLabel(game.skillLevel);
   const address =
     locations[game.location]?.address ?? 'Northwestern campus, Evanston, IL';
@@ -98,9 +101,14 @@ export function GameDetailView({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-400 text-sm font-extrabold text-ink">
+            <button
+              type="button"
+              onClick={() => navigate(paths.userProfile(game.organizer))}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-400 text-sm font-extrabold text-ink transition hover:ring-2 hover:ring-brand-300 hover:ring-offset-2 hover:ring-offset-ink"
+              title={`View ${organizerName(game)}'s profile`}
+            >
               {initials(organizerName(game))}
-            </span>
+            </button>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-cream-muted">
                 Hosted by
@@ -181,12 +189,14 @@ export function GameDetailView({
                   return (
                     <li key={p.email}>
                       <div className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
-                        <span
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xs font-extrabold text-cream"
-                          aria-hidden
+                        <button
+                          type="button"
+                          onClick={() => navigate(paths.userProfile(p.email))}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xs font-extrabold text-cream transition hover:bg-white/20 hover:ring-2 hover:ring-brand-300"
+                          title={`View ${p.name}'s profile`}
                         >
                           {initials(p.name)}
-                        </span>
+                        </button>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-cream">{p.name}</span>
@@ -256,13 +266,15 @@ export function GameDetailView({
               <p className="text-sm font-semibold text-cream-muted">Roster</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {game.players.map((p) => (
-                  <span
+                  <button
                     key={p.email}
-                    title={p.name}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xs font-extrabold text-cream"
+                    type="button"
+                    onClick={() => navigate(paths.userProfile(p.email))}
+                    title={`View ${p.name}'s profile`}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xs font-extrabold text-cream transition hover:bg-white/20 hover:ring-2 hover:ring-brand-300"
                   >
                     {initials(p.name)}
-                  </span>
+                  </button>
                 ))}
               </div>
               <p className="mt-4 text-lg font-bold text-cream">
