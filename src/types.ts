@@ -25,6 +25,7 @@ export type PickupGame = {
   requirements: string;
   players: Player[];
 };
+// hi
 
 export type GameDraft = {
   sport: SportName | '';

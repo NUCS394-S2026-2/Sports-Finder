@@ -7,6 +7,7 @@ export type AppNotification = {
   body?: string;
   time: string;
   unread?: boolean;
+  gameID?: string; // for chat notifications, to link to the game
 };
 
 type NotificationListProps = {

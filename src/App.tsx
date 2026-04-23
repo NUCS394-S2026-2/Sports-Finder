@@ -55,6 +55,8 @@ import {
 } from './lib/games';
 import { homeGameCardTitle, sportEmoji, sportHomeCategoryLabel } from './lib/sports';
 import type { GameDraft, PickupGame, User } from './types';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { db } from './lib/firebase';
 
 type SortOption = 'date' | 'spots-asc' | 'spots-desc';
 type TagValue<T extends string> = 'All' | T;
@@ -92,6 +94,8 @@ function App() {
   const [draft, setDraft] = useState<GameDraft>(emptyDraft);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [chatNotifications, setChatNotifications] = useState<AppNotification[]>([]);
+  const [visitedGameIds, setVisitedGameIds] = useState<Set<string>>(new Set());
   /** Shown when a game was created without a real Firestore document (rules / config). */
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
   /** Firestore returned permission-denied even though .env looks configured (wrong project, App Check, API key, …). */
@@ -226,6 +230,7 @@ function App() {
       });
     })();
   }, [user, pendingJoinId]);
+  
 
   useEffect(() => {
     setCreateConflictGame(null);
@@ -292,31 +297,8 @@ function App() {
   );
 
   const notificationItems = useMemo((): AppNotification[] => {
-    return [
-      {
-        id: 'n1',
-        kind: 'info',
-        title: 'Maya Chen joined your evening Soccer run',
-        time: '3m ago',
-        unread: true,
-      },
-      {
-        id: 'n2',
-        kind: 'cancel',
-        title: 'Your game has been cancelled',
-        body: 'Tuesday tennis ladders at Northwestern Tennis Courts — courts closed for maintenance.',
-        time: '1h ago',
-      },
-      {
-        id: 'n3',
-        kind: 'info',
-        title: 'Reminder: Frisbee at Deering Meadow starts at 5:30pm',
-        time: 'Yesterday',
-        unread: true,
-      },
-    ];
-  }, []);
-
+    return chatNotifications.filter((n) => !n.gameID || !visitedGameIds.has(n.gameID));
+  }, [chatNotifications, visitedGameIds]);
   const gamesHosted = useMemo(
     () =>
       user
@@ -335,6 +317,46 @@ function App() {
       )
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [games, user]);
+
+  useEffect(() => {
+    if (!user || signedUpGames.length === 0 || !db) return;
+    const unsubscribers: (() => void)[] = [];
+
+    signedUpGames.forEach((game) => {
+      if (!game.id || game.id.startsWith('session-')) return;
+      const messagesRef = collection(db, 'games', game.id, 'messages');
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'));
+
+      const unsub = onSnapshot(messagesQuery, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type !== 'added') return;
+          const data = change.doc.data();
+          const senderId = String(data.senderId ?? '').toLowerCase();
+          if (senderId === user.email.toLowerCase()) return; // skip own messages
+          if (visitedGameIds.has(game.id)) return; // skip if user already viewed this chat
+          const newNotif: AppNotification = {
+            id: `chat-${change.doc.id}`,
+            kind: 'info',
+            title: `${data.senderName ?? 'Someone'} in ${game.sport} chat: "${String(data.text ?? '').slice(0, 60)}"`,
+            time: data.timestamp?.toDate
+              ? data.timestamp.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+              : 'Just now',
+            unread: true,
+            gameID: game.id,
+          };
+
+          setChatNotifications((prev) => {
+            if (prev.some((n) => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev];
+          });
+        });
+      });
+
+      unsubscribers.push(unsub);
+    });
+
+    return () => unsubscribers.forEach((u) => u());
+  }, [user, signedUpGames]);
 
   const signedUpUpcoming = useMemo(
     () => signedUpGames.filter((game) => new Date(game.startTime) > now),
@@ -367,6 +389,7 @@ function App() {
   function openGameDetail(id: string) {
     navigate(paths.game(id));
     setNotificationsOpen(false);
+    setVisitedGameIds((prev) => new Set([...prev, id]));
   }
 
   function isJoinedByUser(game: PickupGame): boolean {
