@@ -1,6 +1,6 @@
 # Architecture & Code Quality Review
 
-**Team:** Jack Press, Fay Ma
+**Team:** Jack Press, Fay Ma, Abby Miggiani, Damini Iyer, Souvenir TURINUMUGISHA
 **Date:** 4/27/2026
 **Commit reviewed:** [<git sha>](https://github.com/NUCS394-S2026-2/Sports-Finder/tree/main)
 
