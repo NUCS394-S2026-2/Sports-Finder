@@ -45,6 +45,6 @@ Our data and how it is structured. While all of the data is accessible and usabl
 ## Lessons for the next project
 Each phrased as "Next time, we will ___":
 
-1. Properly plan out all necessary and potential components(i.e. systems, pages, data structures, etc)
-2. ...
-3. ...
+1. Next time we will Properly plan out all necessary and potential components(i.e. systems, pages, data structures, etc)
+2. Next time we will sketch the archicture diagram of the app before starting the development and update it as we go to keep things organized.
+3. 
