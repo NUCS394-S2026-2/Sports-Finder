@@ -36,8 +36,8 @@ Biggest single-person dependency: If Abby leaves we won't understand how several
 ## Tool output summary
 - jscpd: 4, 14
 - madge: 0, App.tsx
-- Largest files: <list top 3 with line counts> App.tsx, 
-- Unused exports: <count>
+- Largest files: <list top 3 with line counts> App.tsx <1373>, 
+- Unused exports: None
 
 ## What we'd fix first, and why
 Our data and how it is structured. While all of the data is accessible and usable, It is stored in ineffiecent and confusing ways
