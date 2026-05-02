@@ -1,0 +1,726 @@
+{
+  "statistics": {
+    "detectionDate": "2026-04-27T22:50:06.484Z",
+    "formats": {
+      "typescript": {
+        "sources": {
+          "./src/components/ui/viewNames.ts": {
+            "lines": 6,
+            "tokens": 37,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/sports.ts": {
+            "lines": 42,
+            "tokens": 414,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/routes.ts": {
+            "lines": 34,
+            "tokens": 367,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/profiles.ts": {
+            "lines": 104,
+            "tokens": 723,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/games.ts": {
+            "lines": 451,
+            "tokens": 4450,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/firebase.ts": {
+            "lines": 34,
+            "tokens": 333,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/lib/datetime.ts": {
+            "lines": 43,
+            "tokens": 461,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/vite-env.d.ts": {
+            "lines": 13,
+            "tokens": 87,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/types.ts": {
+            "lines": 60,
+            "tokens": 442,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/data.ts": {
+            "lines": 648,
+            "tokens": 5057,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1435,
+          "tokens": 12371,
+          "sources": 10,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "javascript": {
+        "sources": {
+          "./src/components/ui/Button.tsx": {
+            "lines": 1,
+            "tokens": 24,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/ui/BottomTabBar.tsx": {
+            "lines": 26,
+            "tokens": 209,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/ui/AppNavbar.tsx": {
+            "lines": 208,
+            "tokens": 1272,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/pages/SettingsPage.jsx": {
+            "lines": 312,
+            "tokens": 2018,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/pages/ProfilePage.jsx": {
+            "lines": 108,
+            "tokens": 943,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/TagFilterGroup.tsx": {
+            "lines": 14,
+            "tokens": 100,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/SignedUpGameCard.tsx": {
+            "lines": 97,
+            "tokens": 745,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/NotificationList.tsx": {
+            "lines": 83,
+            "tokens": 604,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/Hero.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameForm.tsx": {
+            "lines": 266,
+            "tokens": 2097,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameDetailView.tsx": {
+            "lines": 232,
+            "tokens": 1840,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameChat.jsx": {
+            "lines": 53,
+            "tokens": 368,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameCard.tsx": {
+            "lines": 86,
+            "tokens": 627,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/app.test.tsx": {
+            "lines": 0,
+            "tokens": 5,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1486,
+          "tokens": 10855,
+          "sources": 14,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "tsx": {
+        "sources": {
+          "./src/components/ui/Button.tsx": {
+            "lines": 30,
+            "tokens": 219,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/ui/BottomTabBar.tsx": {
+            "lines": 71,
+            "tokens": 663,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/ui/AppNavbar.tsx": {
+            "lines": 301,
+            "tokens": 2190,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 7,
+            "duplicatedTokens": 127,
+            "percentage": 2.33,
+            "percentageTokens": 5.8,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/TagFilterGroup.tsx": {
+            "lines": 36,
+            "tokens": 262,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/SignedUpGameCard.tsx": {
+            "lines": 168,
+            "tokens": 1428,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/NotificationList.tsx": {
+            "lines": 128,
+            "tokens": 920,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/Hero.tsx": {
+            "lines": 44,
+            "tokens": 430,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameForm.tsx": {
+            "lines": 444,
+            "tokens": 4007,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameDetailView.tsx": {
+            "lines": 321,
+            "tokens": 2794,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 7,
+            "duplicatedTokens": 127,
+            "percentage": 2.18,
+            "percentageTokens": 4.55,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameCard.tsx": {
+            "lines": 153,
+            "tokens": 1297,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/main.tsx": {
+            "lines": 15,
+            "tokens": 104,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/app.test.tsx": {
+            "lines": 176,
+            "tokens": 2059,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1887,
+          "tokens": 16373,
+          "sources": 12,
+          "clones": 1,
+          "duplicatedLines": 7,
+          "duplicatedTokens": 127,
+          "percentage": 0.37,
+          "percentageTokens": 0.78,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "jsx": {
+        "sources": {
+          "./src/pages/SettingsPage.jsx": {
+            "lines": 654,
+            "tokens": 4995,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 15,
+            "duplicatedTokens": 228,
+            "percentage": 2.29,
+            "percentageTokens": 4.56,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/pages/ProfilePage.jsx": {
+            "lines": 237,
+            "tokens": 2313,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 37,
+            "duplicatedTokens": 506,
+            "percentage": 15.61,
+            "percentageTokens": 21.88,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "./src/components/GameChat.jsx": {
+            "lines": 249,
+            "tokens": 2117,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 100,
+            "percentage": 2.41,
+            "percentageTokens": 4.72,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1140,
+          "tokens": 9425,
+          "sources": 3,
+          "clones": 3,
+          "duplicatedLines": 29,
+          "duplicatedTokens": 417,
+          "percentage": 2.54,
+          "percentageTokens": 4.42,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "css": {
+        "sources": {
+          "./src/index.css": {
+            "lines": 60,
+            "tokens": 297,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 60,
+          "tokens": 297,
+          "sources": 1,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 6008,
+      "tokens": 49321,
+      "sources": 40,
+      "clones": 4,
+      "duplicatedLines": 36,
+      "duplicatedTokens": 544,
+      "percentage": 0.6,
+      "percentageTokens": 1.1,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "jsx",
+      "lines": 10,
+      "fragment": ";\n\nfunction initials(name) {\n  const parts = name.trim().split(/\\s+/).filter(Boolean);\n  if (parts.length === 0) return '?';\n  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();\n  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();\n}\n\nexport function ProfilePage",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\pages\\ProfilePage.jsx",
+        "start": 11,
+        "end": 20,
+        "startLoc": {
+          "line": 11,
+          "column": 16,
+          "position": 146
+        },
+        "endLoc": {
+          "line": 20,
+          "column": 12,
+          "position": 274
+        }
+      },
+      "secondFile": {
+        "name": "src\\pages\\SettingsPage.jsx",
+        "start": 15,
+        "end": 24,
+        "startLoc": {
+          "line": 15,
+          "column": 10,
+          "position": 159
+        },
+        "endLoc": {
+          "line": 24,
+          "column": 13,
+          "position": 287
+        }
+      }
+    },
+    {
+      "format": "jsx",
+      "lines": 15,
+      "fragment": "const joined = games.filter((g) =>\n            g.players.some((p) => p.email.toLowerCase() === userId.toLowerCase()),\n          );\n          const created = games.filter(\n            (g) => g.organizer.toLowerCase() === userId.toLowerCase(),\n          );\n\n          setUserGames({\n            joined: joined.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)),\n            created: created.sort(\n              (a, b) => new Date(b.startTime) - new Date(a.startTime),\n            ),\n          });\n        }\n      }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\pages\\ProfilePage.jsx",
+        "start": 64,
+        "end": 78,
+        "startLoc": {
+          "line": 64,
+          "column": 11,
+          "position": 760
+        },
+        "endLoc": {
+          "line": 78,
+          "column": 2,
+          "position": 949
+        }
+      },
+      "secondFile": {
+        "name": "src\\pages\\ProfilePage.jsx",
+        "start": 42,
+        "end": 55,
+        "startLoc": {
+          "line": 42,
+          "column": 11,
+          "position": 520
+        },
+        "endLoc": {
+          "line": 55,
+          "column": 5,
+          "position": 708
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 8,
+      "fragment": "function initials(name: string): string {\n  const parts = name.trim().split(/\\s+/).filter(Boolean);\n  if (parts.length === 0) return '?';\n  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();\n  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();\n}\n\nfunction",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\GameDetailView.tsx",
+        "start": 29,
+        "end": 36,
+        "startLoc": {
+          "line": 29,
+          "column": 1,
+          "position": 336
+        },
+        "endLoc": {
+          "line": 36,
+          "column": 9,
+          "position": 463
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\ui\\AppNavbar.tsx",
+        "start": 29,
+        "end": 36,
+        "startLoc": {
+          "line": 29,
+          "column": 1,
+          "position": 308
+        },
+        "endLoc": {
+          "line": 36,
+          "column": 7,
+          "position": 435
+        }
+      }
+    },
+    {
+      "format": "jsx",
+      "lines": 7,
+      "fragment": ".split(/\\s+/).filter(Boolean);\n  if (parts.length === 0) return '?';\n  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();\n  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();\n}\n\nfunction",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\GameChat.jsx",
+        "start": 23,
+        "end": 29,
+        "startLoc": {
+          "line": 23,
+          "column": 5,
+          "position": 206
+        },
+        "endLoc": {
+          "line": 29,
+          "column": 9,
+          "position": 306
+        }
+      },
+      "secondFile": {
+        "name": "src\\pages\\SettingsPage.jsx",
+        "start": 18,
+        "end": 24,
+        "startLoc": {
+          "line": 18,
+          "column": 2,
+          "position": 183
+        },
+        "endLoc": {
+          "line": 24,
+          "column": 7,
+          "position": 283
+        }
+      }
+    }
+  ],
+  "filename": "C:\\Users\\jackp\\AppData\\Local\\npm-cache\\_npx\\652ead47bf63fe99\\node_modules\\@jscpd\\html-reporter\\dist\\templates\\main.pug"
+}
